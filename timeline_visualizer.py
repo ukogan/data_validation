@@ -476,29 +476,63 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
             padding: 15px;
             margin-bottom: 15px;
         }}
-        .stats-grid {{
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
+        .occupancy-bars {{
             margin-bottom: 15px;
         }}
-        .stat-item {{
-            background: white;
-            padding: 10px;
-            border-radius: 4px;
-            text-align: center;
-            border: 1px solid #e9ecef;
+        .bar-row {{
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
         }}
-        .stat-label {{
-            font-size: 0.8em;
+        .bar-label {{
+            width: 120px;
+            font-size: 0.9em;
             color: #666;
-            margin-bottom: 5px;
+            font-weight: 500;
+            text-align: right;
+            padding-right: 10px;
+            flex-shrink: 0;
         }}
-        .stat-value {{
-            font-size: 1.1em;
+        .bar-track {{
+            flex: 1;
+            height: 25px;
+            background: #e9ecef;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #dee2e6;
+        }}
+        .bar-segment {{
+            height: 100%;
+            float: left;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.75em;
             font-weight: bold;
-            color: #333;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            min-width: 0;
         }}
+        .bar-segment.small {{
+            font-size: 0.65em;
+        }}
+        .sensor-occupied {{ background: #e74c3c; }}
+        .sensor-unoccupied {{ background: #3498db; }}
+        .zone-occupied {{ background: #f1948a; }}
+        .zone-standby {{ background: #85c1e9; }}
+        .correlation-analysis {{
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 12px;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }}
+        .correlation-good {{ background: #d4edda; color: #155724; border-color: #c3e6cb; }}
+        .correlation-poor {{ background: #f8d7da; color: #721c24; border-color: #f5c6cb; }}
+        .correlation-fair {{ background: #fff3cd; color: #856404; border-color: #ffeaa7; }}
         .error-rate-panel {{
             background: white;
             border: 2px solid #dee2e6;
@@ -656,32 +690,9 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
                 </div>
 
                 <div class="statistics-panel">
-                    <div style="font-weight: bold; margin-bottom: 10px;">Occupancy Time Analysis</div>
-                    <div class="stats-grid">
-                        <div class="stat-item tooltip-enhanced" title="Total time sensor detected occupied state">
-                            <div class="stat-label">Sensor Occupied</div>
-                            <div class="stat-value">${{data.statistics.sensor_occupied_time}}</div>
-                        </div>
-                        <div class="stat-item tooltip-enhanced" title="Total time sensor detected unoccupied state">
-                            <div class="stat-label">Sensor Unoccupied</div>
-                            <div class="stat-value">${{data.statistics.sensor_unoccupied_time}}</div>
-                        </div>
-                        <div class="stat-item tooltip-enhanced" title="Total time zone was in occupied mode">
-                            <div class="stat-label">Zone Occupied Mode</div>
-                            <div class="stat-value">${{data.statistics.zone_occupied_time}}</div>
-                        </div>
-                        <div class="stat-item tooltip-enhanced" title="Total time zone was in standby mode">
-                            <div class="stat-label">Zone Standby Mode</div>
-                            <div class="stat-value">${{data.statistics.zone_standby_time}}</div>
-                        </div>
-                        <div class="stat-item tooltip-enhanced" title="How well zone occupied mode correlates with sensor occupied time (ideal: ~100%)">
-                            <div class="stat-label">Occupied Correlation</div>
-                            <div class="stat-value">${{data.statistics.zone_occupied_ratio}}%</div>
-                        </div>
-                        <div class="stat-item tooltip-enhanced" title="How well zone standby mode correlates with sensor unoccupied time (ideal: ~100%)">
-                            <div class="stat-label">Standby Correlation</div>
-                            <div class="stat-value">${{data.statistics.zone_standby_ratio}}%</div>
-                        </div>
+                    <div style="font-weight: bold; margin-bottom: 15px;">📊 Occupancy Time Analysis</div>
+                    <div class="occupancy-bars" id="occupancy-bars-${{containerId}}">
+                        <!-- Bars will be populated by JavaScript -->
                     </div>
                 </div>
 
@@ -731,6 +742,9 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
 
                 timeline.appendChild(violationEl);
             }});
+
+            // Create occupancy bar charts
+            createOccupancyBars(data, containerId);
 
             // Add collapsible violations section
             if (data.violations.length > 0) {{
@@ -790,6 +804,92 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
 
         function hideTooltip() {{
             document.getElementById('tooltip').style.display = 'none';
+        }}
+
+        function createOccupancyBars(data, containerId) {{
+            const container = document.getElementById(`occupancy-bars-${{containerId}}`);
+
+            // Parse time strings to get total seconds for percentage calculation
+            const parseTime = (timeStr) => {{
+                const match = timeStr.match(/(\\d+)h\\s*(\\d+)m/);
+                if (match) {{
+                    return parseInt(match[1]) * 3600 + parseInt(match[2]) * 60;
+                }}
+                const minMatch = timeStr.match(/(\\d+)m/);
+                if (minMatch) {{
+                    return parseInt(minMatch[1]) * 60;
+                }}
+                return 0;
+            }};
+
+            const sensorOccupiedSec = parseTime(data.statistics.sensor_occupied_time);
+            const sensorUnoccupiedSec = parseTime(data.statistics.sensor_unoccupied_time);
+            const zoneOccupiedSec = parseTime(data.statistics.zone_occupied_time);
+            const zoneStandbySec = parseTime(data.statistics.zone_standby_time);
+
+            const totalSec = sensorOccupiedSec + sensorUnoccupiedSec;
+
+            // Calculate percentages
+            const sensorOccupiedPct = totalSec > 0 ? (sensorOccupiedSec / totalSec * 100) : 0;
+            const sensorUnoccupiedPct = totalSec > 0 ? (sensorUnoccupiedSec / totalSec * 100) : 0;
+            const zoneOccupiedPct = totalSec > 0 ? (zoneOccupiedSec / totalSec * 100) : 0;
+            const zoneStandbyPct = totalSec > 0 ? (zoneStandbySec / totalSec * 100) : 0;
+
+            // Determine correlation status
+            const occCorrelation = data.statistics.zone_occupied_ratio;
+            const standbyCorrelation = data.statistics.zone_standby_ratio;
+
+            let correlationClass = 'correlation-good';
+            let correlationText = 'Good correlation';
+            if (occCorrelation < 80 || occCorrelation > 120 || standbyCorrelation < 80 || standbyCorrelation > 120) {{
+                correlationClass = 'correlation-poor';
+                correlationText = 'Poor correlation - timing violations detected';
+            }} else if (occCorrelation < 90 || occCorrelation > 110 || standbyCorrelation < 90 || standbyCorrelation > 110) {{
+                correlationClass = 'correlation-fair';
+                correlationText = 'Fair correlation - minor timing issues';
+            }}
+
+            // Create sensor and zone labels from data
+            const sensorName = data.sensor.replace(' presence', '');
+            const zoneName = data.zone;
+
+            container.innerHTML = `
+                <!-- Sensor Bar -->
+                <div class="bar-row">
+                    <div class="bar-label tooltip-enhanced" title="Sensor occupancy time distribution">${{sensorName}}</div>
+                    <div class="bar-track">
+                        <div class="bar-segment sensor-occupied" style="width: ${{sensorOccupiedPct}}%;"
+                             title="Occupied: ${{data.statistics.sensor_occupied_time}} (${{sensorOccupiedPct.toFixed(1)}}%)">
+                            ${{sensorOccupiedPct >= 15 ? `${{sensorOccupiedPct.toFixed(0)}}%` : ''}}
+                        </div>
+                        <div class="bar-segment sensor-unoccupied" style="width: ${{sensorUnoccupiedPct}}%;"
+                             title="Unoccupied: ${{data.statistics.sensor_unoccupied_time}} (${{sensorUnoccupiedPct.toFixed(1)}}%)">
+                            ${{sensorUnoccupiedPct >= 15 ? `${{sensorUnoccupiedPct.toFixed(0)}}%` : ''}}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Zone Bar -->
+                <div class="bar-row">
+                    <div class="bar-label tooltip-enhanced" title="Zone mode time distribution">${{zoneName}}</div>
+                    <div class="bar-track">
+                        <div class="bar-segment zone-occupied" style="width: ${{zoneOccupiedPct}}%;"
+                             title="Occupied Mode: ${{data.statistics.zone_occupied_time}} (${{zoneOccupiedPct.toFixed(1)}}%)">
+                            ${{zoneOccupiedPct >= 15 ? `${{zoneOccupiedPct.toFixed(0)}}%` : ''}}
+                        </div>
+                        <div class="bar-segment zone-standby" style="width: ${{zoneStandbyPct}}%;"
+                             title="Standby Mode: ${{data.statistics.zone_standby_time}} (${{zoneStandbyPct.toFixed(1)}}%)">
+                            ${{zoneStandbyPct >= 15 ? `${{zoneStandbyPct.toFixed(0)}}%` : ''}}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Correlation Analysis -->
+                <div class="correlation-analysis ${{correlationClass}}" title="Analysis of how well zone modes correlate with sensor states">
+                    <strong>Performance Analysis:</strong> Zone occupied ${{occCorrelation}}% of sensor occupied time,
+                    Zone standby ${{standbyCorrelation}}% of sensor unoccupied time. ${{correlationText}}.
+                </div>
+            `;
         }}
 
         function toggleViolations(containerId) {{
