@@ -43,6 +43,140 @@ def load_data(filename):
                 })
     return sorted(data, key=lambda x: x['time'])
 
+def format_duration(td):
+    """Format timedelta object to human readable string"""
+    total_seconds = int(td.total_seconds())
+    hours = total_seconds // 3600
+    minutes = (total_seconds % 3600) // 60
+    if hours > 0:
+        return f"{hours}h {minutes}m"
+    else:
+        return f"{minutes}m"
+
+def calculate_occupancy_statistics(sensor_data, zone_data, start_time, end_time):
+    """Calculate occupancy time statistics for sensor and zone"""
+    total_duration = end_time - start_time
+
+    # Calculate sensor occupied/unoccupied time
+    sensor_occupied_time = timedelta(0)
+    sensor_unoccupied_time = timedelta(0)
+
+    if sensor_data:
+        current_state = None
+        last_time = start_time
+
+        for record in sensor_data:
+            if current_state is not None:
+                duration = record['time'] - last_time
+                if current_state == 1:
+                    sensor_occupied_time += duration
+                else:
+                    sensor_unoccupied_time += duration
+
+            current_state = int(record['value'])
+            last_time = record['time']
+
+        # Add final period to end time
+        if current_state is not None:
+            duration = end_time - last_time
+            if current_state == 1:
+                sensor_occupied_time += duration
+            else:
+                sensor_unoccupied_time += duration
+
+    # Calculate zone occupied/standby time
+    zone_occupied_time = timedelta(0)
+    zone_standby_time = timedelta(0)
+
+    if zone_data:
+        current_mode = None
+        last_time = start_time
+
+        for record in zone_data:
+            if current_mode is not None:
+                duration = record['time'] - last_time
+                if current_mode == 0:  # Zone occupied mode
+                    zone_occupied_time += duration
+                else:  # Zone standby mode
+                    zone_standby_time += duration
+
+            current_mode = int(record['value'])
+            last_time = record['time']
+
+        # Add final period to end time
+        if current_mode is not None:
+            duration = end_time - last_time
+            if current_mode == 0:
+                zone_occupied_time += duration
+            else:
+                zone_standby_time += duration
+
+    # Calculate correlation percentages
+    zone_occupied_ratio = 0
+    zone_standby_ratio = 0
+
+    if sensor_occupied_time.total_seconds() > 0:
+        zone_occupied_ratio = (zone_occupied_time.total_seconds() / sensor_occupied_time.total_seconds()) * 100
+
+    if sensor_unoccupied_time.total_seconds() > 0:
+        zone_standby_ratio = (zone_standby_time.total_seconds() / sensor_unoccupied_time.total_seconds()) * 100
+
+    return {
+        'sensor_occupied_time': sensor_occupied_time,
+        'sensor_unoccupied_time': sensor_unoccupied_time,
+        'zone_occupied_time': zone_occupied_time,
+        'zone_standby_time': zone_standby_time,
+        'zone_occupied_ratio': zone_occupied_ratio,
+        'zone_standby_ratio': zone_standby_ratio,
+        'total_duration': total_duration
+    }
+
+def calculate_error_rates(violations, zone_events):
+    """Calculate BMS error rates"""
+    if not zone_events:
+        return {
+            'total_mode_changes': 0,
+            'total_violations': 0,
+            'overall_error_rate': 0,
+            'premature_standby_rate': 0,
+            'premature_occupied_rate': 0
+        }
+
+    # Count total mode changes
+    total_mode_changes = 0
+    to_standby_changes = 0
+    to_occupied_changes = 0
+
+    last_mode = None
+    for event in zone_events:
+        current_mode = int(event['value'])
+        if last_mode is not None and last_mode != current_mode:
+            total_mode_changes += 1
+            if current_mode == 1:  # Going to standby
+                to_standby_changes += 1
+            else:  # Going to occupied
+                to_occupied_changes += 1
+        last_mode = current_mode
+
+    # Count violations by type
+    premature_standby_violations = len([v for v in violations if v.get('type') == 'premature_standby'])
+    premature_occupied_violations = len([v for v in violations if v.get('type') == 'premature_occupied'])
+
+    # Calculate error rates
+    overall_error_rate = (len(violations) / total_mode_changes * 100) if total_mode_changes > 0 else 0
+    premature_standby_rate = (premature_standby_violations / to_standby_changes * 100) if to_standby_changes > 0 else 0
+    premature_occupied_rate = (premature_occupied_violations / to_occupied_changes * 100) if to_occupied_changes > 0 else 0
+
+    return {
+        'total_mode_changes': total_mode_changes,
+        'total_violations': len(violations),
+        'overall_error_rate': overall_error_rate,
+        'premature_standby_rate': premature_standby_rate,
+        'premature_occupied_rate': premature_occupied_rate,
+        'to_standby_changes': to_standby_changes,
+        'to_occupied_changes': to_occupied_changes
+    }
+
 def create_timeline_data(data, sensor, zone, start_time=None, duration_hours=24):
     """Create timeline data for a specific sensor-zone pair"""
 
@@ -134,6 +268,13 @@ def create_timeline_data(data, sensor, zone, start_time=None, duration_hours=24)
 
                 current_zone_state = new_zone_state
 
+    # Calculate occupancy statistics
+    statistics = calculate_occupancy_statistics(sensor_data, zone_data, start_time, end_time)
+
+    # Calculate error rates
+    zone_events_for_stats = [e for e in events if e['type'] == 'zone']
+    error_rates = calculate_error_rates(violations, zone_events_for_stats)
+
     # Remove time objects for JSON serialization
     for event in events:
         del event['time']
@@ -145,6 +286,16 @@ def create_timeline_data(data, sensor, zone, start_time=None, duration_hours=24)
         'end_time': end_time.isoformat(),
         'events': events,
         'violations': violations,
+        'statistics': {
+            'sensor_occupied_time': format_duration(statistics['sensor_occupied_time']),
+            'sensor_unoccupied_time': format_duration(statistics['sensor_unoccupied_time']),
+            'zone_occupied_time': format_duration(statistics['zone_occupied_time']),
+            'zone_standby_time': format_duration(statistics['zone_standby_time']),
+            'zone_occupied_ratio': round(statistics['zone_occupied_ratio'], 1),
+            'zone_standby_ratio': round(statistics['zone_standby_ratio'], 1),
+            'total_duration': format_duration(statistics['total_duration'])
+        },
+        'error_rates': error_rates,
         'summary': {
             'total_events': len(events),
             'sensor_events': len([e for e in events if e['type'] == 'sensor']),
@@ -318,6 +469,108 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
             background: #6c757d;
             cursor: not-allowed;
         }}
+        .statistics-panel {{
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }}
+        .stats-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }}
+        .stat-item {{
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+            border: 1px solid #e9ecef;
+        }}
+        .stat-label {{
+            font-size: 0.8em;
+            color: #666;
+            margin-bottom: 5px;
+        }}
+        .stat-value {{
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #333;
+        }}
+        .error-rate-panel {{
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }}
+        .error-rate-title {{
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }}
+        .error-rate-main {{
+            font-size: 2em;
+            font-weight: bold;
+            text-align: center;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }}
+        .error-rate-excellent {{ background: #d4edda; color: #155724; border-left: 4px solid #28a745; }}
+        .error-rate-good {{ background: #fff3cd; color: #856404; border-left: 4px solid #ffc107; }}
+        .error-rate-poor {{ background: #f8d7da; color: #721c24; border-left: 4px solid #dc3545; }}
+        .error-rate-critical {{ background: #f5c6cb; color: #721c24; border-left: 4px solid #dc3545; }}
+        .error-breakdown {{
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 0.9em;
+        }}
+        .collapsible-header {{
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }}
+        .collapsible-header:hover {{
+            background: #dee2e6;
+        }}
+        .collapsible-content {{
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }}
+        .collapsible-content.collapsed {{
+            max-height: 0;
+        }}
+        .collapsible-content.expanded {{
+            max-height: 1000px;
+        }}
+        .tooltip-enhanced {{
+            position: relative;
+            cursor: help;
+        }}
+        .tooltip-enhanced::after {{
+            content: "?";
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            background: #007bff;
+            color: white;
+            border-radius: 50%;
+            font-size: 10px;
+            text-align: center;
+            line-height: 14px;
+            margin-left: 5px;
+        }}
     </style>
 </head>
 <body>
@@ -375,14 +628,63 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
             const endTime = new Date(data.end_time);
             const totalDuration = endTime - startTime;
 
+            // Determine error rate styling
+            const errorRate = data.error_rates.overall_error_rate;
+            let errorRateClass = 'error-rate-excellent';
+            if (errorRate > 30) errorRateClass = 'error-rate-critical';
+            else if (errorRate > 15) errorRateClass = 'error-rate-poor';
+            else if (errorRate > 5) errorRateClass = 'error-rate-good';
+
             // Create timeline HTML
             container.innerHTML = `
                 <div class="timeline-header">${{data.sensor}} → ${{data.zone}}</div>
                 <div class="timeline-info">
                     Period: ${{startTime.toLocaleString()}} to ${{endTime.toLocaleString()}}<br>
-                    Events: ${{data.summary.sensor_events}} sensor, ${{data.summary.zone_events}} zone |
-                    Violations: ${{data.summary.violations}}
+                    Duration: ${{data.statistics.total_duration}} | Events: ${{data.summary.sensor_events}} sensor, ${{data.summary.zone_events}} zone
                 </div>
+
+                <div class="error-rate-panel">
+                    <div class="error-rate-title tooltip-enhanced" title="Percentage of BMS mode changes that violated timing rules">BMS Error Rate</div>
+                    <div class="error-rate-main ${{errorRateClass}}">${{errorRate.toFixed(1)}}%</div>
+                    <div class="error-breakdown">
+                        <div><strong>Premature Standby:</strong> ${{data.error_rates.premature_standby_rate.toFixed(1)}}% (${{data.error_rates.to_standby_changes}} changes)</div>
+                        <div><strong>Premature Occupied:</strong> ${{data.error_rates.premature_occupied_rate.toFixed(1)}}% (${{data.error_rates.to_occupied_changes}} changes)</div>
+                    </div>
+                    <div style="text-align: center; margin-top: 10px; font-size: 0.9em; color: #666;">
+                        ${{data.error_rates.total_violations}} violations out of ${{data.error_rates.total_mode_changes}} total mode changes
+                    </div>
+                </div>
+
+                <div class="statistics-panel">
+                    <div style="font-weight: bold; margin-bottom: 10px;">Occupancy Time Analysis</div>
+                    <div class="stats-grid">
+                        <div class="stat-item tooltip-enhanced" title="Total time sensor detected occupied state">
+                            <div class="stat-label">Sensor Occupied</div>
+                            <div class="stat-value">${{data.statistics.sensor_occupied_time}}</div>
+                        </div>
+                        <div class="stat-item tooltip-enhanced" title="Total time sensor detected unoccupied state">
+                            <div class="stat-label">Sensor Unoccupied</div>
+                            <div class="stat-value">${{data.statistics.sensor_unoccupied_time}}</div>
+                        </div>
+                        <div class="stat-item tooltip-enhanced" title="Total time zone was in occupied mode">
+                            <div class="stat-label">Zone Occupied Mode</div>
+                            <div class="stat-value">${{data.statistics.zone_occupied_time}}</div>
+                        </div>
+                        <div class="stat-item tooltip-enhanced" title="Total time zone was in standby mode">
+                            <div class="stat-label">Zone Standby Mode</div>
+                            <div class="stat-value">${{data.statistics.zone_standby_time}}</div>
+                        </div>
+                        <div class="stat-item tooltip-enhanced" title="How well zone occupied mode correlates with sensor occupied time (ideal: ~100%)">
+                            <div class="stat-label">Occupied Correlation</div>
+                            <div class="stat-value">${{data.statistics.zone_occupied_ratio}}%</div>
+                        </div>
+                        <div class="stat-item tooltip-enhanced" title="How well zone standby mode correlates with sensor unoccupied time (ideal: ~100%)">
+                            <div class="stat-label">Standby Correlation</div>
+                            <div class="stat-value">${{data.statistics.zone_standby_ratio}}%</div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="timeline-container" data-timeline-container>
                     <div class="timeline" id="timeline-${{containerId}}">
                         <div style="position: absolute; top: 20px; left: 10px; font-size: 0.8em; color: #666;">Sensor</div>
@@ -430,20 +732,26 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
                 timeline.appendChild(violationEl);
             }});
 
-            // Add summary
+            // Add collapsible violations section
             if (data.violations.length > 0) {{
-                const violationsList = document.createElement('div');
-                violationsList.className = 'violations-list';
-                violationsList.innerHTML = `
-                    <strong>Control Violations (${{data.violations.length}}):</strong>
-                    ${{data.violations.slice(-5).map(v => `
-                        <div class="violation-item">
-                            ${{new Date(v.timestamp).toLocaleString()}}: ${{v.message}} (expected: ${{v.expected}})
+                const violationsSection = document.createElement('div');
+                violationsSection.innerHTML = `
+                    <div class="collapsible-header" onclick="toggleViolations('${{containerId}}')" title="Click to expand/collapse violation details">
+                        <span><strong>Control Violations (${{data.violations.length}})</strong></span>
+                        <span id="toggle-${{containerId}}">+</span>
+                    </div>
+                    <div class="collapsible-content collapsed" id="violations-${{containerId}}">
+                        <div class="violations-list">
+                            ${{data.violations.slice(-10).map(v => `
+                                <div class="violation-item">
+                                    ${{new Date(v.timestamp).toLocaleString()}}: ${{v.message}} (expected: ${{v.expected}})
+                                </div>
+                            `).join('')}}
+                            ${{data.violations.length > 10 ? `<div style="font-style: italic; padding: 10px;">... and ${{data.violations.length - 10}} more violations</div>` : ''}}
                         </div>
-                    `).join('')}}
-                    ${{data.violations.length > 5 ? `<div style="font-style: italic;">... and ${{data.violations.length - 5}} more</div>` : ''}}
+                    </div>
                 `;
-                container.appendChild(violationsList);
+                container.appendChild(violationsSection);
             }}
             }}, 10); // Small delay to ensure DOM rendering
         }}
@@ -482,6 +790,21 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
 
         function hideTooltip() {{
             document.getElementById('tooltip').style.display = 'none';
+        }}
+
+        function toggleViolations(containerId) {{
+            const content = document.getElementById(`violations-${{containerId}}`);
+            const toggle = document.getElementById(`toggle-${{containerId}}`);
+
+            if (content.classList.contains('collapsed')) {{
+                content.classList.remove('collapsed');
+                content.classList.add('expanded');
+                toggle.textContent = '−';
+            }} else {{
+                content.classList.remove('expanded');
+                content.classList.add('collapsed');
+                toggle.textContent = '+';
+            }}
         }}
 
         // Create all timelines
@@ -562,13 +885,25 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
 def main():
     if len(sys.argv) < 2:
         print("Usage: python3 timeline_visualizer.py <csv_file> [start_time] [duration_hours]")
-        print("Example: python3 timeline_visualizer.py SCH-1_data_20250916.csv")
-        print("         python3 timeline_visualizer.py sensor_dump_filtered.csv '2025-09-11 08:00' 12")
+        print("Examples:")
+        print("  python3 timeline_visualizer.py SCH-1_data_20250916.csv")
+        print("    (Default: starts at 5pm on 9/15, ~22 hour duration)")
+        print("  python3 timeline_visualizer.py SCH-1_data_20250916.csv '2025-09-16 08:00' 8")
+        print("  python3 timeline_visualizer.py sensor_dump_filtered.csv '2025-09-11 08:00' 12")
         sys.exit(1)
 
     filename = sys.argv[1]
     start_time = None
-    duration_hours = 24
+    duration_hours = None
+
+    # Set smart defaults based on filename
+    if 'SCH-1' in filename:
+        # For recent data, default to 5pm on 9/15 for comprehensive analysis
+        start_time = datetime(2025, 9, 15, 17, 0)  # 5pm on 9/15
+        duration_hours = 22  # Until ~3pm on 9/16
+    else:
+        # For other files, use 24 hour default
+        duration_hours = 24
 
     if len(sys.argv) > 2:
         try:
@@ -584,7 +919,7 @@ def main():
             print("Invalid duration. Use number of hours.")
             sys.exit(1)
 
-    print(f"Creating timeline visualization for: {filename}")
+    print(f"Creating enhanced timeline visualization for: {filename}")
     if start_time:
         print(f"Start time: {start_time}")
     print(f"Duration: {duration_hours} hours")
