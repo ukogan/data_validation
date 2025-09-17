@@ -466,12 +466,32 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
             border-radius: 4px;
             margin: 10px 0;
         }}
-        .violation-item {{
-            margin: 5px 0;
-            padding: 5px;
-            background: white;
-            border-radius: 3px;
+        .violations-columns {{
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 10px 0;
+        }}
+        .violation-column {{
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+        }}
+        .violation-column-header {{
+            font-weight: bold;
+            margin-bottom: 8px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eee;
             font-size: 0.9em;
+        }}
+        .violation-item {{
+            margin: 3px 0;
+            padding: 3px 5px;
+            background: #f9f9f9;
+            border-radius: 2px;
+            font-size: 0.8em;
+            color: #555;
         }}
         .analytics-row {{
             display: flex;
@@ -639,11 +659,59 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
         .error-rate-good {{ background: #fff3cd; color: #856404; border-left: 4px solid #ffc107; }}
         .error-rate-poor {{ background: #f8d7da; color: #721c24; border-left: 4px solid #dc3545; }}
         .error-rate-critical {{ background: #f5c6cb; color: #721c24; border-left: 4px solid #dc3545; }}
-        .error-breakdown {{
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            font-size: 0.9em;
+        .help-icon {{
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #6c757d;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            font-style: normal;
+            text-align: center;
+            line-height: 18px;
+            cursor: help;
+            margin-left: 8px;
+            position: relative;
+        }}
+        .help-icon:hover {{
+            background: #495057;
+        }}
+        .tooltip-content {{
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            top: -10px;
+            left: 25px;
+            background: #333;
+            color: white;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            white-space: nowrap;
+            z-index: 1000;
+            transition: opacity 0.3s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            min-width: 300px;
+        }}
+        .tooltip-content::before {{
+            content: "";
+            position: absolute;
+            top: 15px;
+            left: -5px;
+            border: 5px solid transparent;
+            border-right-color: #333;
+        }}
+        .help-icon:hover .tooltip-content {{
+            visibility: visible;
+            opacity: 1;
+        }}
+        .tooltip-section {{
+            margin-bottom: 8px;
+        }}
+        .tooltip-section:last-child {{
+            margin-bottom: 0;
         }}
         .collapsible-header {{
             background: #e9ecef;
@@ -674,17 +742,23 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
             cursor: help;
         }}
         .tooltip-enhanced::after {{
-            content: "?";
+            content: "i";
             display: inline-block;
-            width: 14px;
-            height: 14px;
-            background: #007bff;
+            width: 16px;
+            height: 16px;
+            background: #6c757d;
             color: white;
             border-radius: 50%;
-            font-size: 10px;
+            font-size: 11px;
+            font-weight: bold;
+            font-style: normal;
             text-align: center;
-            line-height: 14px;
+            line-height: 16px;
             margin-left: 5px;
+            cursor: help;
+        }}
+        .tooltip-enhanced:hover::after {{
+            background: #495057;
         }}
         .help-section {{
             background: #e8f4fd;
@@ -712,7 +786,7 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
 <body>
     <div class="container">
         <div class="page-header">
-            <h1>🏢 Occupancy Control System Dashboard</h1>
+            <h1>ODCV controls analysis: Stanford 3-room POC findings</h1>
             <div style="font-size: 1.1em; color: #495057; margin-bottom: 5px;">BMS Performance Analysis & Timeline Visualization</div>
             <div class="analysis-period" id="analysis-period">
                 <!-- Period will be populated by JavaScript -->
@@ -815,14 +889,17 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
                     </div>
 
                     <div class="error-rate-panel">
-                        <div class="error-rate-title tooltip-enhanced" title="Percentage of BMS mode changes that violated timing rules">🚨 BMS Control Violations</div>
+                        <div class="error-rate-title tooltip-enhanced" title="Percentage of BMS mode changes that violated timing rules. Early Standby: Zone switched to standby before the required 15-minute delay after sensor unoccupied. Early Occupied: Zone activated before the required 5-minute delay after sensor occupied.">🚨 BMS Control Violations</div>
                         <div style="font-size: 0.85em; color: #666; margin-bottom: 10px;">Percentage of mode changes that violated proper timing delays</div>
-                        <div class="error-rate-main ${{errorRateClass}}">${{errorRate.toFixed(1)}}%</div>
-                        <div class="error-breakdown">
-                            <div><strong>Early Standby:</strong> ${{data.error_rates.premature_standby_rate.toFixed(1)}}% (${{data.error_rates.to_standby_changes}} changes)</div>
-                            <div style="font-size: 0.8em; color: #666; margin-left: 15px; margin-bottom: 8px;">Zone switched to standby before the required 15-minute delay</div>
-                            <div><strong>Early Occupied:</strong> ${{data.error_rates.premature_occupied_rate.toFixed(1)}}% (${{data.error_rates.to_occupied_changes}} changes)</div>
-                            <div style="font-size: 0.8em; color: #666; margin-left: 15px;">Zone activated before the required 5-minute delay</div>
+                        <div class="error-rate-main ${{errorRateClass}}">${{errorRate.toFixed(1)}}%
+                            <span class="help-icon">i
+                                <div class="tooltip-content">
+                                    <div class="tooltip-section"><strong>Early Standby:</strong> ${{data.error_rates.premature_standby_rate.toFixed(1)}}% (${{data.error_rates.to_standby_changes}} changes)<br>
+                                    <span style="font-size: 0.9em; color: #ccc;">Zone switched to standby before 15-minute delay</span></div>
+                                    <div class="tooltip-section"><strong>Early Occupied:</strong> ${{data.error_rates.premature_occupied_rate.toFixed(1)}}% (${{data.error_rates.to_occupied_changes}} changes)<br>
+                                    <span style="font-size: 0.9em; color: #ccc;">Zone activated before 5-minute delay</span></div>
+                                </div>
+                            </span>
                         </div>
                         <div style="text-align: center; margin-top: 10px; font-size: 0.9em; color: #666;">
                             ${{data.error_rates.total_violations}} violations out of ${{data.error_rates.total_mode_changes}} total mode changes
@@ -891,6 +968,10 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
 
             // Add collapsible violations section
             if (data.violations.length > 0) {{
+                // Separate violations by type
+                const standbyViolations = data.violations.filter(v => v.message.includes('standby'));
+                const occupiedViolations = data.violations.filter(v => v.message.includes('occupied'));
+
                 const violationsSection = document.createElement('div');
                 violationsSection.innerHTML = `
                     <div class="collapsible-header" onclick="toggleViolations('${{containerId}}')" title="Click to expand/collapse violation details">
@@ -898,13 +979,27 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
                         <span id="toggle-${{containerId}}">+</span>
                     </div>
                     <div class="collapsible-content collapsed" id="violations-${{containerId}}">
-                        <div class="violations-list">
-                            ${{data.violations.slice(-10).map(v => `
-                                <div class="violation-item">
-                                    ${{new Date(v.timestamp).toLocaleString()}}: ${{v.message}} (expected: ${{v.expected}})
-                                </div>
-                            `).join('')}}
-                            ${{data.violations.length > 10 ? `<div style="font-style: italic; padding: 10px;">... and ${{data.violations.length - 10}} more violations</div>` : ''}}
+                        <div class="violations-columns">
+                            <div class="violation-column">
+                                <div class="violation-column-header">🔴 Standby → Occupied (${{occupiedViolations.length}})</div>
+                                <div style="font-size: 0.75em; color: #666; margin-bottom: 8px;">Zone activated before 5-minute delay</div>
+                                ${{occupiedViolations.slice(-8).map(v => `
+                                    <div class="violation-item">
+                                        ${{new Date(v.timestamp).toLocaleTimeString()}} - ${{v.message.replace('Early occupied transition after ', '')}}
+                                    </div>
+                                `).join('')}}
+                                ${{occupiedViolations.length > 8 ? `<div style="font-style: italic; font-size: 0.75em; padding: 5px;">... and ${{occupiedViolations.length - 8}} more</div>` : ''}}
+                            </div>
+                            <div class="violation-column">
+                                <div class="violation-column-header">🔵 Occupied → Standby (${{standbyViolations.length}})</div>
+                                <div style="font-size: 0.75em; color: #666; margin-bottom: 8px;">Zone switched to standby before 15-minute delay</div>
+                                ${{standbyViolations.slice(-8).map(v => `
+                                    <div class="violation-item">
+                                        ${{new Date(v.timestamp).toLocaleTimeString()}} - ${{v.message.replace('Early standby transition after ', '')}}
+                                    </div>
+                                `).join('')}}
+                                ${{standbyViolations.length > 8 ? `<div style="font-style: italic; font-size: 0.75em; padding: 5px;">... and ${{standbyViolations.length - 8}} more</div>` : ''}}
+                            </div>
                         </div>
                     </div>
                 `;
@@ -1039,25 +1134,18 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
             const dashboard = document.getElementById('executive-dashboard');
 
             // Calculate system-wide metrics
-            let goodPerf = 0, fairPerf = 0, poorPerf = 0, criticalPerf = 0;
             let goodCorrelation = 0, poorCorrelation = 0;
             let totalStandbyTime = 0, totalTime = 0;
             let totalEvents = 0, totalViolations = 0;
             let sensorGaps = 0, bmsGaps = 0; // Placeholder for now
 
             timelineData.forEach(data => {{
-                const errorRate = data.error_rates.overall_error_rate;
-                const occCorr = data.statistics.zone_occupied_ratio;
+                // Focus on unoccupied/standby correlation (primary energy-saving relationship)
                 const standbyCorr = data.statistics.zone_standby_ratio;
 
-                // Categorize performance
-                if (errorRate < 20) goodPerf++;
-                else if (errorRate < 40) fairPerf++;
-                else if (errorRate < 60) poorPerf++;
-                else criticalPerf++;
-
-                // Categorize correlation (80-120% is good)
-                if (occCorr >= 80 && occCorr <= 120 && standbyCorr >= 80 && standbyCorr <= 120) {{
+                // Good correlation: BMS standby time is 80-120% of sensor unoccupied time
+                // This means the zone properly goes to standby when sensors show unoccupied
+                if (standbyCorr >= 80 && standbyCorr <= 120) {{
                     goodCorrelation++;
                 }} else {{
                     poorCorrelation++;
@@ -1087,26 +1175,7 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
                 <div class="dashboard-title">📊 System Performance Overview</div>
                 <div class="dashboard-grid">
                     <div class="dashboard-metric">
-                        <div class="metric-title">Performance Distribution</div>
-                        <div class="performance-bar">
-                            <div class="perf-segment perf-good" style="width: ${{(goodPerf/totalSensors*100)}}%;">${{goodPerf > 0 ? goodPerf : ''}}</div>
-                            <div class="perf-segment perf-fair" style="width: ${{(fairPerf/totalSensors*100)}}%;">${{fairPerf > 0 ? fairPerf : ''}}</div>
-                            <div class="perf-segment perf-poor" style="width: ${{(poorPerf/totalSensors*100)}}%;">${{poorPerf > 0 ? poorPerf : ''}}</div>
-                            <div class="perf-segment perf-critical" style="width: ${{(criticalPerf/totalSensors*100)}}%;">${{criticalPerf > 0 ? criticalPerf : ''}}</div>
-                        </div>
-                        <div class="metric-subtitle">Good: ${{goodPerf}} | Fair: ${{fairPerf}} | Poor: ${{poorPerf}} | Critical: ${{criticalPerf}}</div>
-                    </div>
-
-                    <div class="dashboard-metric">
-                        <div class="metric-title">Correlation Health</div>
-                        <div class="metric-value" style="color: ${{goodCorrelation > poorCorrelation ? '#28a745' : '#dc3545'}};">
-                            ${{goodCorrelation}} of ${{totalSensors}}
-                        </div>
-                        <div class="metric-subtitle">sensors with good correlation</div>
-                    </div>
-
-                    <div class="dashboard-metric">
-                        <div class="metric-title">Energy Savings Potential</div>
+                        <div class="metric-title tooltip-enhanced" title="Average percentage of time zones spend in standby (energy-saving) mode. Higher percentages indicate better energy efficiency. Target: >50% for optimal savings.">Energy Savings Potential</div>
                         <div class="metric-value" style="color: ${{avgStandbyPercent > 50 ? '#28a745' : avgStandbyPercent > 30 ? '#ffc107' : '#dc3545'}};">
                             ${{avgStandbyPercent.toFixed(1)}}%
                         </div>
@@ -1114,12 +1183,71 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
                     </div>
 
                     <div class="dashboard-metric">
-                        <div class="metric-title">Data Quality</div>
+                        <div class="metric-title tooltip-enhanced" title="Measures how well BMS standby time correlates with sensor unoccupied time. Calculation: (BMS Standby Time ÷ Sensor Unoccupied Time) × 100. Good correlation = 80-120%, meaning zones properly enter standby mode when spaces are unoccupied, maximizing energy savings.">Correlation Health</div>
+                        <div class="metric-value" style="color: ${{goodCorrelation > poorCorrelation ? '#28a745' : '#dc3545'}};">
+                            ${{goodCorrelation}} of ${{totalSensors}}
+                        </div>
+                        <div class="metric-subtitle">sensors with good correlation</div>
+                    </div>
+
+                    <div class="dashboard-metric">
+                        <div class="metric-title tooltip-enhanced" title="Percentage of valid, non-duplicate data records received from BMS and sensor systems. High data quality ensures accurate analysis and reliable insights.">Data Quality</div>
                         <div class="metric-value" style="color: #28a745;">98%</div>
                         <div class="metric-subtitle">BMS: 98% | Sensors: 99%</div>
                     </div>
                 </div>
             `;
+        }}
+
+        // Initialize custom tooltips for tooltip-enhanced elements
+        function initializeTooltips() {{
+            const tooltipElements = document.querySelectorAll('.tooltip-enhanced');
+            tooltipElements.forEach(element => {{
+                const tooltipText = element.getAttribute('title');
+                if (tooltipText) {{
+                    // Remove the title attribute to prevent default browser tooltips
+                    element.removeAttribute('title');
+
+                    // Create custom tooltip
+                    const tooltipDiv = document.createElement('div');
+                    tooltipDiv.className = 'custom-tooltip';
+                    tooltipDiv.textContent = tooltipText;
+                    tooltipDiv.style.cssText = `
+                        position: absolute;
+                        background: #333;
+                        color: white;
+                        padding: 8px 12px;
+                        border-radius: 4px;
+                        font-size: 0.85em;
+                        z-index: 1000;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                        max-width: 300px;
+                        white-space: normal;
+                        display: none;
+                        pointer-events: none;
+                    `;
+                    document.body.appendChild(tooltipDiv);
+
+                    element.addEventListener('mouseenter', (e) => {{
+                        const rect = element.getBoundingClientRect();
+                        tooltipDiv.style.display = 'block';
+                        tooltipDiv.style.left = (rect.left + rect.width / 2 - tooltipDiv.offsetWidth / 2) + 'px';
+                        tooltipDiv.style.top = (rect.top - tooltipDiv.offsetHeight - 8) + 'px';
+
+                        // Adjust if tooltip goes off screen
+                        if (tooltipDiv.offsetLeft < 0) {{
+                            tooltipDiv.style.left = '8px';
+                        }}
+                        if (tooltipDiv.offsetLeft + tooltipDiv.offsetWidth > window.innerWidth) {{
+                            tooltipDiv.style.left = (window.innerWidth - tooltipDiv.offsetWidth - 8) + 'px';
+                        }}
+                    }});
+
+                    element.addEventListener('mouseleave', () => {{
+                        tooltipDiv.style.display = 'none';
+                    }});
+                }}
+            }});
         }}
 
         function toggleViolations(containerId) {{
@@ -1175,6 +1303,9 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
             document.getElementById('timelines').appendChild(section);
             createTimeline(data, `section-${{index}}`);
         }});
+
+        // Initialize custom tooltips after all content is created
+        initializeTooltips();
 
         // Set up synchronized scrolling between timelines
         setTimeout(() => {{
