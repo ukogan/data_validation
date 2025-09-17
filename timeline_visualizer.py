@@ -876,9 +876,6 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
             // Create timeline HTML
             container.innerHTML = `
                 <div class="timeline-header">Sensor (${{data.sensor.replace(' presence', '')}}) → BMS Status (${{data.zone}})</div>
-                <div class="timeline-info">
-                    Events: ${{data.summary.sensor_events}} sensor, ${{data.summary.zone_events}} zone | Duration: ${{data.statistics.total_duration}}
-                </div>
 
                 <div class="analytics-row">
                     <div class="statistics-panel">
@@ -890,7 +887,6 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
 
                     <div class="error-rate-panel">
                         <div class="error-rate-title tooltip-enhanced" title="Percentage of BMS mode changes that violated timing rules. Early Standby: Zone switched to standby before the required 15-minute delay after sensor unoccupied. Early Occupied: Zone activated before the required 5-minute delay after sensor occupied.">BMS Control Violations</div>
-                        <div style="font-size: 0.85em; color: #666; margin-bottom: 10px;">Percentage of mode changes that violated proper timing delays</div>
                         <div class="error-rate-main ${{errorRateClass}}">${{errorRate.toFixed(1)}}%
                             <span class="help-icon">i
                                 <div class="tooltip-content">
@@ -965,6 +961,12 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
 
             // Create occupancy bar charts
             createOccupancyBars(data, containerId);
+
+            // Add timeline info section
+            const timelineInfo = document.createElement('div');
+            timelineInfo.className = 'timeline-info';
+            timelineInfo.innerHTML = `Events: ${{data.summary.sensor_events}} sensor, ${{data.summary.zone_events}} zone | Duration: ${{data.statistics.total_duration}}`;
+            container.appendChild(timelineInfo);
 
             // Add collapsible violations section
             if (data.violations.length > 0) {{
