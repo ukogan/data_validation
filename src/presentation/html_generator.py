@@ -513,18 +513,18 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
                     <li><strong>Percentages:</strong> Show correlation between sensor readings and zone responses</li>
                 </ul>
 
-                <p><strong>Control Violations (Right Panel):</strong></p>
+                <p><strong>Out of spec mode changes (Right Panel):</strong></p>
                 <ul>
                     <li><strong>Early Standby:</strong> Zone switched to standby before waiting 15 minutes after sensor unoccupied</li>
                     <li><strong>Early Occupied:</strong> Zone activated before waiting 5 minutes after sensor occupied</li>
-                    <li><strong>Target:</strong> 0% violations (perfect timing compliance)</li>
+                    <li><strong>Target:</strong> 0% out of spec changes (perfect timing compliance)</li>
                 </ul>
 
                 <p><strong>📈 Timeline (Bottom):</strong></p>
                 <ul>
-                    <li><strong>Purple bars:</strong> Timing violations (hover for details)</li>
-                    <li><strong>Hover events:</strong> See exact timestamps and violation explanations</li>
-                    <li><strong>Collapsed sections:</strong> Click violation counts to expand details</li>
+                    <li><strong>Purple bars:</strong> Out of spec mode changes (hover for details)</li>
+                    <li><strong>Hover events:</strong> See exact timestamps and timing details</li>
+                    <li><strong>Collapsed sections:</strong> Click counts to expand details</li>
                 </ul>
             </div>
         </div>
@@ -549,7 +549,7 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
             </div>
             <div class="legend-item">
                 <div class="legend-color" style="background-color: #8e44ad;"></div>
-                <span>Control Violation</span>
+                <span>Out of spec mode change</span>
             </div>
         </div>
 
@@ -594,19 +594,20 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
                     </div>
 
                     <div class="error-rate-panel">
-                        <div class="error-rate-title tooltip-enhanced" title="Percentage of BMS mode changes that violated timing rules. Early Standby: Zone switched to standby before the required 15-minute delay after sensor unoccupied. Early Occupied: Zone activated before the required 5-minute delay after sensor occupied.">BMS Control Violations</div>
-                        <div class="error-rate-main ${{errorRateClass}}">${{errorRate.toFixed(1)}}%
+                        <div class="error-rate-title">Continuous Commissioning
                             <span class="help-icon">i
                                 <div class="tooltip-content">
-                                    <div class="tooltip-section"><strong>Early Standby:</strong> ${{data.error_rates.premature_standby_rate.toFixed(1)}}% (${{data.error_rates.to_standby_changes}} changes)<br>
-                                    <span style="font-size: 0.9em; color: #ccc;">Zone switched to standby before 15-minute delay</span></div>
-                                    <div class="tooltip-section"><strong>Early Occupied:</strong> ${{data.error_rates.premature_occupied_rate.toFixed(1)}}% (${{data.error_rates.to_occupied_changes}} changes)<br>
-                                    <span style="font-size: 0.9em; color: #ccc;">Zone activated before 5-minute delay</span></div>
+                                    Zone switched to standby before 15-minute delay or occupied before 5-minute delay
                                 </div>
                             </span>
                         </div>
-                        <div style="text-align: center; margin-top: 10px; font-size: 0.9em; color: #666;">
-                            ${{data.error_rates.total_violations}} violations out of ${{data.error_rates.total_mode_changes}} total mode changes
+                        <div style="margin-top: 15px;">
+                            <div style="margin-bottom: 8px;">
+                                <strong>Early Standby:</strong> ${{data.error_rates.premature_standby_rate.toFixed(1)}}%
+                            </div>
+                            <div>
+                                <strong>Early Occupied:</strong> ${{data.error_rates.premature_occupied_rate.toFixed(1)}}%
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -684,8 +685,8 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
 
                 const violationsSection = document.createElement('div');
                 violationsSection.innerHTML = `
-                    <div class="collapsible-header" onclick="toggleViolations('${{containerId}}')" title="Click to expand/collapse violation details">
-                        <span><strong>Control Violations (${{data.violations.length}})</strong></span>
+                    <div class="collapsible-header" onclick="toggleViolations('${{containerId}}')" title="Click to expand/collapse timing details">
+                        <span><strong>Out of spec mode changes (${{data.violations.length}})</strong></span>
                         <span id="toggle-${{containerId}}">+</span>
                     </div>
                     <div class="collapsible-content collapsed" id="violations-${{containerId}}">
@@ -804,7 +805,13 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
             container.innerHTML = `
                 <!-- Sensor Bar -->
                 <div class="bar-row">
-                    <div class="bar-label tooltip-enhanced" title="Shows how much time the occupancy sensor detected presence vs. unoccupied states during the analysis period">${{sensorName}}</div>
+                    <div class="bar-label">${{sensorName}}
+                        <span class="help-icon">i
+                            <div class="tooltip-content">
+                                Shows how much time the occupancy sensor detected presence vs. unoccupied states during the analysis period
+                            </div>
+                        </span>
+                    </div>
                     <div class="bar-track">
                         <div class="bar-segment sensor-occupied" style="width: ${{sensorOccupiedPct}}%;"
                              title="Occupied: ${{data.statistics.sensor_occupied_time}} (${{sensorOccupiedPct.toFixed(1)}}%)">
@@ -819,7 +826,13 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
 
                 <!-- Zone Bar -->
                 <div class="bar-row">
-                    <div class="bar-label tooltip-enhanced" title="Shows how much time the BMS zone was in occupied mode vs. standby mode during the analysis period">${{zoneName}}</div>
+                    <div class="bar-label">${{zoneName}}
+                        <span class="help-icon">i
+                            <div class="tooltip-content">
+                                Shows how much time the BMS zone was in occupied mode vs. standby mode during the analysis period
+                            </div>
+                        </span>
+                    </div>
                     <div class="bar-track">
                         <div class="bar-segment zone-occupied" style="width: ${{zoneOccupiedPct}}%;"
                              title="Occupied Mode: ${{data.statistics.zone_occupied_time}} (${{zoneOccupiedPct.toFixed(1)}}%)">
@@ -832,11 +845,6 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
                     </div>
                 </div>
 
-                <!-- Correlation Analysis -->
-                <div class="correlation-analysis ${{correlationClass}}" title="Analysis of how well zone modes correlate with sensor states">
-                    <strong>Performance Analysis:</strong> Zone occupied ${{occCorrelation}}% of sensor occupied time,
-                    Zone standby ${{standbyCorrelation}}% of sensor unoccupied time. ${{correlationText}}.
-                </div>
             `;
         }}
 

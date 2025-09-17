@@ -1,15 +1,18 @@
 """
 Timeline processing logic for ODCV analytics dashboard.
 Handles event creation, violation analysis, and data aggregation.
+Now uses plugin-based validation system for improved modularity.
 """
 
 from datetime import timedelta
 from .occupancy_calculator import calculate_occupancy_statistics
 from .violation_detector import calculate_error_rates
+from .validations.validation_manager import ValidationManager
+from ..data.validation_config import get_validation_config
 from ..presentation.formatters import format_duration
 
 
-def create_timeline_data(data, sensor, zone, start_time=None, duration_hours=24):
+def create_timeline_data(data, sensor, zone, start_time=None, duration_hours=24, validation_profile='default'):
     """Create timeline data for a specific sensor-zone pair"""
     # Filter data for this sensor-zone pair
     sensor_data = [d for d in data if d['name'] == sensor]
@@ -54,13 +57,16 @@ def create_timeline_data(data, sensor, zone, start_time=None, duration_hours=24)
     # Sort by time
     events.sort(key=lambda x: x['time'])
 
-    # Analyze control performance for this period
+    # Initialize validation system with configuration
+    validation_config = get_validation_config(validation_profile)
+    validation_manager = ValidationManager(validation_config)
     violations = []
     current_sensor_state = None
     current_zone_state = None
     last_sensor_change = None
 
     for event in events:
+        # Update state tracking
         if event['type'] == 'sensor':
             if current_sensor_state != event['value']:
                 current_sensor_state = event['value']
@@ -68,31 +74,15 @@ def create_timeline_data(data, sensor, zone, start_time=None, duration_hours=24)
         elif event['type'] == 'zone':
             new_zone_state = event['value']
             if current_zone_state != new_zone_state:
-                # Check for violations
-                if last_sensor_change and current_sensor_state is not None:
-                    time_since_change = event['time'] - last_sensor_change
-                    violation = None
-
-                    if current_sensor_state == 0 and new_zone_state == 1:  # Going to standby
-                        if time_since_change < timedelta(minutes=13):  # Allow 2 min tolerance
-                            violation = {
-                                'type': 'premature_standby',
-                                'message': f"Early standby transition after {time_since_change}",
-                                'expected': '15 minutes unoccupied'
-                            }
-                    elif current_sensor_state == 1 and new_zone_state == 0:  # Going to occupied
-                        if time_since_change < timedelta(minutes=3):  # Allow 2 min tolerance
-                            violation = {
-                                'type': 'premature_occupied',
-                                'message': f"Early occupied transition after {time_since_change}",
-                                'expected': '5 minutes occupied'
-                            }
-
-                    if violation:
-                        violations.append({
-                            'timestamp': event['time'].isoformat(),
-                            **violation
-                        })
+                # Run validation plugins on zone state changes
+                event_violations = validation_manager.validate_event(
+                    events=events,
+                    sensor_state=current_sensor_state,
+                    zone_state=new_zone_state,
+                    last_change_time=last_sensor_change,
+                    current_time=event['time']
+                )
+                violations.extend(event_violations)
                 current_zone_state = new_zone_state
 
     # Calculate occupancy statistics
