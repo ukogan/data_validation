@@ -363,16 +363,15 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
         .timeline {{
             position: relative;
             height: 120px;
-            width: 400%; /* 4x wider */
             background: linear-gradient(to right, #fafafa 0%, #fafafa 100%);
-            min-width: 400%;
+            /* Width will be set dynamically based on duration */
         }}
         .event {{
             position: absolute;
-            width: 3px;
+            width: 2px;
             height: 100%;
             cursor: pointer;
-            border-radius: 2px;
+            border-radius: 1px;
         }}
         .event.sensor {{
             top: 10px;
@@ -390,11 +389,11 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
             position: absolute;
             top: 0;
             height: 100%;
-            width: 6px;
+            width: 3px;
             background-color: #8e44ad;
-            border-radius: 3px;
+            border-radius: 2px;
             cursor: pointer;
-            box-shadow: 0 0 5px rgba(142, 68, 173, 0.5);
+            box-shadow: 0 0 3px rgba(142, 68, 173, 0.6);
         }}
         .timeline-labels {{
             display: flex;
@@ -846,7 +845,16 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
             // Wait for the DOM to be fully rendered
             setTimeout(() => {{
                 const timeline = document.getElementById(`timeline-${{containerId}}`);
-                const timelineWidth = timeline.offsetWidth;
+
+                // Calculate timeline width based on duration: 300 pixels per hour
+                // This gives ~2.5 pixels per 30 seconds for visible separation
+                const durationHours = totalDuration / (1000 * 60 * 60);
+                const pixelsPerHour = 300;
+                const timelineWidth = Math.max(1200, durationHours * pixelsPerHour); // Minimum 1200px
+
+                // Set the timeline width dynamically
+                timeline.style.width = timelineWidth + 'px';
+                timeline.style.minWidth = timelineWidth + 'px';
 
             // Add events
             data.events.forEach(event => {{
