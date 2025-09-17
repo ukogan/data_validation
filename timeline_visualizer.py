@@ -794,18 +794,18 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
         </div>
 
         <div class="help-section">
-            <div class="help-toggle" onclick="toggleHelp()">📖 How to Read This Dashboard <span id="help-arrow">▼</span></div>
+            <div class="help-toggle" onclick="toggleHelp()">How to Read This Dashboard <span id="help-arrow">▼</span></div>
             <div class="help-content" id="help-content">
-                <p><strong>🎯 Purpose:</strong> This dashboard shows how well your BMS (Building Management System) responds to occupancy sensors.</p>
+                <p><strong>Purpose:</strong> This dashboard shows how well your BMS (Building Management System) responds to occupancy sensors.</p>
 
-                <p><strong>📊 Occupancy Time Analysis (Left Panel):</strong></p>
+                <p><strong>Occupancy Time Analysis (Left Panel):</strong></p>
                 <ul>
                     <li><strong>Red bars:</strong> Time when sensor detected occupancy or zone was in occupied mode</li>
                     <li><strong>Blue bars:</strong> Time when sensor was unoccupied or zone was in standby mode</li>
                     <li><strong>Percentages:</strong> Show correlation between sensor readings and zone responses</li>
                 </ul>
 
-                <p><strong>🚨 Control Violations (Right Panel):</strong></p>
+                <p><strong>Control Violations (Right Panel):</strong></p>
                 <ul>
                     <li><strong>Early Standby:</strong> Zone switched to standby before waiting 15 minutes after sensor unoccupied</li>
                     <li><strong>Early Occupied:</strong> Zone activated before waiting 5 minutes after sensor occupied</li>
@@ -882,14 +882,14 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
 
                 <div class="analytics-row">
                     <div class="statistics-panel">
-                        <div style="font-weight: bold; margin-bottom: 15px;">📊 Occupancy Time Analysis</div>
+                        <div style="font-weight: bold; margin-bottom: 15px;">Occupancy Time Analysis</div>
                         <div class="occupancy-bars" id="occupancy-bars-${{containerId}}">
                             <!-- Bars will be populated by JavaScript -->
                         </div>
                     </div>
 
                     <div class="error-rate-panel">
-                        <div class="error-rate-title tooltip-enhanced" title="Percentage of BMS mode changes that violated timing rules. Early Standby: Zone switched to standby before the required 15-minute delay after sensor unoccupied. Early Occupied: Zone activated before the required 5-minute delay after sensor occupied.">🚨 BMS Control Violations</div>
+                        <div class="error-rate-title tooltip-enhanced" title="Percentage of BMS mode changes that violated timing rules. Early Standby: Zone switched to standby before the required 15-minute delay after sensor unoccupied. Early Occupied: Zone activated before the required 5-minute delay after sensor occupied.">BMS Control Violations</div>
                         <div style="font-size: 0.85em; color: #666; margin-bottom: 10px;">Percentage of mode changes that violated proper timing delays</div>
                         <div class="error-rate-main ${{errorRateClass}}">${{errorRate.toFixed(1)}}%
                             <span class="help-icon">i
@@ -981,7 +981,7 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
                     <div class="collapsible-content collapsed" id="violations-${{containerId}}">
                         <div class="violations-columns">
                             <div class="violation-column">
-                                <div class="violation-column-header">🔴 Standby → Occupied (${{occupiedViolations.length}})</div>
+                                <div class="violation-column-header">Standby → Occupied (${{occupiedViolations.length}})</div>
                                 <div style="font-size: 0.75em; color: #666; margin-bottom: 8px;">Zone activated before 5-minute delay</div>
                                 ${{occupiedViolations.slice(-8).map(v => `
                                     <div class="violation-item">
@@ -991,7 +991,7 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
                                 ${{occupiedViolations.length > 8 ? `<div style="font-style: italic; font-size: 0.75em; padding: 5px;">... and ${{occupiedViolations.length - 8}} more</div>` : ''}}
                             </div>
                             <div class="violation-column">
-                                <div class="violation-column-header">🔵 Occupied → Standby (${{standbyViolations.length}})</div>
+                                <div class="violation-column-header">Occupied → Standby (${{standbyViolations.length}})</div>
                                 <div style="font-size: 0.75em; color: #666; margin-bottom: 8px;">Zone switched to standby before 15-minute delay</div>
                                 ${{standbyViolations.slice(-8).map(v => `
                                     <div class="violation-item">
@@ -1172,7 +1172,7 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
             const totalSensors = timelineData.length;
 
             dashboard.innerHTML = `
-                <div class="dashboard-title">📊 System Performance Overview</div>
+                <div class="dashboard-title">System Performance Overview</div>
                 <div class="dashboard-grid">
                     <div class="dashboard-metric">
                         <div class="metric-title tooltip-enhanced" title="Average percentage of time zones spend in standby (energy-saving) mode. Higher percentages indicate better energy efficiency. Target: >50% for optimal savings.">Energy Savings Potential</div>
