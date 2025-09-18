@@ -20,7 +20,7 @@
         if (configLoaded) return urlConfig;
 
         try {
-            const response = await fetch('nav-urls.json');
+            const response = await fetch('/public/nav-urls.json');
             if (!response.ok) {
                 throw new Error(`Failed to load nav-urls.json: ${response.status}`);
             }
@@ -77,7 +77,7 @@
     // Base navigation configuration (URLs will be resolved dynamically)
     const NAV_CONFIG_TEMPLATE = {
         title: 'ODCV Compass',
-        logo: 'R-Zero_Logo_white.png',
+        logo: '/public/R-Zero_Logo_white.png',
         items: [
             {
                 id: 'generator',
