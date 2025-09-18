@@ -1,0 +1,26 @@
+{
+  "name": "odcv-analytics",
+  "version": "1.0.0",
+  "description": "ODCV Analytics Dashboard - Building management system occupancy control validation and timeline visualization",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "odcv",
+    "analytics",
+    "occupancy-control",
+    "bms",
+    "timeline-visualization"
+  ],
+  "author": "R-Zero",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.19.2",
+    "cors": "^2.8.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

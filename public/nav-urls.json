@@ -6,12 +6,17 @@
     },
     "production": {
       "soo_base": "https://odcv-compass.up.railway.app/",
-      "validation_base": "https://odcv-compass-validation.up.railway.app/"
+      "validation_base": "https://odcv-compass-analytics.up.railway.app/"
+    },
+    "staging": {
+      "soo_base": "https://odcv-compass-staging.up.railway.app/",
+      "validation_base": "https://odcv-compass-analytics-staging.up.railway.app/"
     }
   },
   "_comments": {
     "local": "Relative paths for local development - assumes both projects in same parent directory",
-    "production": "Update these URLs with actual Railway deployment URLs when available",
+    "production": "Production Railway deployment URLs",
+    "staging": "Staging Railway deployment URLs (linked to development branches)",
     "soo_base": "Base URL for SOO Generator project (index.html, SOO-calculator.html, etc.)",
     "validation_base": "Base URL for ODCV Analytics project (timeline_viewer.html, etc.)"
   }
