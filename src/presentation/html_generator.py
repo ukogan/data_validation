@@ -376,7 +376,7 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
             margin-bottom: 8px;
         }}
         .bar-label {{
-            width: 120px;
+            width: 180px;
             font-size: 0.9em;
             color: #666;
             font-weight: 500;
@@ -385,7 +385,7 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
             flex-shrink: 0;
         }}
         .bar-track {{
-            flex: 1;
+            width: 300px;
             height: 25px;
             background: #e9ecef;
             border-radius: 12px;
@@ -1070,17 +1070,31 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
                 <div class="dashboard-title">System Performance Overview</div>
                 <div class="dashboard-grid">
                     <div class="dashboard-metric">
-                        <div class="metric-title">Energy Savings Potential
+                        <div class="metric-title">Standby Mode
                             <span class="help-icon">i
                                 <div class="tooltip-content">
-                                    Average percentage of time zones spend in standby (energy-saving) mode. Higher percentages indicate better energy efficiency. Target: >50% for optimal savings.
+                                    Percentage of time that zones cut VAV by 75%. Higher percentages indicate better energy efficiency. Target: >50% for optimal savings.
                                 </div>
                             </span>
                         </div>
                         <div class="metric-value" style="color: ${{avgStandbyPercent > 50 ? '#28a745' : avgStandbyPercent > 30 ? '#ffc107' : '#dc3545'}};">
                             ${{avgStandbyPercent.toFixed(1)}}%
                         </div>
-                        <div class="metric-subtitle">average standby time</div>
+                        <div class="metric-subtitle">Percentage of time that zones cut VAV by 75%</div>
+                    </div>
+
+                    <div class="dashboard-metric">
+                        <div class="metric-title">Airflow reduction
+                            <span class="help-icon">i
+                                <div class="tooltip-content">
+                                    Actual airflow reduction achieved by multiplying standby time by VAV reduction factor (75%). Green if over 15%, yellow otherwise.
+                                </div>
+                            </span>
+                        </div>
+                        <div class="metric-value" style="color: ${{(avgStandbyPercent * 0.75) > 15 ? '#28a745' : '#ffc107'}};">
+                            ${{(avgStandbyPercent * 0.75).toFixed(1)}}%
+                        </div>
+                        <div class="metric-subtitle">Standby Mode × 75% VAV reduction</div>
                     </div>
 
                     <div class="dashboard-metric">
