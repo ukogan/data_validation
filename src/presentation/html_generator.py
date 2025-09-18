@@ -27,12 +27,13 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
             font-family: Arial, sans-serif;
             margin: 20px;
             background-color: #f5f5f5;
+            font-size: 14px;
         }}
         .container {{
             max-width: 1200px;
             margin: 0 auto;
             background: white;
-            padding: 25px;
+            padding: 16px;
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.08);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -70,7 +71,7 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
         }}
         .timeline {{
             position: relative;
-            height: 120px;
+            height: 100px;
             background: linear-gradient(to right, #fafafa 0%, #fafafa 100%);
             /* Width will be set dynamically based on duration */
         }}
@@ -114,7 +115,7 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
             background: white;
             padding: 20px;
             border-bottom: 2px solid #dee2e6;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
         }}
         .analysis-period {{
             font-size: 1.1em;
@@ -132,7 +133,7 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
             top: 0;
             z-index: 100;
             border: 1px solid #dee2e6;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
         }}
         .legend-title {{
             font-weight: bold;
@@ -204,7 +205,7 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
         .analytics-row {{
             display: flex;
             gap: 20px;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
         }}
         .statistics-panel {{
             background: #f8f9fa;
@@ -280,14 +281,14 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
             background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
             border: 2px solid #dee2e6;
             border-radius: 12px;
-            padding: 25px;
+            padding: 16px;
             margin-bottom: 30px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }}
         .dashboard-title {{
             font-size: 1.4em;
             font-weight: 600;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
             color: #2c3e50;
             text-align: center;
             padding-bottom: 15px;
@@ -353,6 +354,12 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
             font-size: 1.1em;
             font-weight: bold;
             margin-bottom: 10px;
+            color: #333;
+        }}
+        .statistics-title {{
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-bottom: 15px;
             color: #333;
         }}
         .error-rate-main {{
@@ -473,7 +480,7 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
             border: 1px solid #b8daf7;
             border-radius: 6px;
             padding: 15px;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
             font-size: 0.9em;
         }}
         .help-toggle {{
@@ -502,7 +509,7 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
         </div>
 
         <div class="help-section">
-            <div class="help-toggle" onclick="toggleHelp()">How to Read This Dashboard <span id="help-arrow">▼</span></div>
+            <div class="help-toggle" onclick="toggleHelp()">How to Read This Dashboard <span id="help-arrow">▶</span></div>
             <div class="help-content" id="help-content">
                 <p><strong>Purpose:</strong> This dashboard shows how well your BMS (Building Management System) responds to occupancy sensors.</p>
 
@@ -587,7 +594,7 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
 
                 <div class="analytics-row">
                     <div class="statistics-panel">
-                        <div style="font-weight: bold; margin-bottom: 15px;">Occupancy Time Analysis</div>
+                        <div class="statistics-title">Occupancy Time Analysis</div>
                         <div class="occupancy-bars" id="occupancy-bars-${{containerId}}">
                             <!-- Bars will be populated by JavaScript -->
                         </div>
@@ -1007,10 +1014,10 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
 
             if (content.classList.contains('expanded')) {{
                 content.classList.remove('expanded');
-                arrow.textContent = '▼';
+                arrow.textContent = '▶';
             }} else {{
                 content.classList.add('expanded');
-                arrow.textContent = '▲';
+                arrow.textContent = '▼';
             }}
         }}
 

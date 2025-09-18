@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Statistics Integration Mockup - ODCV Timeline Viewer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        /* Mockup Container */
+        .mockup-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        /* Mockup Header */
+        .mockup-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .mockup-header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .mockup-header p {
+            font-size: 18px;
+            opacity: 0.95;
+        }
+
+        /* Comparison Layout */
+        .comparison-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2px;
+            background: #dee2e6;
+            padding: 2px;
+        }
+
+        .comparison-side {
+            background: white;
+            padding: 25px;
+            position: relative;
+        }
+
+        .comparison-label {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: #333;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 14px;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .comparison-label.current {
+            background: #6c757d;
+        }
+
+        .comparison-label.enhanced {
+            background: #28a745;
+        }
+
+        /* Executive Dashboard Styles */
+        .executive-dashboard {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            border: 1px solid #dee2e6;
+        }
+
+        .executive-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .metric-value {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .metric-subtitle {
+            font-size: 11px;
+            color: #adb5bd;
+        }
+
+        /* Color Coding for Performance */
+        .performance-good { color: #28a745; }
+        .performance-moderate { color: #ffc107; }
+        .performance-poor { color: #dc3545; }
+
+        /* Sensor Panel Styles */
+        .sensor-panel {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .sensor-header {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f1f3f5;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .stat-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+        }
+
+        .stat-section h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .stat-name {
+            font-size: 13px;
+            color: #6c757d;
+        }
+
+        .stat-value {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* Annotation System */
+        .annotation {
+            position: absolute;
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 4px 12px rgba(255,193,7,0.3);
+            z-index: 100;
+            max-width: 280px;
+            animation: annotationPulse 2s infinite;
+        }
+
+        @keyframes annotationPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .annotation-arrow {
+            position: absolute;
+            width: 2px;
+            background: #ffc107;
+            transform-origin: top;
+        }
+
+        .annotation-title {
+            font-weight: bold;
+            color: #856404;
+            margin-bottom: 5px;
+            font-size: 13px;
+        }
+
+        .annotation-text {
+            font-size: 12px;
+            color: #856404;
+            line-height: 1.4;
+        }
+
+        /* Enhanced Statistics Highlight */
+        .enhanced-stat {
+            position: relative;
+            animation: highlightPulse 1.5s infinite;
+        }
+
+        @keyframes highlightPulse {
+            0%, 100% { background: rgba(40, 167, 69, 0.05); }
+            50% { background: rgba(40, 167, 69, 0.1); }
+        }
+
+        /* Formula Display */
+        .formula-display {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 6px;
+            padding: 12px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            text-align: center;
+            color: #0056b3;
+        }
+
+        /* Legend Section */
+        .color-legend {
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px;
+        }
+
+        .legend-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .legend-items {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-color {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+        }
+
+        .legend-text {
+            font-size: 13px;
+            color: #495057;
+        }
+
+        /* Improvement Badge */
+        .improvement-badge {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-left: 8px;
+            animation: badgeBounce 1s ease-in-out;
+        }
+
+        @keyframes badgeBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-3px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="mockup-container">
+        <!-- Mockup Header -->
+        <div class="mockup-header">
+            <h1>Enhanced Statistics Integration</h1>
+            <p>Demonstrating Color-Coded Performance Indicators & Improved Metrics</p>
+        </div>
+
+        <!-- Color Legend -->
+        <div class="color-legend">
+            <h3 class="legend-title">Performance Color Coding System</h3>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #28a745;"></div>
+                    <div class="legend-text"><strong>Green:</strong> Excellent Performance (≤5% violations)</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ffc107;"></div>
+                    <div class="legend-text"><strong>Amber:</strong> Moderate Performance (5-15% violations)</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #dc3545;"></div>
+                    <div class="legend-text"><strong>Red:</strong> Poor Performance (>15% violations)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comparison View -->
+        <div class="comparison-container">
+            <!-- Current Implementation -->
+            <div class="comparison-side">
+                <div class="comparison-label current">CURRENT IMPLEMENTATION</div>
+
+                <!-- Executive Dashboard - Current -->
+                <div class="executive-dashboard">
+                    <h2 class="executive-title">Executive Dashboard</h2>
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-label">Correlation Health</div>
+                            <div class="metric-value">94%</div>
+                            <div class="metric-subtitle">System accuracy</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Energy Savings Potential</div>
+                            <div class="metric-value">23%</div>
+                            <div class="metric-subtitle">Optimization opportunity</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Data Quality</div>
+                            <div class="metric-value">98%</div>
+                            <div class="metric-subtitle">Signal integrity</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Active Zones</div>
+                            <div class="metric-value">3</div>
+                            <div class="metric-subtitle">Monitored areas</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sensor Panel - Current -->
+                <div class="sensor-panel">
+                    <h3 class="sensor-header">Zone BV200 - Conference Room A</h3>
+                    <div class="stats-container">
+                        <div class="stat-section">
+                            <h4>Continuous Commissioning</h4>
+                            <div class="stat-row">
+                                <span class="stat-name">Early Standby</span>
+                                <span class="stat-value">12.4%</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-name">Early Occupied</span>
+                                <span class="stat-value">8.7%</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-name">Response Rate</span>
+                                <span class="stat-value">87.2%</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-name">Compliance</span>
+                                <span class="stat-value">78.9%</span>
+                            </div>
+                        </div>
+                        <div class="stat-section">
+                            <h4>Occupancy Analysis</h4>
+                            <div class="stat-row">
+                                <span class="stat-name">Total Occupied</span>
+                                <span class="stat-value">14h 23m</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-name">Occupancy Rate</span>
+                                <span class="stat-value">65.4%</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-name">Peak Hour</span>
+                                <span class="stat-value">14:00-15:00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enhanced Implementation -->
+            <div class="comparison-side" style="position: relative;">
+                <div class="comparison-label enhanced">ENHANCED IMPLEMENTATION</div>
+
+                <!-- Executive Dashboard - Enhanced -->
+                <div class="executive-dashboard">
+                    <h2 class="executive-title">Executive Dashboard <span class="improvement-badge">IMPROVED</span></h2>
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-label">Correlation Health</div>
+                            <div class="metric-value performance-good">94%</div>
+                            <div class="metric-subtitle">System accuracy</div>
+                        </div>
+                        <div class="metric-card enhanced-stat">
+                            <div class="metric-label">Standby Time</div>
+                            <div class="metric-value performance-moderate">34.6%</div>
+                            <div class="metric-subtitle">Unoccupied period ratio</div>
+                        </div>
+                        <div class="metric-card enhanced-stat">
+                            <div class="metric-label">CFM Savings</div>
+                            <div class="metric-value performance-good">26.0%</div>
+                            <div class="metric-subtitle">Airflow reduction</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Data Quality</div>
+                            <div class="metric-value performance-good">98%</div>
+                            <div class="metric-subtitle">Signal integrity</div>
+                        </div>
+                    </div>
+
+                    <!-- Formula Display -->
+                    <div class="formula-display">
+                        CFM Savings = Standby Time % × 75% (Stanford's standby_setback_percentage)
+                        <br>
+                        26.0% = 34.6% × 75%
+                    </div>
+                </div>
+
+                <!-- Annotation for new metrics -->
+                <div class="annotation" style="top: 160px; right: -250px;">
+                    <div class="annotation-title">New Metrics Added</div>
+                    <div class="annotation-text">
+                        • "Energy Savings Potential" → "Standby Time"<br>
+                        • Added "CFM Savings" calculation<br>
+                        • Color-coded performance values
+                    </div>
+                    <div class="annotation-arrow" style="height: 60px; left: -30px; top: 20px; transform: rotate(-45deg);"></div>
+                </div>
+
+                <!-- Sensor Panel - Enhanced -->
+                <div class="sensor-panel">
+                    <h3 class="sensor-header">Zone BV200 - Conference Room A</h3>
+                    <div class="stats-container">
+                        <div class="stat-section">
+                            <h4>Continuous Commissioning <span class="improvement-badge">COLOR CODED</span></h4>
+                            <div class="stat-row">
+                                <span class="stat-name">Early Standby</span>
+                                <span class="stat-value performance-moderate">12.4%</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-name">Early Occupied</span>
+                                <span class="stat-value performance-moderate">8.7%</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-name">Response Rate</span>
+                                <span class="stat-value performance-good">87.2%</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-name">Compliance</span>
+                                <span class="stat-value performance-moderate">78.9%</span>
+                            </div>
+                        </div>
+                        <div class="stat-section">
+                            <h4>Occupancy Analysis</h4>
+                            <div class="stat-row">
+                                <span class="stat-name">Total Occupied</span>
+                                <span class="stat-value">14h 23m</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-name">Occupancy Rate</span>
+                                <span class="stat-value performance-moderate">65.4%</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-name">Standby Ratio</span>
+                                <span class="stat-value performance-good enhanced-stat">34.6%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Annotation for color coding -->
+                <div class="annotation" style="bottom: 80px; right: -250px;">
+                    <div class="annotation-title">Performance Colors</div>
+                    <div class="annotation-text">
+                        Values now use color to indicate performance:<br>
+                        • Green = Good (low violations)<br>
+                        • Amber = Moderate<br>
+                        • Red = Poor (high violations)
+                    </div>
+                    <div class="annotation-arrow" style="height: 60px; left: -30px; top: 20px; transform: rotate(-45deg);"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Multiple Sensor Example -->
+        <div style="padding: 25px; background: #f8f9fa; border-top: 2px solid #dee2e6;">
+            <h2 style="font-size: 20px; font-weight: 600; color: #2c3e50; margin-bottom: 20px;">
+                Multiple Sensor View with Enhanced Statistics
+            </h2>
+
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                <!-- Good Performance Sensor -->
+                <div class="sensor-panel">
+                    <h3 class="sensor-header" style="border-left: 4px solid #28a745; padding-left: 10px;">
+                        Zone BV201 - Open Office
+                    </h3>
+                    <div class="stat-section">
+                        <h4>Performance Summary</h4>
+                        <div class="stat-row">
+                            <span class="stat-name">Early Standby</span>
+                            <span class="stat-value performance-good">3.2%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-name">Early Occupied</span>
+                            <span class="stat-value performance-good">2.1%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-name">Compliance</span>
+                            <span class="stat-value performance-good">94.7%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-name">CFM Savings</span>
+                            <span class="stat-value performance-good">31.5%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Moderate Performance Sensor -->
+                <div class="sensor-panel">
+                    <h3 class="sensor-header" style="border-left: 4px solid #ffc107; padding-left: 10px;">
+                        Zone BV202 - Meeting Room
+                    </h3>
+                    <div class="stat-section">
+                        <h4>Performance Summary</h4>
+                        <div class="stat-row">
+                            <span class="stat-name">Early Standby</span>
+                            <span class="stat-value performance-moderate">11.5%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-name">Early Occupied</span>
+                            <span class="stat-value performance-moderate">7.8%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-name">Compliance</span>
+                            <span class="stat-value performance-moderate">80.7%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-name">CFM Savings</span>
+                            <span class="stat-value performance-moderate">22.8%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Poor Performance Sensor -->
+                <div class="sensor-panel">
+                    <h3 class="sensor-header" style="border-left: 4px solid #dc3545; padding-left: 10px;">
+                        Zone BV203 - Break Room
+                    </h3>
+                    <div class="stat-section">
+                        <h4>Performance Summary</h4>
+                        <div class="stat-row">
+                            <span class="stat-name">Early Standby</span>
+                            <span class="stat-value performance-poor">24.3%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-name">Early Occupied</span>
+                            <span class="stat-value performance-poor">18.9%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-name">Compliance</span>
+                            <span class="stat-value performance-poor">56.8%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-name">CFM Savings</span>
+                            <span class="stat-value performance-poor">12.3%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Summary -->
+            <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 8px; border: 1px solid #dee2e6;">
+                <h3 style="font-size: 16px; font-weight: 600; color: #2c3e50; margin-bottom: 10px;">
+                    Visual Performance Summary Benefits
+                </h3>
+                <ul style="color: #495057; font-size: 14px; line-height: 1.8; padding-left: 20px;">
+                    <li><strong>Immediate Visual Assessment:</strong> Color coding allows executives to instantly identify problem areas</li>
+                    <li><strong>Performance Trending:</strong> Green/amber/red indicators show which zones need attention</li>
+                    <li><strong>CFM Savings Clarity:</strong> Direct calculation from standby time provides clear energy savings metric</li>
+                    <li><strong>Actionable Insights:</strong> Poor performance (red) zones become priority targets for commissioning</li>
+                    <li><strong>Standardized Thresholds:</strong> Consistent color coding across all sensors enables fair comparison</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Implementation Notes -->
+        <div style="padding: 25px; background: white; border-top: 2px solid #dee2e6;">
+            <h2 style="font-size: 20px; font-weight: 600; color: #2c3e50; margin-bottom: 15px;">
+                Implementation Notes
+            </h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div style="padding: 15px; background: #e7f3ff; border-radius: 8px; border: 1px solid #b3d9ff;">
+                    <h3 style="font-size: 16px; font-weight: 600; color: #0056b3; margin-bottom: 10px;">
+                        Key Changes from Current Design
+                    </h3>
+                    <ol style="font-size: 14px; color: #495057; line-height: 1.6; padding-left: 20px;">
+                        <li>Replace "Energy Savings Potential" with "Standby Time" metric</li>
+                        <li>Add "CFM Savings" calculation (Standby % × 75%)</li>
+                        <li>Implement color-coded performance values</li>
+                        <li>Add performance threshold indicators</li>
+                        <li>Include visual formula display for transparency</li>
+                    </ol>
+                </div>
+                <div style="padding: 15px; background: #e8f5e9; border-radius: 8px; border: 1px solid #c3e6cb;">
+                    <h3 style="font-size: 16px; font-weight: 600; color: #155724; margin-bottom: 10px;">
+                        Benefits of Enhanced Statistics
+                    </h3>
+                    <ol style="font-size: 14px; color: #495057; line-height: 1.6; padding-left: 20px;">
+                        <li>Clear visual feedback on system performance</li>
+                        <li>Direct correlation to energy savings (CFM)</li>
+                        <li>Easier identification of problem zones</li>
+                        <li>Executive-friendly color indicators</li>
+                        <li>Maintains professional appearance</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add interactive hover effects
+        document.querySelectorAll('.metric-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                if (this.classList.contains('enhanced-stat')) {
+                    this.style.border = '2px solid #28a745';
+                }
+            });
+            card.addEventListener('mouseleave', function() {
+                this.style.border = '1px solid #e9ecef';
+            });
+        });
+
+        // Highlight enhanced features periodically
+        function highlightEnhancements() {
+            const enhanced = document.querySelectorAll('.enhanced-stat');
+            enhanced.forEach(el => {
+                el.style.transition = 'all 0.5s ease';
+                el.style.transform = 'scale(1.02)';
+                el.style.boxShadow = '0 0 20px rgba(40, 167, 69, 0.3)';
+
+                setTimeout(() => {
+                    el.style.transform = 'scale(1)';
+                    el.style.boxShadow = 'none';
+                }, 1000);
+            });
+        }
+
+        // Run highlight every 5 seconds
+        setInterval(highlightEnhancements, 5000);
+
+        // Initial highlight
+        setTimeout(highlightEnhancements, 1000);
+    </script>
+</body>
+</html>
