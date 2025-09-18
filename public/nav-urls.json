@@ -5,11 +5,11 @@
       "validation_base": "./"
     },
     "production": {
-      "soo_base": "https://odcv-compass.up.railway.app/",
+      "soo_base": "https://odcv-compass-soo.up.railway.app/",
       "validation_base": "https://odcv-compass-analytics.up.railway.app/"
     },
     "staging": {
-      "soo_base": "https://odcv-compass-staging.up.railway.app/",
+      "soo_base": "https://odcv-compass-soo-staging.up.railway.app/",
       "validation_base": "https://odcv-compass-analytics-staging.up.railway.app/"
     }
   },
