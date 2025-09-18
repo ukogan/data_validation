@@ -831,7 +831,7 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
             container.innerHTML = `
                 <!-- Sensor Bar -->
                 <div class="bar-row">
-                    <div class="bar-label">${{sensorName}}
+                    <div class="bar-label">Sensor: ${{sensorName}}
                         <span class="help-icon">i
                             <div class="tooltip-content">
                                 Shows how much time the occupancy sensor detected presence vs. unoccupied states during the analysis period
@@ -852,7 +852,7 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
 
                 <!-- Zone Bar -->
                 <div class="bar-row">
-                    <div class="bar-label">${{zoneName}}
+                    <div class="bar-label">Zone: ${{zoneName}}
                         <span class="help-icon">i
                             <div class="tooltip-content">
                                 Shows how much time the BMS zone was in occupied mode vs. standby mode during the analysis period
