@@ -3,7 +3,13 @@
  * Express server for serving static analytics dashboard files with Google authentication
  */
 
-require('dotenv').config({ path: require('path').join(__dirname, '.env') });
+// Load environment variables from .env file (if it exists)
+try {
+    require('dotenv').config({ path: require('path').join(__dirname, '.env') });
+} catch (error) {
+    // .env file not found or dotenv not available - use environment variables directly
+    console.log('[ODCV Analytics] Using environment variables directly (no .env file)');
+}
 
 const express = require('express');
 const path = require('path');
@@ -136,10 +142,26 @@ app.get('*', (req, res) => {
     }
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`ODCV Analytics server running on port ${PORT}`);
-    console.log(`Health check available at: http://localhost:${PORT}/api/health`);
-    console.log(`Timeline viewer at: http://localhost:${PORT}/`);
+// Add global error handling for unhandled errors
+process.on('uncaughtException', (error) => {
+    console.error('[ODCV Analytics] Uncaught Exception:', error);
+    process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('[ODCV Analytics] Unhandled Rejection at:', promise, 'reason:', reason);
+    process.exit(1);
+});
+
+app.listen(PORT, '0.0.0.0', (err) => {
+    if (err) {
+        console.error('[ODCV Analytics] Failed to start server:', err);
+        process.exit(1);
+    }
+    console.log(`[ODCV Analytics] Server running on port ${PORT}`);
+    console.log(`[ODCV Analytics] Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`[ODCV Analytics] Health check: http://localhost:${PORT}/api/health`);
+    console.log(`[ODCV Analytics] Timeline viewer: http://localhost:${PORT}/`);
 });
 
 module.exports = app;
