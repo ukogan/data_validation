@@ -87,6 +87,8 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
         .main-content {{
             flex: 1;
             background: #f8f9fa;
+            max-width: 100%;
+            overflow-x: hidden;
         }}
 
         /* Header */
@@ -185,6 +187,8 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
             border: 1px solid #ddd;
             border-radius: 6px;
             padding: 20px;
+            max-width: 100%;
+            overflow: hidden;
         }}
         .timeline-header {{
             font-size: 1.3em;
@@ -206,6 +210,7 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
         }}
         .timeline-container {{
             width: 100%;
+            max-width: 100%;
             overflow-x: auto;
             border: 1px solid #ccc;
             border-radius: 4px;
