@@ -41,4 +41,4 @@ Thumbs.db
 .temp/
 
 # Analysis outputs (keep examples but ignore large outputs)
-timeline_viewer.html
+# timeline_viewer.html - now included for Railway deployment
