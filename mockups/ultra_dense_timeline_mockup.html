@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultra-Dense ODCV Timeline Visualization</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Core colors */
+            --occupied-color: #dc2626;
+            --unoccupied-color: #2563eb;
+            --active-color: #dc2626;
+            --standby-color: #2563eb;
+            --missing-color: #9ca3af;
+            --violation-color: #9333ea;
+
+            /* UI colors */
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-hover: #334155;
+            --border-color: #475569;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --business-hours: rgba(255, 255, 255, 0.03);
+
+            /* Sizing */
+            --dot-size: 3px;
+            --circle-size: 7px;
+            --element-spacing: 1.5px;
+            --row-height: 10px;
+            --row-gap: 2px;
+            --label-width: 80px;
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 11px;
+            overflow-x: auto;
+        }
+
+        .container {
+            min-width: 100%;
+            padding: 16px;
+        }
+
+        .header {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            background: var(--bg-primary);
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+
+        .control-group label {
+            color: var(--text-secondary);
+            font-size: 10px;
+            margin-right: 4px;
+        }
+
+        button {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 10px;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: var(--bg-hover);
+            border-color: var(--text-secondary);
+        }
+
+        button.active {
+            background: #2563eb;
+            border-color: #3b82f6;
+        }
+
+        .legend {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-bottom: 16px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            font-size: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-visual {
+            width: 20px;
+            height: 10px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .legend-dot {
+            width: var(--dot-size);
+            height: var(--dot-size);
+            border-radius: 50%;
+            position: absolute;
+        }
+
+        .legend-circle {
+            width: var(--circle-size);
+            height: var(--circle-size);
+            border-radius: 50%;
+            border: 1.5px solid;
+            position: absolute;
+        }
+
+        .visualization-container {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px;
+            overflow-x: auto;
+        }
+
+        .zone-section {
+            margin-bottom: 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--bg-primary);
+        }
+
+        .zone-header {
+            background: var(--bg-secondary);
+            padding: 6px 10px;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+            font-size: 11px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .zone-stats {
+            font-weight: 400;
+            color: var(--text-secondary);
+            font-size: 10px;
+        }
+
+        .timeline-grid {
+            position: relative;
+            padding: 8px 0;
+        }
+
+        .timeline-row {
+            display: flex;
+            height: var(--row-height);
+            margin-bottom: var(--row-gap);
+            position: relative;
+        }
+
+        .row-label {
+            width: var(--label-width);
+            padding-right: 8px;
+            text-align: right;
+            color: var(--text-secondary);
+            font-size: 9px;
+            line-height: var(--row-height);
+            flex-shrink: 0;
+        }
+
+        .data-points {
+            display: flex;
+            gap: var(--element-spacing);
+            flex: 1;
+            position: relative;
+            align-items: center;
+        }
+
+        .business-hours-bg {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            background: var(--business-hours);
+            pointer-events: none;
+        }
+
+        .data-point {
+            width: var(--circle-size);
+            height: var(--circle-size);
+            position: relative;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .data-dot {
+            width: var(--dot-size);
+            height: var(--dot-size);
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+        }
+
+        .data-circle {
+            width: var(--circle-size);
+            height: var(--circle-size);
+            border-radius: 50%;
+            border: 1.5px solid;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        .data-point.violation .data-circle {
+            box-shadow: 0 0 0 1px var(--violation-color);
+        }
+
+        .data-dot.occupied { background: var(--occupied-color); }
+        .data-dot.unoccupied { background: var(--unoccupied-color); }
+        .data-dot.missing { background: var(--missing-color); }
+
+        .data-circle.active { border-color: var(--active-color); }
+        .data-circle.standby { border-color: var(--standby-color); }
+        .data-circle.missing { border-color: var(--missing-color); }
+
+        .tooltip {
+            position: fixed;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 6px 8px;
+            font-size: 10px;
+            pointer-events: none;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .tooltip.visible {
+            display: block;
+        }
+
+        .tooltip-time {
+            color: var(--text-primary);
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .tooltip-data {
+            color: var(--text-secondary);
+        }
+
+        .stats-panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 16px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+        }
+
+        .stat-item {
+            background: var(--bg-primary);
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .time-scale-indicator {
+            position: absolute;
+            top: -20px;
+            left: var(--label-width);
+            right: 0;
+            height: 20px;
+            display: flex;
+            align-items: flex-end;
+            pointer-events: none;
+        }
+
+        .hour-marker {
+            flex: 1;
+            text-align: center;
+            font-size: 9px;
+            color: var(--text-secondary);
+            border-left: 1px solid var(--border-color);
+            padding-bottom: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 8px;
+            }
+
+            :root {
+                --label-width: 60px;
+                --dot-size: 2px;
+                --circle-size: 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">Ultra-Dense ODCV Timeline • Week of Sept 1-7, 2025</div>
+            <div class="controls">
+                <div class="control-group">
+                    <label>View:</label>
+                    <button class="active" onclick="setView('week')">Week</button>
+                    <button onclick="setView('day')">Day</button>
+                    <button onclick="setView('month')">Month</button>
+                </div>
+                <div class="control-group">
+                    <label>Density:</label>
+                    <button onclick="setDensity('1min')">1min</button>
+                    <button class="active" onclick="setDensity('2min')">2min</button>
+                    <button onclick="setDensity('5min')">5min</button>
+                </div>
+                <div class="control-group">
+                    <label>Filter:</label>
+                    <button onclick="toggleFilter('violations')">Violations Only</button>
+                    <button onclick="toggleFilter('occupied')">Occupied Times</button>
+                </div>
+                <div class="control-group">
+                    <button onclick="navigateTime('prev')">← Previous</button>
+                    <button onclick="navigateTime('next')">Next →</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-visual">
+                    <div class="legend-dot" style="background: var(--occupied-color);"></div>
+                    <div class="legend-circle" style="border-color: var(--active-color);"></div>
+                </div>
+                <span>Occupied + Active</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-visual">
+                    <div class="legend-dot" style="background: var(--unoccupied-color);"></div>
+                    <div class="legend-circle" style="border-color: var(--standby-color);"></div>
+                </div>
+                <span>Unoccupied + Standby</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-visual">
+                    <div class="legend-dot" style="background: var(--occupied-color);"></div>
+                    <div class="legend-circle" style="border-color: var(--standby-color);"></div>
+                </div>
+                <span>Mismatch (Violation)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-visual">
+                    <div class="legend-dot" style="background: var(--missing-color);"></div>
+                    <div class="legend-circle" style="border-color: var(--missing-color);"></div>
+                </div>
+                <span>Missing Data</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-visual">
+                    <div class="legend-circle" style="border-color: var(--violation-color); box-shadow: 0 0 0 1px var(--violation-color);"></div>
+                </div>
+                <span>Timing Violation</span>
+            </div>
+        </div>
+
+        <div class="visualization-container">
+            <div id="zonesContainer"></div>
+        </div>
+
+        <div class="stats-panel">
+            <div class="stat-item">
+                <div class="stat-label">Total Data Points</div>
+                <div class="stat-value" id="statTotal">15,120</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Occupancy Rate</div>
+                <div class="stat-value" id="statOccupancy">28.4%</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Control Accuracy</div>
+                <div class="stat-value" id="statAccuracy">94.2%</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Violations</div>
+                <div class="stat-value" id="statViolations">876</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Missing Data</div>
+                <div class="stat-value" id="statMissing">3.1%</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Energy Efficiency</div>
+                <div class="stat-value" id="statEfficiency">87.3%</div>
+            </div>
+        </div>
+
+        <div class="tooltip" id="tooltip">
+            <div class="tooltip-time"></div>
+            <div class="tooltip-data"></div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const ZONES = ['BV200', 'BV201', 'BV202'];
+        const POINTS_PER_HOUR = 30; // 2-minute intervals by default
+        const HOURS_PER_ROW = 12; // 12 hours per row for laptop screens
+        const DAYS = 7;
+        const START_DATE = new Date('2025-09-01T00:00:00');
+
+        // Generate realistic sample data
+        function generateSampleData(zone, startTime, duration) {
+            const data = [];
+            const endTime = new Date(startTime.getTime() + duration * 60 * 60 * 1000);
+            let current = new Date(startTime);
+
+            while (current < endTime) {
+                const hour = current.getHours();
+                const day = current.getDay();
+                const isWeekend = day === 0 || day === 6;
+                const isBusinessHours = !isWeekend && hour >= 8 && hour < 18;
+
+                // Realistic occupancy patterns
+                let occupancyChance = 0.05; // Default low occupancy
+                if (isBusinessHours) {
+                    if (hour >= 9 && hour <= 11) occupancyChance = 0.75; // Morning peak
+                    else if (hour === 12) occupancyChance = 0.3; // Lunch dip
+                    else if (hour >= 13 && hour <= 16) occupancyChance = 0.65; // Afternoon
+                    else occupancyChance = 0.4; // Early/late hours
+                }
+
+                const isOccupied = Math.random() < occupancyChance;
+
+                // Control logic with realistic delays and violations
+                let controlState = isOccupied ? 'active' : 'standby';
+                const hasViolation = Math.random() < 0.06; // 6% violation rate
+
+                if (hasViolation) {
+                    controlState = isOccupied ? 'standby' : 'active'; // Mismatch
+                }
+
+                // Occasional missing data
+                const isMissing = Math.random() < 0.03; // 3% missing data
+
+                data.push({
+                    time: new Date(current),
+                    occupancy: isMissing ? 'missing' : (isOccupied ? 'occupied' : 'unoccupied'),
+                    control: isMissing ? 'missing' : controlState,
+                    violation: hasViolation && !isMissing
+                });
+
+                current = new Date(current.getTime() + 2 * 60 * 1000); // 2-minute intervals
+            }
+
+            return data;
+        }
+
+        // Create visualization
+        function createVisualization() {
+            const container = document.getElementById('zonesContainer');
+            container.innerHTML = '';
+
+            ZONES.forEach(zone => {
+                const zoneSection = document.createElement('div');
+                zoneSection.className = 'zone-section';
+
+                // Zone header
+                const header = document.createElement('div');
+                header.className = 'zone-header';
+                header.innerHTML = `
+                    <span>${zone}</span>
+                    <span class="zone-stats">Occupancy: 28.4% • Accuracy: 94.2%</span>
+                `;
+                zoneSection.appendChild(header);
+
+                // Timeline grid
+                const grid = document.createElement('div');
+                grid.className = 'timeline-grid';
+
+                // Generate data for entire week
+                const data = generateSampleData(zone, START_DATE, DAYS * 24);
+
+                // Create rows
+                const totalHours = DAYS * 24;
+                const rowCount = Math.ceil(totalHours / HOURS_PER_ROW);
+
+                for (let row = 0; row < rowCount; row++) {
+                    const rowElement = document.createElement('div');
+                    rowElement.className = 'timeline-row';
+
+                    // Row label
+                    const startHour = row * HOURS_PER_ROW;
+                    const rowDate = new Date(START_DATE.getTime() + startHour * 60 * 60 * 1000);
+                    const label = document.createElement('div');
+                    label.className = 'row-label';
+                    label.textContent = formatRowLabel(rowDate);
+                    rowElement.appendChild(label);
+
+                    // Data points container
+                    const pointsContainer = document.createElement('div');
+                    pointsContainer.className = 'data-points';
+
+                    // Add business hours background
+                    const businessHoursBg = createBusinessHoursBackground(rowDate, HOURS_PER_ROW);
+                    if (businessHoursBg) {
+                        pointsContainer.appendChild(businessHoursBg);
+                    }
+
+                    // Add data points for this row
+                    const startIdx = row * HOURS_PER_ROW * POINTS_PER_HOUR;
+                    const endIdx = Math.min(startIdx + HOURS_PER_ROW * POINTS_PER_HOUR, data.length);
+
+                    for (let i = startIdx; i < endIdx; i++) {
+                        const point = createDataPoint(data[i], zone);
+                        pointsContainer.appendChild(point);
+                    }
+
+                    rowElement.appendChild(pointsContainer);
+                    grid.appendChild(rowElement);
+                }
+
+                zoneSection.appendChild(grid);
+                container.appendChild(zoneSection);
+            });
+        }
+
+        function formatRowLabel(date) {
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const day = days[date.getDay()];
+            const hour = date.getHours();
+            const period = hour === 0 ? '12AM' : hour < 12 ? `${hour}AM` : hour === 12 ? '12PM' : `${hour - 12}PM`;
+            return `${day} ${period}`;
+        }
+
+        function createBusinessHoursBackground(startDate, hours) {
+            const day = startDate.getDay();
+            const startHour = startDate.getHours();
+
+            // Skip weekends
+            if (day === 0 || day === 6) return null;
+
+            const bg = document.createElement('div');
+            bg.className = 'business-hours-bg';
+
+            // Calculate business hours overlap
+            const businessStart = Math.max(0, 8 - startHour);
+            const businessEnd = Math.min(hours, 18 - startHour);
+
+            if (businessEnd > businessStart) {
+                const leftPercent = (businessStart / hours) * 100;
+                const widthPercent = ((businessEnd - businessStart) / hours) * 100;
+                bg.style.left = `${leftPercent}%`;
+                bg.style.width = `${widthPercent}%`;
+                return bg;
+            }
+
+            return null;
+        }
+
+        function createDataPoint(data, zone) {
+            const point = document.createElement('div');
+            point.className = 'data-point';
+
+            if (data.violation) {
+                point.classList.add('violation');
+            }
+
+            // Create dot (occupancy)
+            const dot = document.createElement('div');
+            dot.className = `data-dot ${data.occupancy}`;
+            point.appendChild(dot);
+
+            // Create circle (control)
+            const circle = document.createElement('div');
+            circle.className = `data-circle ${data.control}`;
+            point.appendChild(circle);
+
+            // Add hover interaction
+            point.addEventListener('mouseenter', (e) => showTooltip(e, data, zone));
+            point.addEventListener('mouseleave', hideTooltip);
+
+            return point;
+        }
+
+        function showTooltip(event, data, zone) {
+            const tooltip = document.getElementById('tooltip');
+            const timeStr = data.time.toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            tooltip.querySelector('.tooltip-time').textContent = timeStr;
+            tooltip.querySelector('.tooltip-data').innerHTML = `
+                Zone: ${zone}<br>
+                Occupancy: ${data.occupancy}<br>
+                Control: ${data.control}
+                ${data.violation ? '<br><span style="color: var(--violation-color)">⚠ Violation</span>' : ''}
+            `;
+
+            tooltip.classList.add('visible');
+
+            // Position tooltip
+            const rect = event.target.getBoundingClientRect();
+            tooltip.style.left = `${rect.left}px`;
+            tooltip.style.top = `${rect.bottom + 5}px`;
+        }
+
+        function hideTooltip() {
+            document.getElementById('tooltip').classList.remove('visible');
+        }
+
+        // Control functions
+        function setView(view) {
+            console.log('Setting view to:', view);
+            document.querySelectorAll('.control-group button').forEach(btn => {
+                if (btn.textContent.toLowerCase().includes(view)) {
+                    btn.classList.add('active');
+                } else if (btn.parentElement.querySelector('label')?.textContent === 'View:') {
+                    btn.classList.remove('active');
+                }
+            });
+            // Re-render with new view
+            createVisualization();
+        }
+
+        function setDensity(density) {
+            console.log('Setting density to:', density);
+            document.querySelectorAll('.control-group button').forEach(btn => {
+                if (btn.textContent === density) {
+                    btn.classList.add('active');
+                } else if (btn.parentElement.querySelector('label')?.textContent === 'Density:') {
+                    btn.classList.remove('active');
+                }
+            });
+            // Re-render with new density
+            createVisualization();
+        }
+
+        function toggleFilter(filter) {
+            console.log('Toggling filter:', filter);
+            // Implementation for filtering visualization
+        }
+
+        function navigateTime(direction) {
+            console.log('Navigating time:', direction);
+            // Implementation for time navigation
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', createVisualization);
+
+        // Handle window resize
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(createVisualization, 250);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ODCV Analytics - Multi-Metric Heatmap Dashboard</title>
+    <style>
+        :root {
+            --primary: #7c3aed;
+            --secondary: #2dd4bf;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #f43f5e;
+            --dark: #18181b;
+            --light: #fafafa;
+            --surface: #ffffff;
+            --border: #e4e4e7;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--light);
+            color: var(--dark);
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .header-subtitle {
+            opacity: 0.9;
+            font-size: 1rem;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .controls-bar {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .control-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #71717a;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .control-select {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.875rem;
+            background: var(--surface);
+            min-width: 150px;
+        }
+
+        .view-toggles {
+            display: flex;
+            gap: 0.5rem;
+            margin-left: auto;
+        }
+
+        .view-toggle {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            border-radius: 6px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .view-toggle.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .heatmap-container {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            overflow: auto;
+        }
+
+        .heatmap-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .heatmap-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .legend {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .legend-label {
+            font-size: 0.875rem;
+            color: #71717a;
+        }
+
+        .legend-scale {
+            display: flex;
+            height: 20px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .legend-segment {
+            width: 40px;
+        }
+
+        .heatmap-grid {
+            display: grid;
+            gap: 2px;
+            background: var(--border);
+            padding: 2px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .heatmap-row {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 2px;
+        }
+
+        .heatmap-label {
+            background: var(--surface);
+            padding: 0.75rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+        }
+
+        .heatmap-cells {
+            display: grid;
+            grid-auto-flow: column;
+            gap: 2px;
+        }
+
+        .heatmap-cell {
+            aspect-ratio: 1;
+            min-width: 20px;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .heatmap-cell:hover {
+            transform: scale(1.2);
+            z-index: 10;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .time-labels {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 2px;
+            margin-bottom: 0.5rem;
+        }
+
+        .time-labels-spacer {
+            /* Empty spacer */
+        }
+
+        .time-labels-container {
+            display: flex;
+            justify-content: space-between;
+            padding: 0 2px;
+        }
+
+        .time-label {
+            font-size: 0.75rem;
+            color: #71717a;
+            transform: rotate(-45deg);
+            transform-origin: center;
+        }
+
+        .occupancy-overlay {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .occupancy-chart {
+            height: 150px;
+            position: relative;
+            margin-top: 1rem;
+        }
+
+        .drill-down-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .drill-down-modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            background: var(--light);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .modal-close:hover {
+            background: var(--border);
+        }
+
+        .modal-body {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .detail-card {
+            background: var(--light);
+            border-radius: 8px;
+            padding: 1rem;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .detail-metric {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .detail-metric-label {
+            font-size: 0.75rem;
+            color: #71717a;
+            text-transform: uppercase;
+        }
+
+        .detail-metric-value {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border-radius: 8px;
+            padding: 1rem;
+            border: 1px solid var(--border);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #71717a;
+        }
+
+        .zone-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            padding: 0.25rem;
+            background: var(--light);
+            border-radius: 8px;
+        }
+
+        .zone-tab {
+            flex: 1;
+            padding: 0.75rem;
+            text-align: center;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: transparent;
+        }
+
+        .zone-tab.active {
+            background: var(--surface);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .tooltip {
+            position: absolute;
+            background: var(--dark);
+            color: white;
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 1000;
+            max-width: 250px;
+        }
+
+        .tooltip.visible {
+            opacity: 0.95;
+        }
+
+        .adequacy-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+
+        .adequacy-indicator.adequate { background: var(--success); }
+        .adequacy-indicator.marginal { background: var(--warning); }
+        .adequacy-indicator.inadequate { background: var(--danger); }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1 class="header-title">Multi-Metric Heatmap Analysis</h1>
+            <p class="header-subtitle">Calendar visualization of adequacy across all metrics and zones</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="controls-bar">
+            <div class="control-group">
+                <label class="control-label">View Period</label>
+                <select class="control-select" id="viewPeriod">
+                    <option value="day">Today</option>
+                    <option value="week" selected>This Week</option>
+                    <option value="month">September 2025</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label class="control-label">Metric Focus</label>
+                <select class="control-select" id="metricFocus">
+                    <option value="all">All Metrics</option>
+                    <option value="cfm">OA CFM</option>
+                    <option value="damper">Damper Position</option>
+                    <option value="temp">Temperature</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label class="control-label">Color Scheme</label>
+                <select class="control-select" id="colorScheme">
+                    <option value="adequacy">Adequacy</option>
+                    <option value="deviation">Deviation</option>
+                    <option value="occupancy">Occupancy Level</option>
+                </select>
+            </div>
+            <div class="view-toggles">
+                <button class="view-toggle active" data-view="heatmap">Heatmap</button>
+                <button class="view-toggle" data-view="calendar">Calendar</button>
+                <button class="view-toggle" data-view="matrix">Matrix</button>
+            </div>
+        </div>
+
+        <div class="summary-stats" id="summaryStats"></div>
+
+        <div class="zone-tabs" id="zoneTabs"></div>
+
+        <div class="occupancy-overlay">
+            <div class="heatmap-header">
+                <div class="heatmap-title">People Count Overlay</div>
+                <div class="legend">
+                    <span class="legend-label">Occupancy:</span>
+                    <span>Low</span>
+                    <div class="legend-scale">
+                        <div class="legend-segment" style="background: #dbeafe;"></div>
+                        <div class="legend-segment" style="background: #93c5fd;"></div>
+                        <div class="legend-segment" style="background: #3b82f6;"></div>
+                        <div class="legend-segment" style="background: #1e40af;"></div>
+                    </div>
+                    <span>High</span>
+                </div>
+            </div>
+            <div class="occupancy-chart">
+                <canvas id="occupancyCanvas"></canvas>
+            </div>
+        </div>
+
+        <div class="heatmap-container">
+            <div class="heatmap-header">
+                <div class="heatmap-title">Adequacy Heatmap</div>
+                <div class="legend">
+                    <span class="legend-label">Response:</span>
+                    <span class="adequacy-indicator inadequate"></span>Inadequate
+                    <span class="adequacy-indicator marginal"></span>Marginal
+                    <span class="adequacy-indicator adequate"></span>Adequate
+                </div>
+            </div>
+            <div id="heatmapContent"></div>
+        </div>
+    </div>
+
+    <div class="drill-down-modal" id="drillDownModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle">Detail View</div>
+                <button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+        </div>
+    </div>
+
+    <div class="tooltip" id="tooltip"></div>
+
+    <script>
+        class MultiMetricHeatmap {
+            constructor() {
+                this.zones = ['AHU-1', 'AHU-2', 'AHU-3'];
+                this.activeZone = 'AHU-1';
+                this.metrics = ['cfm', 'damper', 'temp'];
+                this.data = {};
+                this.init();
+            }
+
+            init() {
+                this.generateData();
+                this.render();
+                this.attachEventListeners();
+            }
+
+            generateData() {
+                const startDate = new Date('2025-09-01T00:00:00');
+                const endDate = new Date('2025-09-30T23:59:59');
+
+                this.zones.forEach(zone => {
+                    const maxPeople = { 'AHU-1': 50, 'AHU-2': 75, 'AHU-3': 30 }[zone];
+                    const zoneData = [];
+
+                    for (let date = new Date(startDate); date <= endDate; date.setHours(date.getHours() + 1)) {
+                        const hour = date.getHours();
+                        const dayOfWeek = date.getDay();
+                        const isBusinessHours = dayOfWeek !== 0 && dayOfWeek !== 6 && hour >= 8 && hour < 18;
+
+                        const peopleCount = isBusinessHours
+                            ? Math.floor(maxPeople * (0.5 + 0.4 * Math.sin((hour - 8) * Math.PI / 10)))
+                            : Math.floor(Math.random() * maxPeople * 0.1);
+
+                        const expected = {
+                            cfm: peopleCount * 20,
+                            damper: (peopleCount / maxPeople) * 100,
+                            temp: 72 - (peopleCount / maxPeople) * 2
+                        };
+
+                        const adequacyFactors = this.getAdequacyFactors(zone, hour);
+                        const actual = {
+                            cfm: expected.cfm * adequacyFactors.cfm + (Math.random() - 0.5) * 100,
+                            damper: Math.min(100, Math.max(0, expected.damper * adequacyFactors.damper + (Math.random() - 0.5) * 5)),
+                            temp: expected.temp + (1 - adequacyFactors.temp) * 2 + (Math.random() - 0.5)
+                        };
+
+                        const adequacy = {};
+                        this.metrics.forEach(metric => {
+                            const ratio = expected[metric] > 0 ? actual[metric] / expected[metric] : 1;
+                            if (ratio >= 0.8 && ratio <= 1.2) adequacy[metric] = 'adequate';
+                            else if (ratio >= 0.7 && ratio <= 1.3) adequacy[metric] = 'marginal';
+                            else adequacy[metric] = 'inadequate';
+                        });
+
+                        zoneData.push({
+                            timestamp: new Date(date),
+                            hour,
+                            dayOfWeek,
+                            isBusinessHours,
+                            peopleCount,
+                            expected,
+                            actual,
+                            adequacy,
+                            overallAdequacy: this.calculateOverallAdequacy(adequacy)
+                        });
+                    }
+
+                    this.data[zone] = zoneData;
+                });
+            }
+
+            getAdequacyFactors(zone, hour) {
+                if (zone === 'AHU-1') {
+                    return { cfm: 0.95, damper: 0.92, temp: 0.98 };
+                } else if (zone === 'AHU-2') {
+                    return hour >= 12 && hour < 14
+                        ? { cfm: 0.7, damper: 0.65, temp: 1.1 }
+                        : { cfm: 0.88, damper: 0.85, temp: 0.95 };
+                } else {
+                    return { cfm: 1.15, damper: 1.2, temp: 0.9 };
+                }
+            }
+
+            calculateOverallAdequacy(adequacy) {
+                const scores = { adequate: 1, marginal: 0.5, inadequate: 0 };
+                const totalScore = Object.values(adequacy).reduce((sum, level) => sum + scores[level], 0);
+                const avgScore = totalScore / Object.keys(adequacy).length;
+
+                if (avgScore >= 0.8) return 'adequate';
+                if (avgScore >= 0.4) return 'marginal';
+                return 'inadequate';
+            }
+
+            render() {
+                this.renderSummaryStats();
+                this.renderZoneTabs();
+                this.renderOccupancyChart();
+                this.renderHeatmap();
+            }
+
+            renderSummaryStats() {
+                const container = document.getElementById('summaryStats');
+                const stats = this.calculateStats();
+
+                container.innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-value" style="color: var(--success)">${stats.adequate.toFixed(1)}%</div>
+                        <div class="stat-label">Adequate Response</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" style="color: var(--primary)">${stats.avgOccupancy}</div>
+                        <div class="stat-label">Avg Occupancy</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" style="color: var(--secondary)">${stats.peakHour}</div>
+                        <div class="stat-label">Peak Hour</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" style="color: var(--warning)">${stats.energyWaste.toFixed(1)}%</div>
+                        <div class="stat-label">Overresponse Time</div>
+                    </div>
+                `;
+            }
+
+            renderZoneTabs() {
+                const container = document.getElementById('zoneTabs');
+                container.innerHTML = this.zones.map(zone => `
+                    <div class="zone-tab ${zone === this.activeZone ? 'active' : ''}" data-zone="${zone}">
+                        ${zone}
+                    </div>
+                `).join('');
+            }
+
+            renderOccupancyChart() {
+                const canvas = document.getElementById('occupancyCanvas');
+                const ctx = canvas.getContext('2d');
+                const rect = canvas.parentElement.getBoundingClientRect();
+                canvas.width = rect.width - 32;
+                canvas.height = 120;
+
+                const data = this.getFilteredData();
+                const maxPeople = Math.max(...data.map(d => d.peopleCount));
+
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // Draw gradient background
+                const gradient = ctx.createLinearGradient(0, canvas.height, 0, 0);
+                gradient.addColorStop(0, 'rgba(59, 130, 246, 0.05)');
+                gradient.addColorStop(1, 'rgba(59, 130, 246, 0.2)');
+
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.moveTo(0, canvas.height);
+
+                data.forEach((d, i) => {
+                    const x = (i / (data.length - 1)) * canvas.width;
+                    const y = canvas.height - (d.peopleCount / maxPeople) * canvas.height;
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                });
+
+                ctx.lineTo(canvas.width, canvas.height);
+                ctx.lineTo(0, canvas.height);
+                ctx.closePath();
+                ctx.fill();
+
+                // Draw line
+                ctx.strokeStyle = '#3b82f6';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+
+                data.forEach((d, i) => {
+                    const x = (i / (data.length - 1)) * canvas.width;
+                    const y = canvas.height - (d.peopleCount / maxPeople) * canvas.height;
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                });
+
+                ctx.stroke();
+            }
+
+            renderHeatmap() {
+                const container = document.getElementById('heatmapContent');
+                const viewPeriod = document.getElementById('viewPeriod').value;
+                const metricFocus = document.getElementById('metricFocus').value;
+                const colorScheme = document.getElementById('colorScheme').value;
+
+                if (viewPeriod === 'month') {
+                    this.renderMonthView(container, metricFocus, colorScheme);
+                } else if (viewPeriod === 'week') {
+                    this.renderWeekView(container, metricFocus, colorScheme);
+                } else {
+                    this.renderDayView(container, metricFocus, colorScheme);
+                }
+            }
+
+            renderMonthView(container, metricFocus, colorScheme) {
+                const data = this.data[this.activeZone];
+                const weeks = this.groupByWeek(data);
+
+                const html = `
+                    <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;">
+                        ${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day =>
+                            `<div style="text-align: center; font-size: 0.75rem; color: #71717a; padding: 0.5rem;">${day}</div>`
+                        ).join('')}
+                        ${this.generateMonthCells(data, metricFocus, colorScheme)}
+                    </div>
+                `;
+
+                container.innerHTML = html;
+            }
+
+            renderWeekView(container, metricFocus, colorScheme) {
+                const data = this.getFilteredData();
+                const metricsToShow = metricFocus === 'all' ? this.metrics : [metricFocus];
+
+                const timeLabels = [];
+                for (let i = 0; i < 24; i += 3) {
+                    timeLabels.push(`${i}:00`);
+                }
+
+                const html = `
+                    <div class="time-labels">
+                        <div class="time-labels-spacer"></div>
+                        <div class="time-labels-container">
+                            ${timeLabels.map(label => `<span class="time-label">${label}</span>`).join('')}
+                        </div>
+                    </div>
+                    <div class="heatmap-grid">
+                        ${metricsToShow.map(metric => this.generateMetricRow(metric, data, colorScheme)).join('')}
+                    </div>
+                `;
+
+                container.innerHTML = html;
+            }
+
+            renderDayView(container, metricFocus, colorScheme) {
+                const data = this.getFilteredData().slice(-24); // Last 24 hours
+                const metricsToShow = metricFocus === 'all' ? this.metrics : [metricFocus];
+
+                const html = `
+                    <div class="heatmap-grid">
+                        ${metricsToShow.map(metric => this.generateMetricRow(metric, data, colorScheme)).join('')}
+                    </div>
+                `;
+
+                container.innerHTML = html;
+            }
+
+            generateMonthCells(data, metricFocus, colorScheme) {
+                const firstDay = new Date('2025-09-01').getDay();
+                const cells = [];
+
+                // Add empty cells for days before month starts
+                for (let i = 0; i < firstDay; i++) {
+                    cells.push(`<div></div>`);
+                }
+
+                // Group data by day
+                const dayData = {};
+                data.forEach(d => {
+                    const day = d.timestamp.getDate();
+                    if (!dayData[day]) dayData[day] = [];
+                    dayData[day].push(d);
+                });
+
+                // Generate cells for each day
+                for (let day = 1; day <= 30; day++) {
+                    const dayPoints = dayData[day] || [];
+                    const adequacy = this.calculateDayAdequacy(dayPoints, metricFocus);
+                    const color = this.getHeatmapColor(adequacy, colorScheme);
+
+                    cells.push(`
+                        <div class="heatmap-cell"
+                             style="background: ${color}; padding: 0.5rem; border-radius: 4px; min-height: 60px; cursor: pointer;"
+                             data-day="${day}"
+                             onclick="showDayDetail(${day})">
+                            <div style="font-size: 0.875rem; font-weight: 600;">${day}</div>
+                            <div style="font-size: 0.625rem; margin-top: 0.25rem;">${adequacy}%</div>
+                        </div>
+                    `);
+                }
+
+                return cells.join('');
+            }
+
+            generateMetricRow(metric, data, colorScheme) {
+                const metricLabels = {
+                    cfm: 'OA CFM',
+                    damper: 'Damper %',
+                    temp: 'Temperature'
+                };
+
+                const cells = data.map((d, i) => {
+                    const color = this.getCellColor(d, metric, colorScheme);
+                    return `
+                        <div class="heatmap-cell"
+                             style="background: ${color};"
+                             data-index="${i}"
+                             data-metric="${metric}"
+                             onmouseover="showTooltip(event, ${i}, '${metric}')"
+                             onmouseout="hideTooltip()"
+                             onclick="showDetail(${i}, '${metric}')">
+                        </div>
+                    `;
+                }).join('');
+
+                return `
+                    <div class="heatmap-row">
+                        <div class="heatmap-label">${metricLabels[metric]}</div>
+                        <div class="heatmap-cells" style="grid-template-columns: repeat(${data.length}, 1fr);">
+                            ${cells}
+                        </div>
+                    </div>
+                `;
+            }
+
+            getCellColor(dataPoint, metric, colorScheme) {
+                if (colorScheme === 'adequacy') {
+                    const adequacy = dataPoint.adequacy[metric];
+                    if (adequacy === 'adequate') return '#10b981';
+                    if (adequacy === 'marginal') return '#f59e0b';
+                    return '#f43f5e';
+                } else if (colorScheme === 'deviation') {
+                    const ratio = dataPoint.expected[metric] > 0
+                        ? dataPoint.actual[metric] / dataPoint.expected[metric]
+                        : 1;
+                    const deviation = (ratio - 1) * 100;
+
+                    if (Math.abs(deviation) <= 10) return '#10b981';
+                    if (Math.abs(deviation) <= 20) return '#84cc16';
+                    if (Math.abs(deviation) <= 30) return '#f59e0b';
+                    return '#f43f5e';
+                } else {
+                    // Occupancy level
+                    const maxPeople = { 'AHU-1': 50, 'AHU-2': 75, 'AHU-3': 30 }[this.activeZone];
+                    const occupancyPercent = dataPoint.peopleCount / maxPeople;
+
+                    if (occupancyPercent < 0.25) return '#dbeafe';
+                    if (occupancyPercent < 0.5) return '#93c5fd';
+                    if (occupancyPercent < 0.75) return '#3b82f6';
+                    return '#1e40af';
+                }
+            }
+
+            getHeatmapColor(adequacyPercent, colorScheme) {
+                if (colorScheme === 'adequacy') {
+                    if (adequacyPercent >= 80) return '#10b981';
+                    if (adequacyPercent >= 60) return '#f59e0b';
+                    return '#f43f5e';
+                }
+                return `hsl(${adequacyPercent * 1.2}, 70%, 50%)`;
+            }
+
+            calculateDayAdequacy(dayPoints, metricFocus) {
+                if (dayPoints.length === 0) return 0;
+
+                const businessHoursPoints = dayPoints.filter(d => d.isBusinessHours);
+                if (businessHoursPoints.length === 0) return 100;
+
+                let adequateCount = 0;
+                let totalCount = 0;
+
+                businessHoursPoints.forEach(d => {
+                    if (metricFocus === 'all') {
+                        this.metrics.forEach(metric => {
+                            if (d.adequacy[metric] === 'adequate') adequateCount++;
+                            totalCount++;
+                        });
+                    } else {
+                        if (d.adequacy[metricFocus] === 'adequate') adequateCount++;
+                        totalCount++;
+                    }
+                });
+
+                return totalCount > 0 ? Math.round((adequateCount / totalCount) * 100) : 0;
+            }
+
+            groupByWeek(data) {
+                const weeks = {};
+                data.forEach(d => {
+                    const week = Math.floor(d.timestamp.getDate() / 7);
+                    if (!weeks[week]) weeks[week] = [];
+                    weeks[week].push(d);
+                });
+                return weeks;
+            }
+
+            getFilteredData() {
+                const viewPeriod = document.getElementById('viewPeriod').value;
+                let data = this.data[this.activeZone];
+
+                if (viewPeriod === 'day') {
+                    return data.slice(-24);
+                } else if (viewPeriod === 'week') {
+                    return data.slice(-168);
+                }
+                return data;
+            }
+
+            calculateStats() {
+                const data = this.data[this.activeZone];
+                const businessHoursData = data.filter(d => d.isBusinessHours);
+
+                let adequateCount = 0;
+                let totalCount = 0;
+                let overresponseCount = 0;
+
+                businessHoursData.forEach(d => {
+                    this.metrics.forEach(metric => {
+                        if (d.adequacy[metric] === 'adequate') adequateCount++;
+                        if (d.expected[metric] > 0) {
+                            const ratio = d.actual[metric] / d.expected[metric];
+                            if (ratio > 1.2) overresponseCount++;
+                        }
+                        totalCount++;
+                    });
+                });
+
+                const occupancies = businessHoursData.map(d => d.peopleCount);
+                const avgOccupancy = Math.round(occupancies.reduce((a, b) => a + b, 0) / occupancies.length);
+
+                const peakHour = businessHoursData.reduce((max, d) =>
+                    d.peopleCount > max.count ? { hour: d.hour, count: d.peopleCount } : max,
+                    { hour: 0, count: 0 }
+                ).hour;
+
+                return {
+                    adequate: (adequateCount / totalCount) * 100,
+                    avgOccupancy,
+                    peakHour: `${peakHour}:00`,
+                    energyWaste: (overresponseCount / totalCount) * 100
+                };
+            }
+
+            attachEventListeners() {
+                // Zone selection
+                document.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('zone-tab')) {
+                        this.activeZone = e.target.dataset.zone;
+                        this.render();
+                    }
+
+                    if (e.target.classList.contains('view-toggle')) {
+                        document.querySelectorAll('.view-toggle').forEach(btn => {
+                            btn.classList.remove('active');
+                        });
+                        e.target.classList.add('active');
+                        // View toggle logic would go here
+                        this.render();
+                    }
+                });
+
+                // Control changes
+                ['viewPeriod', 'metricFocus', 'colorScheme'].forEach(id => {
+                    document.getElementById(id).addEventListener('change', () => this.render());
+                });
+            }
+
+            showDetail(index, metric) {
+                const data = this.getFilteredData()[index];
+                const modal = document.getElementById('drillDownModal');
+                const modalTitle = document.getElementById('modalTitle');
+                const modalBody = document.getElementById('modalBody');
+
+                modalTitle.textContent = `${data.timestamp.toLocaleString()} - ${metric.toUpperCase()}`;
+
+                modalBody.innerHTML = `
+                    <div class="detail-card">
+                        <div class="detail-metric">
+                            <div class="detail-metric-label">People Count</div>
+                            <div class="detail-metric-value">${data.peopleCount}</div>
+                        </div>
+                        <div class="detail-metric">
+                            <div class="detail-metric-label">Expected ${metric.toUpperCase()}</div>
+                            <div class="detail-metric-value">${this.formatValue(data.expected[metric], metric)}</div>
+                        </div>
+                        <div class="detail-metric">
+                            <div class="detail-metric-label">Actual ${metric.toUpperCase()}</div>
+                            <div class="detail-metric-value">${this.formatValue(data.actual[metric], metric)}</div>
+                        </div>
+                        <div class="detail-metric">
+                            <div class="detail-metric-label">Adequacy</div>
+                            <div class="detail-metric-value">
+                                <span class="adequacy-indicator ${data.adequacy[metric]}"></span>
+                                ${data.adequacy[metric]}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="detail-card">
+                        ${this.metrics.map(m => `
+                            <div class="detail-metric">
+                                <div class="detail-metric-label">${m.toUpperCase()} Status</div>
+                                <div class="detail-metric-value">
+                                    <span class="adequacy-indicator ${data.adequacy[m]}"></span>
+                                    ${data.adequacy[m]}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+
+                modal.classList.add('active');
+            }
+
+            formatValue(value, metric) {
+                if (metric === 'cfm') return `${Math.round(value)} CFM`;
+                if (metric === 'damper') return `${value.toFixed(1)}%`;
+                if (metric === 'temp') return `${value.toFixed(1)}°F`;
+                return value.toFixed(1);
+            }
+        }
+
+        // Global functions for event handlers
+        let dashboard;
+
+        function showTooltip(event, index, metric) {
+            const data = dashboard.getFilteredData()[index];
+            const tooltip = document.getElementById('tooltip');
+
+            tooltip.innerHTML = `
+                <div><strong>${data.timestamp.toLocaleTimeString()}</strong></div>
+                <div>People: ${data.peopleCount}</div>
+                <div>${metric.toUpperCase()}: ${dashboard.formatValue(data.actual[metric], metric)}</div>
+                <div>Expected: ${dashboard.formatValue(data.expected[metric], metric)}</div>
+                <div>Status: ${data.adequacy[metric]}</div>
+            `;
+
+            tooltip.style.left = event.pageX + 10 + 'px';
+            tooltip.style.top = event.pageY - 50 + 'px';
+            tooltip.classList.add('visible');
+        }
+
+        function hideTooltip() {
+            document.getElementById('tooltip').classList.remove('visible');
+        }
+
+        function showDetail(index, metric) {
+            dashboard.showDetail(index, metric);
+        }
+
+        function showDayDetail(day) {
+            const data = dashboard.data[dashboard.activeZone].filter(d =>
+                d.timestamp.getDate() === day
+            );
+
+            const modal = document.getElementById('drillDownModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+
+            modalTitle.textContent = `September ${day}, 2025 - Daily Summary`;
+
+            const businessHoursData = data.filter(d => d.isBusinessHours);
+            const stats = {
+                peakOccupancy: Math.max(...data.map(d => d.peopleCount)),
+                avgOccupancy: Math.round(data.reduce((sum, d) => sum + d.peopleCount, 0) / data.length),
+                adequateHours: businessHoursData.filter(d => d.overallAdequacy === 'adequate').length
+            };
+
+            modalBody.innerHTML = `
+                <div class="detail-card">
+                    <div class="detail-metric">
+                        <div class="detail-metric-label">Peak Occupancy</div>
+                        <div class="detail-metric-value">${stats.peakOccupancy} people</div>
+                    </div>
+                    <div class="detail-metric">
+                        <div class="detail-metric-label">Average Occupancy</div>
+                        <div class="detail-metric-value">${stats.avgOccupancy} people</div>
+                    </div>
+                    <div class="detail-metric">
+                        <div class="detail-metric-label">Adequate Hours</div>
+                        <div class="detail-metric-value">${stats.adequateHours} / ${businessHoursData.length}</div>
+                    </div>
+                    <div class="detail-metric">
+                        <div class="detail-metric-label">Adequacy Rate</div>
+                        <div class="detail-metric-value">${((stats.adequateHours / businessHoursData.length) * 100).toFixed(1)}%</div>
+                    </div>
+                </div>
+            `;
+
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('drillDownModal').classList.remove('active');
+        }
+
+        // Initialize application
+        document.addEventListener('DOMContentLoaded', () => {
+            dashboard = new MultiMetricHeatmap();
+        });
+    </script>
+</body>
+</html>

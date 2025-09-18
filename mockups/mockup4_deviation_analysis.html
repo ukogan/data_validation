@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ODCV Analytics - Deviation Analysis Interface</title>
+    <style>
+        :root {
+            --primary: #0ea5e9;
+            --secondary: #6366f1;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #0f172a;
+            --light: #f8fafc;
+            --surface: #ffffff;
+            --border: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--light);
+            color: var(--dark);
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .sidebar-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            color: var(--dark);
+        }
+
+        .sidebar-section {
+            margin-bottom: 2rem;
+        }
+
+        .sidebar-section-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+        }
+
+        .filter-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .filter-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .filter-select,
+        .filter-input {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.875rem;
+            background: var(--surface);
+        }
+
+        .filter-checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filter-checkbox input {
+            width: 16px;
+            height: 16px;
+        }
+
+        .filter-checkbox label {
+            font-size: 0.875rem;
+            color: var(--dark);
+        }
+
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+        }
+
+        .header {
+            margin-bottom: 2rem;
+        }
+
+        .header-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-subtitle {
+            color: #64748b;
+            font-size: 1rem;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-card {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .summary-card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+        }
+
+        .summary-card-icon.success {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--success);
+        }
+
+        .summary-card-icon.warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .summary-card-icon.danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .summary-card-icon.primary {
+            background: rgba(14, 165, 233, 0.1);
+            color: var(--primary);
+        }
+
+        .summary-card-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-card-label {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .analysis-panel {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .panel-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .panel-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .panel-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            border-radius: 6px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .panel-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .panel-btn:hover:not(.active) {
+            background: var(--light);
+        }
+
+        .scatter-plot {
+            position: relative;
+            height: 400px;
+            background: linear-gradient(to bottom, #fafbfc, #ffffff);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .deviation-chart {
+            height: 300px;
+            position: relative;
+            background: var(--light);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .zone-selector {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: var(--surface);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .zone-chip {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            border: 2px solid var(--border);
+            background: var(--surface);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .zone-chip.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .zone-chip:hover:not(.active) {
+            background: var(--light);
+        }
+
+        .deviation-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .deviation-table th {
+            background: var(--light);
+            padding: 0.75rem;
+            text-align: left;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .deviation-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.875rem;
+        }
+
+        .deviation-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .deviation-badge.positive {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .deviation-badge.negative {
+            background: rgba(14, 165, 233, 0.1);
+            color: var(--primary);
+        }
+
+        .deviation-badge.neutral {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--success);
+        }
+
+        .target-zone {
+            background: rgba(34, 197, 94, 0.05);
+            border: 2px dashed var(--success);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            text-align: center;
+        }
+
+        .target-zone-label {
+            font-size: 0.875rem;
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .metric-selector-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            padding: 0.25rem;
+            background: var(--light);
+            border-radius: 8px;
+        }
+
+        .metric-tab {
+            flex: 1;
+            padding: 0.5rem;
+            text-align: center;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: transparent;
+        }
+
+        .metric-tab.active {
+            background: var(--surface);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .tooltip {
+            position: absolute;
+            background: var(--dark);
+            color: white;
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 1000;
+            max-width: 200px;
+        }
+
+        .tooltip.visible {
+            opacity: 0.95;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--border);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="sidebar-title">Deviation Analysis</div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Time Range</div>
+                <div class="filter-group">
+                    <div class="filter-label">Period</div>
+                    <select class="filter-select" id="timePeriod">
+                        <option value="hour">Last Hour</option>
+                        <option value="day" selected>Last 24 Hours</option>
+                        <option value="week">Last Week</option>
+                        <option value="month">September 2025</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <div class="filter-label">Resolution</div>
+                    <select class="filter-select" id="resolution">
+                        <option value="5min">5 Minutes</option>
+                        <option value="15min" selected>15 Minutes</option>
+                        <option value="hour">Hourly</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Metrics</div>
+                <div class="filter-checkbox-group">
+                    <div class="filter-checkbox">
+                        <input type="checkbox" id="metric-cfm" checked>
+                        <label for="metric-cfm">OA CFM</label>
+                    </div>
+                    <div class="filter-checkbox">
+                        <input type="checkbox" id="metric-damper" checked>
+                        <label for="metric-damper">Damper Position</label>
+                    </div>
+                    <div class="filter-checkbox">
+                        <input type="checkbox" id="metric-temp" checked>
+                        <label for="metric-temp">Temperature</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Tolerance</div>
+                <div class="filter-group">
+                    <div class="filter-label">Target Zone</div>
+                    <select class="filter-select" id="tolerance">
+                        <option value="10">±10% (Strict)</option>
+                        <option value="20" selected>±20% (Normal)</option>
+                        <option value="30">±30% (Relaxed)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Display Options</div>
+                <div class="filter-checkbox-group">
+                    <div class="filter-checkbox">
+                        <input type="checkbox" id="showOutliers" checked>
+                        <label for="showOutliers">Show Outliers</label>
+                    </div>
+                    <div class="filter-checkbox">
+                        <input type="checkbox" id="showTrends" checked>
+                        <label for="showTrends">Show Trends</label>
+                    </div>
+                    <div class="filter-checkbox">
+                        <input type="checkbox" id="businessHours" checked>
+                        <label for="businessHours">Business Hours Only</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="header">
+                <h1 class="header-title">Deviation Analysis Dashboard</h1>
+                <p class="header-subtitle">Actual vs Expected Performance Analysis with Tolerance Zones</p>
+            </div>
+
+            <div class="summary-cards" id="summaryCards"></div>
+
+            <div class="zone-selector" id="zoneSelector"></div>
+
+            <div class="analysis-grid">
+                <div class="analysis-panel">
+                    <div class="panel-header">
+                        <div class="panel-title">Actual vs Expected Scatter Plot</div>
+                        <div class="panel-controls">
+                            <button class="panel-btn active" data-view="scatter">Scatter</button>
+                            <button class="panel-btn" data-view="density">Density</button>
+                        </div>
+                    </div>
+                    <div class="metric-selector-tabs" id="metricTabs"></div>
+                    <div class="scatter-plot" id="scatterPlot">
+                        <canvas id="scatterCanvas"></canvas>
+                    </div>
+                </div>
+
+                <div class="analysis-panel">
+                    <div class="panel-header">
+                        <div class="panel-title">Deviation Trends</div>
+                        <div class="panel-controls">
+                            <button class="panel-btn active" data-trend="percent">Percentage</button>
+                            <button class="panel-btn" data-trend="absolute">Absolute</button>
+                        </div>
+                    </div>
+                    <div class="deviation-chart" id="deviationChart">
+                        <canvas id="deviationCanvas"></canvas>
+                    </div>
+                    <div class="target-zone">
+                        <div class="target-zone-label">Target Zone: ±20% (0.8-1.2x Expected)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="analysis-panel">
+                <div class="panel-header">
+                    <div class="panel-title">Statistical Adequacy Summary</div>
+                    <div class="panel-controls">
+                        <button class="panel-btn" id="exportData">Export CSV</button>
+                    </div>
+                </div>
+                <table class="deviation-table" id="deviationTable"></table>
+            </div>
+        </div>
+    </div>
+
+    <div class="tooltip" id="tooltip"></div>
+
+    <script>
+        class DeviationAnalysis {
+            constructor() {
+                this.zones = ['AHU-1', 'AHU-2', 'AHU-3'];
+                this.activeZone = 'AHU-1';
+                this.activeMetric = 'cfm';
+                this.metrics = ['cfm', 'damper', 'temp'];
+                this.data = {};
+                this.init();
+            }
+
+            init() {
+                this.generateData();
+                this.render();
+                this.attachEventListeners();
+            }
+
+            generateData() {
+                this.zones.forEach(zone => {
+                    const maxPeople = { 'AHU-1': 50, 'AHU-2': 75, 'AHU-3': 30 }[zone];
+                    const data = [];
+
+                    // Generate 96 data points (24 hours at 15-min intervals)
+                    for (let i = 0; i < 96; i++) {
+                        const timestamp = new Date(Date.now() - (96 - i) * 15 * 60 * 1000);
+                        const hour = timestamp.getHours();
+                        const isBusinessHours = hour >= 8 && hour < 18;
+
+                        const peopleCount = isBusinessHours
+                            ? Math.floor(maxPeople * (0.5 + 0.4 * Math.sin((hour - 8) * Math.PI / 10)) + (Math.random() - 0.5) * 10)
+                            : Math.floor(Math.random() * maxPeople * 0.1);
+
+                        const expected = {
+                            cfm: peopleCount * 20,
+                            damper: (peopleCount / maxPeople) * 100,
+                            temp: 72 - (peopleCount / maxPeople) * 2
+                        };
+
+                        const adequacyFactor = this.getAdequacyFactor(zone, hour);
+                        const actual = {
+                            cfm: expected.cfm * adequacyFactor.cfm + (Math.random() - 0.5) * 200,
+                            damper: Math.min(100, Math.max(0, expected.damper * adequacyFactor.damper + (Math.random() - 0.5) * 10)),
+                            temp: expected.temp + (1 - adequacyFactor.temp) * 2 + (Math.random() - 0.5)
+                        };
+
+                        const deviations = {};
+                        this.metrics.forEach(metric => {
+                            deviations[metric] = expected[metric] ? ((actual[metric] - expected[metric]) / expected[metric]) * 100 : 0;
+                        });
+
+                        data.push({
+                            timestamp,
+                            hour,
+                            isBusinessHours,
+                            peopleCount,
+                            expected,
+                            actual,
+                            deviations
+                        });
+                    }
+
+                    this.data[zone] = data;
+                });
+            }
+
+            getAdequacyFactor(zone, hour) {
+                const factors = {
+                    'AHU-1': { cfm: 0.95, damper: 0.92, temp: 0.98 },
+                    'AHU-2': hour >= 12 && hour < 14
+                        ? { cfm: 0.7, damper: 0.65, temp: 1.1 }
+                        : { cfm: 0.88, damper: 0.85, temp: 0.95 },
+                    'AHU-3': { cfm: 1.15, damper: 1.2, temp: 0.9 }
+                };
+                return factors[zone];
+            }
+
+            render() {
+                this.renderSummaryCards();
+                this.renderZoneSelector();
+                this.renderMetricTabs();
+                this.renderScatterPlot();
+                this.renderDeviationChart();
+                this.renderDeviationTable();
+            }
+
+            renderSummaryCards() {
+                const container = document.getElementById('summaryCards');
+                const stats = this.calculateOverallStats();
+
+                container.innerHTML = `
+                    <div class="summary-card">
+                        <div class="summary-card-icon success">✓</div>
+                        <div class="summary-card-value">${stats.adequate.toFixed(1)}%</div>
+                        <div class="summary-card-label">Within Tolerance</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-card-icon warning">!</div>
+                        <div class="summary-card-value">${stats.marginal.toFixed(1)}%</div>
+                        <div class="summary-card-label">Marginal Performance</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-card-icon danger">✕</div>
+                        <div class="summary-card-value">${stats.inadequate.toFixed(1)}%</div>
+                        <div class="summary-card-label">Out of Tolerance</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-card-icon primary">↔</div>
+                        <div class="summary-card-value">${stats.avgDeviation.toFixed(1)}%</div>
+                        <div class="summary-card-label">Average Deviation</div>
+                    </div>
+                `;
+            }
+
+            renderZoneSelector() {
+                const container = document.getElementById('zoneSelector');
+                container.innerHTML = this.zones.map(zone => `
+                    <div class="zone-chip ${zone === this.activeZone ? 'active' : ''}" data-zone="${zone}">
+                        ${zone}
+                    </div>
+                `).join('');
+            }
+
+            renderMetricTabs() {
+                const container = document.getElementById('metricTabs');
+                const metricLabels = {
+                    cfm: 'OA CFM',
+                    damper: 'Damper %',
+                    temp: 'Temperature'
+                };
+
+                container.innerHTML = this.metrics.map(metric => `
+                    <div class="metric-tab ${metric === this.activeMetric ? 'active' : ''}" data-metric="${metric}">
+                        ${metricLabels[metric]}
+                    </div>
+                `).join('');
+            }
+
+            renderScatterPlot() {
+                const canvas = document.getElementById('scatterCanvas');
+                const ctx = canvas.getContext('2d');
+                const rect = canvas.parentElement.getBoundingClientRect();
+                canvas.width = rect.width - 32;
+                canvas.height = rect.height - 32;
+
+                const data = this.getFilteredData();
+                const tolerance = parseInt(document.getElementById('tolerance').value);
+
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // Calculate bounds
+                const values = data.flatMap(d => [d.expected[this.activeMetric], d.actual[this.activeMetric]]);
+                const maxValue = Math.max(...values) * 1.1;
+
+                const padding = 40;
+                const plotWidth = canvas.width - padding * 2;
+                const plotHeight = canvas.height - padding * 2;
+
+                // Draw grid
+                ctx.strokeStyle = '#e2e8f0';
+                ctx.lineWidth = 0.5;
+                for (let i = 0; i <= 10; i++) {
+                    const x = padding + (plotWidth * i / 10);
+                    const y = padding + (plotHeight * i / 10);
+
+                    ctx.beginPath();
+                    ctx.moveTo(x, padding);
+                    ctx.lineTo(x, canvas.height - padding);
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.moveTo(padding, y);
+                    ctx.lineTo(canvas.width - padding, y);
+                    ctx.stroke();
+                }
+
+                // Draw tolerance zone
+                ctx.fillStyle = 'rgba(34, 197, 94, 0.1)';
+                ctx.beginPath();
+                ctx.moveTo(padding, canvas.height - padding);
+                ctx.lineTo(canvas.width - padding, padding + plotHeight * (1 - 1.2));
+                ctx.lineTo(canvas.width - padding, padding + plotHeight * (1 - 0.8));
+                ctx.lineTo(padding, canvas.height - padding);
+                ctx.closePath();
+                ctx.fill();
+
+                // Draw perfect correlation line
+                ctx.strokeStyle = '#94a3b8';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(padding, canvas.height - padding);
+                ctx.lineTo(canvas.width - padding, padding);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // Draw data points
+                data.forEach(d => {
+                    const x = padding + (d.expected[this.activeMetric] / maxValue) * plotWidth;
+                    const y = canvas.height - padding - (d.actual[this.activeMetric] / maxValue) * plotHeight;
+
+                    const ratio = d.actual[this.activeMetric] / d.expected[this.activeMetric];
+                    let color;
+                    if (ratio >= (100 - tolerance) / 100 && ratio <= (100 + tolerance) / 100) {
+                        color = '#22c55e';
+                    } else if (ratio >= 0.7 && ratio <= 1.3) {
+                        color = '#f59e0b';
+                    } else {
+                        color = '#ef4444';
+                    }
+
+                    ctx.fillStyle = color;
+                    ctx.globalAlpha = 0.6;
+                    ctx.beginPath();
+                    ctx.arc(x, y, d.isBusinessHours ? 5 : 3, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                });
+
+                // Draw axes labels
+                ctx.fillStyle = '#64748b';
+                ctx.font = '12px Inter';
+                ctx.textAlign = 'center';
+                ctx.fillText('Expected ' + this.getMetricLabel(this.activeMetric), canvas.width / 2, canvas.height - 10);
+
+                ctx.save();
+                ctx.translate(12, canvas.height / 2);
+                ctx.rotate(-Math.PI / 2);
+                ctx.fillText('Actual ' + this.getMetricLabel(this.activeMetric), 0, 0);
+                ctx.restore();
+            }
+
+            renderDeviationChart() {
+                const canvas = document.getElementById('deviationCanvas');
+                const ctx = canvas.getContext('2d');
+                const rect = canvas.parentElement.getBoundingClientRect();
+                canvas.width = rect.width - 32;
+                canvas.height = rect.height - 32;
+
+                const data = this.getFilteredData();
+                const tolerance = parseInt(document.getElementById('tolerance').value);
+
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                const padding = 40;
+                const plotWidth = canvas.width - padding * 2;
+                const plotHeight = canvas.height - padding * 2;
+
+                // Draw tolerance bands
+                ctx.fillStyle = 'rgba(34, 197, 94, 0.1)';
+                ctx.fillRect(padding, padding + plotHeight * (50 - tolerance) / 100, plotWidth, plotHeight * tolerance * 2 / 100);
+
+                // Draw zero line
+                ctx.strokeStyle = '#64748b';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(padding, padding + plotHeight / 2);
+                ctx.lineTo(canvas.width - padding, padding + plotHeight / 2);
+                ctx.stroke();
+
+                // Draw deviation line
+                this.metrics.forEach((metric, metricIndex) => {
+                    if (!document.getElementById(`metric-${metric}`).checked) return;
+
+                    const color = ['#0ea5e9', '#6366f1', '#f59e0b'][metricIndex];
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+
+                    data.forEach((d, i) => {
+                        const x = padding + (i / (data.length - 1)) * plotWidth;
+                        const deviation = d.deviations[metric];
+                        const y = padding + plotHeight / 2 - (deviation / 100) * plotHeight / 2;
+
+                        if (i === 0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    });
+
+                    ctx.stroke();
+                });
+
+                // Draw grid and labels
+                ctx.strokeStyle = '#e2e8f0';
+                ctx.lineWidth = 0.5;
+                ctx.fillStyle = '#64748b';
+                ctx.font = '10px Inter';
+                ctx.textAlign = 'right';
+
+                for (let i = -2; i <= 2; i++) {
+                    const y = padding + plotHeight / 2 - (i * 0.25) * plotHeight;
+                    ctx.beginPath();
+                    ctx.moveTo(padding, y);
+                    ctx.lineTo(canvas.width - padding, y);
+                    ctx.stroke();
+
+                    ctx.fillText(`${i * 25}%`, padding - 5, y + 3);
+                }
+            }
+
+            renderDeviationTable() {
+                const container = document.getElementById('deviationTable');
+                const data = this.getFilteredData();
+                const stats = this.calculateMetricStats(data);
+
+                const headers = `
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Avg Deviation</th>
+                            <th>Max Positive</th>
+                            <th>Max Negative</th>
+                            <th>Std Dev</th>
+                            <th>Adequacy</th>
+                        </tr>
+                    </thead>
+                `;
+
+                const rows = this.metrics.map(metric => {
+                    const metricStats = stats[metric];
+                    const adequacy = this.getAdequacyFromDeviation(metricStats.avgDeviation);
+
+                    return `
+                        <tr>
+                            <td><strong>${this.getMetricLabel(metric)}</strong></td>
+                            <td>
+                                <span class="deviation-badge ${metricStats.avgDeviation > 0 ? 'positive' : metricStats.avgDeviation < 0 ? 'negative' : 'neutral'}">
+                                    ${metricStats.avgDeviation > 0 ? '+' : ''}${metricStats.avgDeviation.toFixed(1)}%
+                                </span>
+                            </td>
+                            <td>+${metricStats.maxPositive.toFixed(1)}%</td>
+                            <td>${metricStats.maxNegative.toFixed(1)}%</td>
+                            <td>${metricStats.stdDev.toFixed(1)}%</td>
+                            <td>
+                                <span class="deviation-badge ${adequacy}">
+                                    ${metricStats.adequacyPercent.toFixed(1)}%
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+                container.innerHTML = headers + '<tbody>' + rows + '</tbody>';
+            }
+
+            calculateOverallStats() {
+                let totalAdequate = 0;
+                let totalMarginal = 0;
+                let totalInadequate = 0;
+                let totalDeviation = 0;
+                let count = 0;
+
+                this.zones.forEach(zone => {
+                    const data = this.getFilteredData(zone);
+                    data.forEach(d => {
+                        this.metrics.forEach(metric => {
+                            if (d.expected[metric] > 0) {
+                                const ratio = d.actual[metric] / d.expected[metric];
+                                if (ratio >= 0.8 && ratio <= 1.2) totalAdequate++;
+                                else if (ratio >= 0.7 && ratio <= 1.3) totalMarginal++;
+                                else totalInadequate++;
+
+                                totalDeviation += Math.abs(d.deviations[metric]);
+                                count++;
+                            }
+                        });
+                    });
+                });
+
+                const total = totalAdequate + totalMarginal + totalInadequate;
+
+                return {
+                    adequate: total > 0 ? (totalAdequate / total) * 100 : 0,
+                    marginal: total > 0 ? (totalMarginal / total) * 100 : 0,
+                    inadequate: total > 0 ? (totalInadequate / total) * 100 : 0,
+                    avgDeviation: count > 0 ? totalDeviation / count : 0
+                };
+            }
+
+            calculateMetricStats(data) {
+                const stats = {};
+
+                this.metrics.forEach(metric => {
+                    const deviations = data.map(d => d.deviations[metric]).filter(d => !isNaN(d));
+
+                    const sum = deviations.reduce((a, b) => a + b, 0);
+                    const avg = sum / deviations.length;
+
+                    const variance = deviations.reduce((a, b) => a + Math.pow(b - avg, 2), 0) / deviations.length;
+                    const stdDev = Math.sqrt(variance);
+
+                    const adequateCount = deviations.filter(d => Math.abs(d) <= 20).length;
+
+                    stats[metric] = {
+                        avgDeviation: avg,
+                        maxPositive: Math.max(...deviations),
+                        maxNegative: Math.min(...deviations),
+                        stdDev,
+                        adequacyPercent: (adequateCount / deviations.length) * 100
+                    };
+                });
+
+                return stats;
+            }
+
+            getAdequacyFromDeviation(deviation) {
+                const abs = Math.abs(deviation);
+                if (abs <= 20) return 'neutral';
+                if (abs <= 30) return 'negative';
+                return 'positive';
+            }
+
+            getFilteredData(zone = this.activeZone) {
+                let data = this.data[zone];
+
+                if (document.getElementById('businessHours').checked) {
+                    data = data.filter(d => d.isBusinessHours);
+                }
+
+                const period = document.getElementById('timePeriod').value;
+                const limits = { hour: 4, day: 96, week: 672, month: 2880 };
+                const limit = limits[period] || 96;
+
+                return data.slice(-limit);
+            }
+
+            getMetricLabel(metric) {
+                const labels = {
+                    cfm: 'OA CFM',
+                    damper: 'Damper Position (%)',
+                    temp: 'Temperature (°F)'
+                };
+                return labels[metric];
+            }
+
+            attachEventListeners() {
+                // Zone selection
+                document.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('zone-chip')) {
+                        this.activeZone = e.target.dataset.zone;
+                        this.render();
+                    }
+
+                    if (e.target.classList.contains('metric-tab')) {
+                        this.activeMetric = e.target.dataset.metric;
+                        this.render();
+                    }
+
+                    if (e.target.classList.contains('panel-btn')) {
+                        e.target.parentElement.querySelectorAll('.panel-btn').forEach(btn => {
+                            btn.classList.remove('active');
+                        });
+                        e.target.classList.add('active');
+                        this.render();
+                    }
+                });
+
+                // Filter changes
+                ['timePeriod', 'resolution', 'tolerance', 'showOutliers', 'showTrends', 'businessHours'].forEach(id => {
+                    document.getElementById(id).addEventListener('change', () => this.render());
+                });
+
+                // Metric checkboxes
+                this.metrics.forEach(metric => {
+                    document.getElementById(`metric-${metric}`).addEventListener('change', () => this.render());
+                });
+
+                // Export button
+                document.getElementById('exportData').addEventListener('click', () => {
+                    this.exportCSV();
+                });
+            }
+
+            exportCSV() {
+                const data = this.getFilteredData();
+                const headers = ['Timestamp', 'People Count', ...this.metrics.flatMap(m => [
+                    `Expected ${m.toUpperCase()}`,
+                    `Actual ${m.toUpperCase()}`,
+                    `Deviation ${m.toUpperCase()} (%)`
+                ])];
+
+                const rows = data.map(d => [
+                    d.timestamp.toISOString(),
+                    d.peopleCount,
+                    ...this.metrics.flatMap(m => [
+                        d.expected[m].toFixed(2),
+                        d.actual[m].toFixed(2),
+                        d.deviations[m].toFixed(2)
+                    ])
+                ]);
+
+                const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `deviation_analysis_${this.activeZone}_${Date.now()}.csv`;
+                a.click();
+            }
+        }
+
+        // Initialize application
+        document.addEventListener('DOMContentLoaded', () => {
+            new DeviationAnalysis();
+        });
+    </script>
+</body>
+</html>

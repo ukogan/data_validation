@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ODCV Analytics - Performance Gauge Dashboard</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --secondary: #06b6d4;
+            --success: #16a34a;
+            --warning: #ea580c;
+            --danger: #dc2626;
+            --dark: #111827;
+            --light: #f9fafb;
+            --surface: #ffffff;
+            --border: #d1d5db;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(180deg, #111827 0%, #1f2937 100%);
+            min-height: 100vh;
+            color: var(--light);
+        }
+
+        .dashboard {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .dashboard-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .dashboard-subtitle {
+            color: #9ca3af;
+            font-size: 1rem;
+        }
+
+        .zone-selector {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 3rem;
+        }
+
+        .zone-tab {
+            padding: 0.75rem 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #9ca3af;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .zone-tab.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-color: transparent;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+        }
+
+        .zone-tab:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .gauge-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .gauge-card {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .gauge-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .gauge-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .gauge-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .gauge-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .gauge-status.adequate {
+            background: rgba(22, 163, 74, 0.2);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .gauge-status.marginal {
+            background: rgba(234, 88, 12, 0.2);
+            color: var(--warning);
+            border: 1px solid var(--warning);
+        }
+
+        .gauge-status.inadequate {
+            background: rgba(220, 38, 38, 0.2);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+
+        .gauge-container {
+            position: relative;
+            height: 200px;
+            margin-bottom: 1.5rem;
+        }
+
+        .gauge-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .gauge-value {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .gauge-value-main {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .gauge-value-unit {
+            font-size: 0.875rem;
+            color: #9ca3af;
+            margin-top: 0.25rem;
+        }
+
+        .gauge-metrics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .gauge-metric {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 0.75rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .gauge-metric-label {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-bottom: 0.25rem;
+        }
+
+        .gauge-metric-value {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .sparkline-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .occupancy-display {
+            background: linear-gradient(145deg, rgba(79, 70, 229, 0.1), rgba(6, 182, 212, 0.1));
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 3rem;
+            border: 1px solid rgba(79, 70, 229, 0.3);
+        }
+
+        .occupancy-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .occupancy-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+
+        .occupancy-count {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .occupancy-bar {
+            height: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .occupancy-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 20px;
+            transition: width 0.5s ease-out;
+            position: relative;
+        }
+
+        .occupancy-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 100px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100px); }
+            100% { transform: translateX(100px); }
+        }
+
+        .occupancy-zones {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .occupancy-zone {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .occupancy-zone-label {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-bottom: 0.5rem;
+        }
+
+        .occupancy-zone-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .controls-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .controls-row {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .control-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .control-item label {
+            font-size: 0.875rem;
+            color: #9ca3af;
+        }
+
+        .control-item input[type="checkbox"] {
+            width: 40px;
+            height: 20px;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .control-item input[type="checkbox"]::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+
+        .control-item input[type="checkbox"]:checked {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .control-item input[type="checkbox"]:checked::after {
+            transform: translateX(20px);
+        }
+
+        .control-item select {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+        }
+
+        .timestamp {
+            text-align: center;
+            color: #9ca3af;
+            font-size: 0.875rem;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="dashboard-header">
+            <h1 class="dashboard-title">Real-Time Performance Dashboard</h1>
+            <p class="dashboard-subtitle">AHU System Scalar Response Monitoring</p>
+        </div>
+
+        <div class="controls-panel">
+            <div class="controls-row">
+                <div class="control-item">
+                    <label>Live Mode</label>
+                    <input type="checkbox" id="liveMode" checked>
+                </div>
+                <div class="control-item">
+                    <label>Show Sparklines</label>
+                    <input type="checkbox" id="showSparklines" checked>
+                </div>
+                <div class="control-item">
+                    <label>Update Interval</label>
+                    <select id="updateInterval">
+                        <option value="5">5 seconds</option>
+                        <option value="15" selected>15 seconds</option>
+                        <option value="30">30 seconds</option>
+                    </select>
+                </div>
+                <div class="control-item">
+                    <label>Tolerance Mode</label>
+                    <select id="toleranceMode">
+                        <option value="strict">Strict (±10%)</option>
+                        <option value="normal" selected>Normal (±20%)</option>
+                        <option value="relaxed">Relaxed (±30%)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="zone-selector" id="zoneTabs"></div>
+
+        <div class="occupancy-display">
+            <div class="occupancy-header">
+                <div class="occupancy-title">Current Zone Occupancy</div>
+                <div class="occupancy-count" id="currentOccupancy">0</div>
+                <div>PEOPLE</div>
+            </div>
+            <div class="occupancy-bar">
+                <div class="occupancy-fill" id="occupancyBar" style="width: 0%"></div>
+            </div>
+            <div class="occupancy-zones" id="occupancyZones"></div>
+        </div>
+
+        <div class="gauge-grid" id="gaugeGrid"></div>
+
+        <div class="timestamp" id="timestamp"></div>
+    </div>
+
+    <script>
+        class PerformanceGaugeDashboard {
+            constructor() {
+                this.zones = ['AHU-1', 'AHU-2', 'AHU-3'];
+                this.activeZone = 'AHU-1';
+                this.metrics = [
+                    { id: 'cfm', name: 'Outside Air CFM', unit: 'CFM', max: 7500, target: 20 }, // 20 CFM per person
+                    { id: 'damper', name: 'Damper Position', unit: '%', max: 100, target: 1.33 }, // 1.33% per person avg
+                    { id: 'temp', name: 'Zone Temperature', unit: '°F', max: 85, min: 65, target: 72 },
+                    { id: 'pressure', name: 'Static Pressure', unit: 'Pa', max: 150, target: 50 }
+                ];
+                this.data = {};
+                this.historicalData = {};
+                this.updateInterval = null;
+                this.init();
+            }
+
+            init() {
+                this.initializeData();
+                this.render();
+                this.attachEventListeners();
+                this.startLiveUpdate();
+            }
+
+            initializeData() {
+                this.zones.forEach(zone => {
+                    this.data[zone] = this.generateZoneData(zone);
+                    this.historicalData[zone] = this.generateHistoricalData(zone);
+                });
+            }
+
+            generateZoneData(zone) {
+                const maxPeople = { 'AHU-1': 50, 'AHU-2': 75, 'AHU-3': 30 }[zone];
+                const hour = new Date().getHours();
+                const isBusinessHours = hour >= 8 && hour < 18;
+
+                const peopleCount = isBusinessHours
+                    ? Math.floor(maxPeople * (0.5 + 0.4 * Math.sin((hour - 8) * Math.PI / 10)) + (Math.random() - 0.5) * 10)
+                    : Math.floor(Math.random() * maxPeople * 0.2);
+
+                const adequacyFactors = this.getZoneAdequacyFactors(zone, hour);
+
+                return {
+                    peopleCount,
+                    maxCapacity: maxPeople,
+                    metrics: {
+                        cfm: {
+                            actual: peopleCount * 20 * adequacyFactors.cfm + (Math.random() - 0.5) * 200,
+                            expected: peopleCount * 20,
+                            tolerance: { min: peopleCount * 20 * 0.8, max: peopleCount * 20 * 1.2 }
+                        },
+                        damper: {
+                            actual: Math.min(100, Math.max(0, (peopleCount / maxPeople) * 100 * adequacyFactors.damper + (Math.random() - 0.5) * 10)),
+                            expected: (peopleCount / maxPeople) * 100,
+                            tolerance: { min: (peopleCount / maxPeople) * 100 * 0.8, max: Math.min(100, (peopleCount / maxPeople) * 100 * 1.2) }
+                        },
+                        temp: {
+                            actual: 72 - (peopleCount / maxPeople) * 2 * adequacyFactors.temp + (Math.random() - 0.5) * 2,
+                            expected: 72 - (peopleCount / maxPeople) * 2,
+                            tolerance: { min: 70, max: 74 }
+                        },
+                        pressure: {
+                            actual: 50 + (peopleCount / maxPeople) * 30 * adequacyFactors.pressure + (Math.random() - 0.5) * 10,
+                            expected: 50 + (peopleCount / maxPeople) * 30,
+                            tolerance: { min: 40, max: 100 }
+                        }
+                    }
+                };
+            }
+
+            getZoneAdequacyFactors(zone, hour) {
+                if (zone === 'AHU-1') {
+                    return { cfm: 0.95, damper: 0.92, temp: 0.98, pressure: 0.9 };
+                } else if (zone === 'AHU-2') {
+                    return hour >= 12 && hour < 14
+                        ? { cfm: 0.7, damper: 0.65, temp: 1.1, pressure: 0.75 }
+                        : { cfm: 0.88, damper: 0.85, temp: 0.95, pressure: 0.85 };
+                } else {
+                    return { cfm: 1.15, damper: 1.2, temp: 0.9, pressure: 1.1 };
+                }
+            }
+
+            generateHistoricalData(zone) {
+                const data = [];
+                for (let i = 0; i < 50; i++) {
+                    data.push({
+                        cfm: Math.random() * 5000,
+                        damper: Math.random() * 100,
+                        temp: 68 + Math.random() * 8,
+                        pressure: 30 + Math.random() * 60
+                    });
+                }
+                return data;
+            }
+
+            render() {
+                this.renderZoneTabs();
+                this.renderOccupancyDisplay();
+                this.renderGauges();
+                this.updateTimestamp();
+            }
+
+            renderZoneTabs() {
+                const container = document.getElementById('zoneTabs');
+                container.innerHTML = this.zones.map(zone => `
+                    <div class="zone-tab ${zone === this.activeZone ? 'active' : ''}" data-zone="${zone}">
+                        ${zone}
+                    </div>
+                `).join('');
+            }
+
+            renderOccupancyDisplay() {
+                const zoneData = this.data[this.activeZone];
+
+                document.getElementById('currentOccupancy').textContent = zoneData.peopleCount;
+
+                const occupancyPercent = (zoneData.peopleCount / zoneData.maxCapacity) * 100;
+                document.getElementById('occupancyBar').style.width = `${occupancyPercent}%`;
+
+                const occupancyZones = document.getElementById('occupancyZones');
+                occupancyZones.innerHTML = this.zones.map(zone => {
+                    const data = this.data[zone];
+                    return `
+                        <div class="occupancy-zone">
+                            <div class="occupancy-zone-label">${zone}</div>
+                            <div class="occupancy-zone-value">${data.peopleCount}</div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            renderGauges() {
+                const container = document.getElementById('gaugeGrid');
+                const zoneData = this.data[this.activeZone];
+
+                container.innerHTML = this.metrics.map(metric => {
+                    const metricData = zoneData.metrics[metric.id];
+                    const adequacy = this.getAdequacyLevel(metricData);
+
+                    return `
+                        <div class="gauge-card">
+                            <div class="gauge-header">
+                                <div class="gauge-title">${metric.name}</div>
+                                <div class="gauge-status ${adequacy}">${adequacy}</div>
+                            </div>
+
+                            <div class="gauge-container">
+                                ${this.renderGaugeSVG(metric, metricData)}
+                                <div class="gauge-value">
+                                    <div class="gauge-value-main">${this.formatValue(metricData.actual, metric.id)}</div>
+                                    <div class="gauge-value-unit">${metric.unit}</div>
+                                </div>
+                            </div>
+
+                            <div class="gauge-metrics">
+                                <div class="gauge-metric">
+                                    <div class="gauge-metric-label">Expected</div>
+                                    <div class="gauge-metric-value">${this.formatValue(metricData.expected, metric.id)} ${metric.unit}</div>
+                                </div>
+                                <div class="gauge-metric">
+                                    <div class="gauge-metric-label">Ratio</div>
+                                    <div class="gauge-metric-value">${(metricData.actual / metricData.expected).toFixed(2)}x</div>
+                                </div>
+                                <div class="gauge-metric">
+                                    <div class="gauge-metric-label">Min Target</div>
+                                    <div class="gauge-metric-value">${this.formatValue(metricData.tolerance.min, metric.id)} ${metric.unit}</div>
+                                </div>
+                                <div class="gauge-metric">
+                                    <div class="gauge-metric-label">Max Target</div>
+                                    <div class="gauge-metric-value">${this.formatValue(metricData.tolerance.max, metric.id)} ${metric.unit}</div>
+                                </div>
+                            </div>
+
+                            ${document.getElementById('showSparklines').checked ? `
+                                <div class="sparkline-container">
+                                    ${this.renderSparkline(metric.id)}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            renderGaugeSVG(metric, metricData) {
+                const startAngle = -220;
+                const endAngle = 40;
+                const totalAngle = endAngle - startAngle;
+
+                const min = metric.min || 0;
+                const max = metric.max;
+                const value = metricData.actual;
+                const expected = metricData.expected;
+
+                const valueAngle = startAngle + ((value - min) / (max - min)) * totalAngle;
+                const expectedAngle = startAngle + ((expected - min) / (max - min)) * totalAngle;
+                const toleranceMinAngle = startAngle + ((metricData.tolerance.min - min) / (max - min)) * totalAngle;
+                const toleranceMaxAngle = startAngle + ((metricData.tolerance.max - min) / (max - min)) * totalAngle;
+
+                const centerX = 175;
+                const centerY = 120;
+                const radius = 80;
+
+                const polarToCartesian = (angle) => {
+                    const angleInRadians = (angle - 90) * Math.PI / 180;
+                    return {
+                        x: centerX + radius * Math.cos(angleInRadians),
+                        y: centerY + radius * Math.sin(angleInRadians)
+                    };
+                };
+
+                const createArc = (startAngle, endAngle, radius) => {
+                    const start = polarToCartesian(endAngle);
+                    const end = polarToCartesian(startAngle);
+                    const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+                    return `M ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArcFlag} 0 ${end.x} ${end.y}`;
+                };
+
+                const adequacy = this.getAdequacyLevel(metricData);
+                const gaugeColor = adequacy === 'adequate' ? '#16a34a' : adequacy === 'marginal' ? '#ea580c' : '#dc2626';
+
+                return `
+                    <svg class="gauge-svg" viewBox="0 0 350 200">
+                        <!-- Background arc -->
+                        <path d="${createArc(startAngle, endAngle, radius)}"
+                              stroke="rgba(255, 255, 255, 0.1)"
+                              stroke-width="20"
+                              fill="none" />
+
+                        <!-- Tolerance band -->
+                        <path d="${createArc(toleranceMinAngle, toleranceMaxAngle, radius)}"
+                              stroke="rgba(22, 163, 74, 0.2)"
+                              stroke-width="20"
+                              fill="none" />
+
+                        <!-- Value arc -->
+                        <path d="${createArc(startAngle, valueAngle, radius)}"
+                              stroke="${gaugeColor}"
+                              stroke-width="20"
+                              fill="none"
+                              stroke-linecap="round" />
+
+                        <!-- Expected marker -->
+                        <line x1="${polarToCartesian(expectedAngle).x}"
+                              y1="${polarToCartesian(expectedAngle).y - 10}"
+                              x2="${polarToCartesian(expectedAngle).x}"
+                              y2="${polarToCartesian(expectedAngle).y + 10}"
+                              stroke="rgba(255, 255, 255, 0.5)"
+                              stroke-width="3" />
+
+                        <!-- Tick marks -->
+                        ${this.renderTickMarks(startAngle, endAngle, centerX, centerY, radius)}
+                    </svg>
+                `;
+            }
+
+            renderTickMarks(startAngle, endAngle, centerX, centerY, radius) {
+                const ticks = [];
+                const numTicks = 10;
+                const angleStep = (endAngle - startAngle) / numTicks;
+
+                for (let i = 0; i <= numTicks; i++) {
+                    const angle = startAngle + i * angleStep;
+                    const angleInRadians = (angle - 90) * Math.PI / 180;
+
+                    const innerRadius = radius - 10;
+                    const outerRadius = radius - 5;
+
+                    const x1 = centerX + innerRadius * Math.cos(angleInRadians);
+                    const y1 = centerY + innerRadius * Math.sin(angleInRadians);
+                    const x2 = centerX + outerRadius * Math.cos(angleInRadians);
+                    const y2 = centerY + outerRadius * Math.sin(angleInRadians);
+
+                    ticks.push(`
+                        <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
+                              stroke="rgba(255, 255, 255, 0.3)"
+                              stroke-width="1" />
+                    `);
+                }
+
+                return ticks.join('');
+            }
+
+            renderSparkline(metricId) {
+                const data = this.historicalData[this.activeZone].map(d => d[metricId]);
+                const max = Math.max(...data);
+                const min = Math.min(...data);
+
+                const width = 350;
+                const height = 50;
+                const points = data.map((value, index) => {
+                    const x = (index / (data.length - 1)) * width;
+                    const y = height - ((value - min) / (max - min)) * height;
+                    return `${x},${y}`;
+                }).join(' ');
+
+                return `
+                    <svg viewBox="0 0 ${width} ${height}" style="width: 100%; height: 100%;">
+                        <polyline points="${points}"
+                                  fill="none"
+                                  stroke="rgba(79, 70, 229, 0.5)"
+                                  stroke-width="2" />
+                    </svg>
+                `;
+            }
+
+            getAdequacyLevel(metricData) {
+                const ratio = metricData.actual / metricData.expected;
+                const toleranceMode = document.getElementById('toleranceMode').value;
+
+                const tolerances = {
+                    strict: { min: 0.9, max: 1.1 },
+                    normal: { min: 0.8, max: 1.2 },
+                    relaxed: { min: 0.7, max: 1.3 }
+                };
+
+                const tolerance = tolerances[toleranceMode];
+
+                if (ratio >= tolerance.min && ratio <= tolerance.max) return 'adequate';
+                if (ratio >= tolerance.min - 0.1 && ratio <= tolerance.max + 0.1) return 'marginal';
+                return 'inadequate';
+            }
+
+            formatValue(value, metricId) {
+                if (metricId === 'cfm') return Math.round(value);
+                if (metricId === 'damper') return value.toFixed(1);
+                if (metricId === 'temp') return value.toFixed(1);
+                if (metricId === 'pressure') return Math.round(value);
+                return value.toFixed(1);
+            }
+
+            updateTimestamp() {
+                const now = new Date();
+                document.getElementById('timestamp').innerHTML = `
+                    Last Updated: ${now.toLocaleTimeString()} |
+                    ${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                `;
+            }
+
+            attachEventListeners() {
+                // Zone tab selection
+                document.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('zone-tab')) {
+                        this.activeZone = e.target.dataset.zone;
+                        this.render();
+                    }
+                });
+
+                // Control changes
+                ['liveMode', 'showSparklines', 'toleranceMode'].forEach(id => {
+                    document.getElementById(id).addEventListener('change', () => {
+                        if (id === 'liveMode') {
+                            if (document.getElementById('liveMode').checked) {
+                                this.startLiveUpdate();
+                            } else {
+                                this.stopLiveUpdate();
+                            }
+                        }
+                        this.render();
+                    });
+                });
+
+                document.getElementById('updateInterval').addEventListener('change', (e) => {
+                    if (document.getElementById('liveMode').checked) {
+                        this.stopLiveUpdate();
+                        this.startLiveUpdate();
+                    }
+                });
+            }
+
+            startLiveUpdate() {
+                const interval = parseInt(document.getElementById('updateInterval').value) * 1000;
+
+                this.updateInterval = setInterval(() => {
+                    if (document.getElementById('liveMode').checked) {
+                        this.updateData();
+                        this.render();
+                    }
+                }, interval);
+            }
+
+            stopLiveUpdate() {
+                if (this.updateInterval) {
+                    clearInterval(this.updateInterval);
+                    this.updateInterval = null;
+                }
+            }
+
+            updateData() {
+                // Simulate real-time data updates
+                this.zones.forEach(zone => {
+                    const currentData = this.data[zone];
+                    const newData = this.generateZoneData(zone);
+
+                    // Smooth transition
+                    Object.keys(newData.metrics).forEach(metric => {
+                        const current = currentData.metrics[metric].actual;
+                        const target = newData.metrics[metric].actual;
+                        currentData.metrics[metric].actual = current * 0.7 + target * 0.3;
+                        currentData.metrics[metric].expected = newData.metrics[metric].expected;
+                        currentData.metrics[metric].tolerance = newData.metrics[metric].tolerance;
+                    });
+
+                    currentData.peopleCount = newData.peopleCount;
+
+                    // Update historical data
+                    this.historicalData[zone].shift();
+                    this.historicalData[zone].push({
+                        cfm: currentData.metrics.cfm.actual,
+                        damper: currentData.metrics.damper.actual,
+                        temp: currentData.metrics.temp.actual,
+                        pressure: currentData.metrics.pressure.actual
+                    });
+                });
+            }
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', () => {
+            new PerformanceGaugeDashboard();
+        });
+    </script>
+</body>
+</html>
