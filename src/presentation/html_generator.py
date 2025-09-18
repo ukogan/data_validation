@@ -1087,6 +1087,7 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
             </div>
         </div>
     </div>
+    <script src="public/auth.js"></script>
     <script src="public/nav-component.js"></script>
 </body>
 </html>

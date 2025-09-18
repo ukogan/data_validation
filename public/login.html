@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ODCV Analytics - Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 48px;
+            text-align: center;
+            max-width: 480px;
+            width: 90%;
+            border: 1px solid #e5e7eb;
+        }
+
+        .compass-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e3a8a;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            font-size: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .welcome-message {
+            background: #f0f9ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 32px;
+            text-align: left;
+        }
+
+        .welcome-message h3 {
+            color: #1e3a8a;
+            font-size: 18px;
+            margin-bottom: 12px;
+        }
+
+        .welcome-message p {
+            color: #374151;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+
+        .features-list {
+            text-align: left;
+            margin-top: 16px;
+        }
+
+        .features-list li {
+            color: #4b5563;
+            font-size: 13px;
+            margin-bottom: 6px;
+            list-style: none;
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .features-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        .google-login-btn {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 16px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            transition: all 0.2s ease;
+        }
+
+        .google-login-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.25);
+        }
+
+        .google-login-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .google-icon {
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #3b82f6;
+            font-weight: bold;
+        }
+
+        .status-message {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .status-loading {
+            background: #f0f9ff;
+            color: #1e40af;
+            border: 1px solid #3b82f6;
+        }
+
+        .status-error {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #ef4444;
+        }
+
+        .status-success {
+            background: #ecfdf5;
+            color: #059669;
+            border: 1px solid #10b981;
+        }
+
+        .version-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: #1e3a8a;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="version-badge">v1.0.0</div>
+
+    <div class="login-container">
+        <span class="compass-icon">📊</span>
+        <div class="logo">ODCV Analytics</div>
+
+        <div class="welcome-message">
+            <h3 style="text-align: center;">Building Control Performance Dashboard</h3>
+            <p>Analyze occupancy sensor data and validate BMS control logic timing compliance.</p>
+
+            <div style="margin-top: 16px;">
+                <h4 style="color: #1e3a8a; font-size: 14px; margin-bottom: 8px;">Performance Analysis:</h4>
+                <ul class="features-list">
+                    <li>Interactive timeline visualization of sensor and zone data</li>
+                    <li>Control logic violation detection and timing analysis</li>
+                    <li>Occupancy correlation statistics and performance scoring</li>
+                    <li>Out-of-spec mode change identification and categorization</li>
+                    <li>Real-time dashboard with executive-friendly metrics</li>
+                </ul>
+
+                <h4 style="color: #1e3a8a; font-size: 14px; margin: 12px 0 8px 0;">Validation & Compliance:</h4>
+                <ul class="features-list">
+                    <li>15-minute unoccupied to standby timing validation</li>
+                    <li>5-minute occupied to active mode compliance checking</li>
+                    <li>Historical performance trend analysis</li>
+                    <li>Data quality assessment and gap detection</li>
+                </ul>
+
+                <h4 style="color: #1e3a8a; font-size: 14px; margin: 12px 0 8px 0;">Reporting & Insights:</h4>
+                <ul class="features-list">
+                    <li>Automated violation categorization and counting</li>
+                    <li>Energy efficiency opportunity identification</li>
+                    <li>Commissioning validation points and testing procedures</li>
+                </ul>
+            </div>
+        </div>
+
+        <button id="google-login-btn" class="google-login-btn" onclick="handleGoogleLogin()">
+            <div class="google-icon">G</div>
+            Sign in with Google
+        </button>
+
+        <div id="status-message" class="status-message" style="display: none;"></div>
+    </div>
+
+    <!-- Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client"></script>
+
+    <script>
+        class ODCVAnalyticsLoginManager {
+            constructor() {
+                this.googleConfig = null;
+                this.isInitialized = false;
+            }
+
+            async initialize() {
+                try {
+                    console.log('[ODCV-Analytics-Login] Initializing authentication...');
+
+                    // Load Google configuration from server
+                    await this.loadGoogleConfig();
+
+                    // Wait for Google scripts to load
+                    await this.waitForGoogleScripts();
+
+                    // Initialize Google APIs
+                    await this.initializeGoogleAPI();
+
+                    console.log('[ODCV-Analytics-Login] Authentication system ready');
+                    return true;
+
+                } catch (error) {
+                    console.error('[ODCV-Analytics-Login] Initialization failed:', error);
+                    this.showError('Failed to initialize Google authentication system');
+                    return false;
+                }
+            }
+
+            async loadGoogleConfig() {
+                const response = await fetch('/api/google-config');
+                if (response.ok) {
+                    this.googleConfig = await response.json();
+                    console.log('[ODCV-Analytics-Login] Google config loaded');
+                } else {
+                    throw new Error('Failed to load Google configuration');
+                }
+            }
+
+            async waitForGoogleScripts() {
+                return new Promise((resolve) => {
+                    const checkScripts = () => {
+                        if (typeof google !== 'undefined' && google.accounts) {
+                            resolve();
+                        } else {
+                            setTimeout(checkScripts, 100);
+                        }
+                    };
+                    checkScripts();
+                });
+            }
+
+            async initializeGoogleAPI() {
+                // Initialize Google Identity Services (GIS)
+                this.tokenClient = google.accounts.oauth2.initTokenClient({
+                    client_id: this.googleConfig.clientId,
+                    scope: this.googleConfig.scopes,
+                    callback: '', // Will be set in authenticateUser
+                });
+
+                this.isInitialized = true;
+                console.log('[ODCV-Analytics-Login] Google Identity Services initialized');
+            }
+
+            async authenticateUser() {
+                try {
+                    console.log('[ODCV-Analytics-Login] Starting user authentication...');
+                    this.showLoading('Authenticating with Google...');
+
+                    if (!this.tokenClient) {
+                        throw new Error('Token client not initialized');
+                    }
+
+                    return new Promise((resolve, reject) => {
+                        this.tokenClient.callback = async (response) => {
+                            console.log('[ODCV-Analytics-Login] Token callback received:', response.access_token ? 'YES' : 'NO');
+
+                            if (response.error !== undefined) {
+                                console.error('[ODCV-Analytics-Login] Authentication error:', response.error);
+                                reject(new Error(response.error));
+                                return;
+                            }
+
+                            try {
+                                // Store access token
+                                const accessToken = response.access_token;
+
+                                // Fetch user info
+                                const userInfo = await this.fetchUserInfo(accessToken);
+
+                                // Store session in localStorage and window
+                                const session = {
+                                    user: userInfo,
+                                    authenticated: true,
+                                    authenticatedAt: new Date().toISOString(),
+                                    miniApp: 'odcv-analytics',
+                                    accessToken: accessToken
+                                };
+
+                                localStorage.setItem('odcv_analytics_session', JSON.stringify(session));
+                                window.odcvAnalyticsSession = session;
+
+                                this.showSuccess(`Welcome, ${userInfo.name}! Redirecting to ODCV Analytics...`);
+
+                                console.log('[ODCV-Analytics-Login] Authentication successful, redirecting...');
+
+                                setTimeout(() => {
+                                    window.location.href = '/timeline_viewer.html';
+                                }, 2000);
+
+                                resolve(userInfo);
+
+                            } catch (error) {
+                                console.error('[ODCV-Analytics-Login] Post-authentication setup failed:', error);
+                                reject(error);
+                            }
+                        };
+
+                        // Request access token with consent prompt
+                        this.tokenClient.requestAccessToken({ prompt: 'consent' });
+                    });
+
+                } catch (error) {
+                    console.error('[ODCV-Analytics-Login] Authentication failed:', error);
+                    this.showError(`Authentication failed: ${error.message}`);
+
+                    // Re-enable login button
+                    const button = document.getElementById('google-login-btn');
+                    button.disabled = false;
+                    button.innerHTML = `
+                        <div class="google-icon">G</div>
+                        Sign in with Google
+                    `;
+                }
+            }
+
+            async fetchUserInfo(accessToken) {
+                try {
+                    console.log('[ODCV-Analytics-Login] Fetching user info...');
+
+                    const response = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+                        headers: {
+                            'Authorization': `Bearer ${accessToken}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`User info request failed: ${response.status} ${response.statusText}`);
+                    }
+
+                    const userInfo = await response.json();
+
+                    return {
+                        id: userInfo.id,
+                        name: userInfo.name,
+                        email: userInfo.email,
+                        imageUrl: userInfo.picture,
+                        authenticated_at: new Date().toISOString()
+                    };
+
+                } catch (error) {
+                    console.error('[ODCV-Analytics-Login] Failed to fetch user info:', error);
+                    // Use fallback user info
+                    return {
+                        id: 'unknown',
+                        name: 'Authenticated User',
+                        email: 'unknown@unknown.com',
+                        imageUrl: '',
+                        authenticated_at: new Date().toISOString()
+                    };
+                }
+            }
+
+            showLoading(message) {
+                const statusDiv = document.getElementById('status-message');
+                statusDiv.className = 'status-message status-loading';
+                statusDiv.textContent = message;
+                statusDiv.style.display = 'block';
+
+                // Disable login button
+                const button = document.getElementById('google-login-btn');
+                button.disabled = true;
+                button.innerHTML = '⏳ Authenticating...';
+            }
+
+            showError(message) {
+                const statusDiv = document.getElementById('status-message');
+                statusDiv.className = 'status-message status-error';
+                statusDiv.textContent = message;
+                statusDiv.style.display = 'block';
+            }
+
+            showSuccess(message) {
+                const statusDiv = document.getElementById('status-message');
+                statusDiv.className = 'status-message status-success';
+                statusDiv.textContent = message;
+                statusDiv.style.display = 'block';
+            }
+        }
+
+        // Global login manager instance
+        window.odcvAnalyticsLogin = new ODCVAnalyticsLoginManager();
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            console.log('[ODCV-Analytics-Login] Page loaded, checking authentication...');
+
+            // Check if user is already authenticated
+            const session = localStorage.getItem('odcv_analytics_session');
+            if (session) {
+                try {
+                    const parsedSession = JSON.parse(session);
+                    if (parsedSession.authenticated) {
+                        console.log('[ODCV-Analytics-Login] User already authenticated, redirecting...');
+                        window.location.href = '/timeline_viewer.html';
+                        return;
+                    }
+                } catch (error) {
+                    console.log('[ODCV-Analytics-Login] Invalid session data, continuing with login');
+                    localStorage.removeItem('odcv_analytics_session');
+                }
+            }
+
+            // Initialize authentication system
+            const initialized = await window.odcvAnalyticsLogin.initialize();
+
+            if (!initialized) {
+                window.odcvAnalyticsLogin.showError('Failed to initialize authentication system. Please refresh the page.');
+            }
+        });
+
+        // Handle Google login button click
+        async function handleGoogleLogin() {
+            console.log('[ODCV-Analytics-Login] Login button clicked');
+
+            if (!window.odcvAnalyticsLogin) {
+                console.error('[ODCV-Analytics-Login] Login manager not initialized!');
+                return;
+            }
+
+            try {
+                await window.odcvAnalyticsLogin.authenticateUser();
+            } catch (error) {
+                console.error('[ODCV-Analytics-Login] Error in handleGoogleLogin:', error);
+            }
+        }
+    </script>
+</body>
+</html>
