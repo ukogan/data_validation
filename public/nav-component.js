@@ -3,6 +3,7 @@
  * Environment-aware navigation component with external URL configuration
  * Provides consistent left navigation across all pages and projects
  * Updated: 2025-09-17 - Added cross-project navigation support
+ * Development ready for future enhancements
  */
 
 (function() {
