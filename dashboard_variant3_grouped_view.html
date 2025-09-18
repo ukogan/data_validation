@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ODCV Analytics Dashboard - Grouped Hierarchical View</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f0f2f5;
+            color: #1c1e21;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a8e 100%);
+            color: white;
+            padding: 28px 36px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .header-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        /* Executive Dashboard */
+        .executive-dashboard {
+            background: white;
+            margin: 28px 36px;
+            padding: 36px;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        }
+
+        .dashboard-title {
+            font-size: 24px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 36px;
+            color: #1e3a5f;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 36px;
+        }
+
+        .kpi-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 24px;
+            position: relative;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+        }
+
+        .kpi-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .kpi-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-right: 16px;
+        }
+
+        .kpi-icon.green { background: linear-gradient(135deg, #d4edda, #c3e6cb); color: #155724; }
+        .kpi-icon.yellow { background: linear-gradient(135deg, #fff3cd, #ffeaa7); color: #856404; }
+        .kpi-icon.red { background: linear-gradient(135deg, #f8d7da, #f5c6cb); color: #721c24; }
+
+        .kpi-label {
+            font-size: 14px;
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .kpi-value {
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .kpi-subtitle {
+            font-size: 13px;
+            color: #6c757d;
+        }
+
+        .kpi-bar {
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 12px;
+        }
+
+        .kpi-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .kpi-bar-fill.green { background: linear-gradient(90deg, #28a745, #20c997); }
+        .kpi-bar-fill.yellow { background: linear-gradient(90deg, #ffc107, #fd7e14); }
+        .kpi-bar-fill.red { background: linear-gradient(90deg, #dc3545, #e83e8c); }
+
+        /* Performance Distribution */
+        .perf-distribution {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .dist-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #495057;
+        }
+
+        .dist-bars {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            height: 120px;
+            margin-bottom: 12px;
+        }
+
+        .dist-bar {
+            flex: 1;
+            margin: 0 8px;
+            background: linear-gradient(180deg, #007bff 0%, #0056b3 100%);
+            border-radius: 4px 4px 0 0;
+            position: relative;
+            transition: opacity 0.3s;
+            cursor: pointer;
+        }
+
+        .dist-bar:hover {
+            opacity: 0.8;
+        }
+
+        .dist-bar.good { background: linear-gradient(180deg, #28a745 0%, #1e7e34 100%); }
+        .dist-bar.fair { background: linear-gradient(180deg, #ffc107 0%, #e0a800 100%); }
+        .dist-bar.poor { background: linear-gradient(180deg, #dc3545 0%, #c82333 100%); }
+
+        .dist-value {
+            position: absolute;
+            top: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .dist-labels {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .dist-label {
+            flex: 1;
+            text-align: center;
+            font-size: 12px;
+            color: #6c757d;
+            margin: 0 8px;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            margin: 28px 36px;
+        }
+
+        /* Controls */
+        .controls {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .controls-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .controls-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1e3a5f;
+        }
+
+        .group-toggle {
+            display: flex;
+            gap: 8px;
+            background: #f8f9fa;
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .toggle-btn {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #6c757d;
+            transition: all 0.2s;
+        }
+
+        .toggle-btn.active {
+            background: white;
+            color: #1e3a5f;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 16px;
+        }
+
+        .filter-input {
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+        }
+
+        /* Grouped Table Container */
+        .grouped-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        /* Group Headers */
+        .group-header {
+            background: linear-gradient(90deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 16px 24px;
+            border-left: 4px solid #007bff;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .group-header:hover {
+            background: linear-gradient(90deg, #e9ecef 0%, #dee2e6 100%);
+        }
+
+        .group-header.collapsed {
+            border-left-color: #6c757d;
+        }
+
+        .group-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .group-toggle-icon {
+            font-size: 18px;
+            transition: transform 0.3s;
+        }
+
+        .group-header.collapsed .group-toggle-icon {
+            transform: rotate(-90deg);
+        }
+
+        .group-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e3a5f;
+        }
+
+        .group-count {
+            background: #007bff;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .group-stats {
+            display: flex;
+            gap: 24px;
+        }
+
+        .group-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .group-stat-label {
+            font-size: 11px;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .group-stat-value {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .group-stat-value.good { color: #28a745; }
+        .group-stat-value.fair { color: #ffc107; }
+        .group-stat-value.poor { color: #dc3545; }
+
+        /* Group Content */
+        .group-content {
+            max-height: 1000px;
+            overflow: hidden;
+            transition: max-height 0.5s ease;
+        }
+
+        .group-content.collapsed {
+            max-height: 0;
+        }
+
+        /* Data Table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table thead {
+            background: #f8f9fa;
+        }
+
+        .data-table th {
+            padding: 14px 24px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .data-table tbody tr {
+            border-bottom: 1px solid #f8f9fa;
+            transition: background 0.2s;
+        }
+
+        .data-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .data-table td {
+            padding: 16px 24px;
+        }
+
+        .sensor-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sensor-indicator {
+            width: 8px;
+            height: 32px;
+            border-radius: 4px;
+        }
+
+        .sensor-indicator.good { background: #28a745; }
+        .sensor-indicator.fair { background: #ffc107; }
+        .sensor-indicator.poor { background: #dc3545; }
+
+        .sensor-name {
+            font-weight: 500;
+            color: #212529;
+        }
+
+        .sensor-id {
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        /* Performance Cells */
+        .perf-value {
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 4px;
+            text-align: center;
+            display: inline-block;
+            min-width: 60px;
+        }
+
+        .perf-value.good {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .perf-value.fair {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .perf-value.poor {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Mini Chart */
+        .mini-chart {
+            width: 100px;
+            height: 30px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-bar {
+            position: absolute;
+            bottom: 0;
+            width: 3px;
+            background: #007bff;
+            opacity: 0.7;
+        }
+
+        /* Detail Button */
+        .detail-btn {
+            padding: 6px 12px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .detail-btn:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,123,255,0.3);
+        }
+
+        /* Expandable Detail */
+        .detail-row {
+            display: none;
+            background: #f8f9fa;
+        }
+
+        .detail-row.active {
+            display: table-row;
+        }
+
+        .detail-content {
+            padding: 24px;
+        }
+
+        .detail-header {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #1e3a5f;
+        }
+
+        .timeline-view {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            height: 160px;
+            position: relative;
+        }
+
+        .timeline-labels {
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #6c757d;
+        }
+
+        .timeline-tracks {
+            position: absolute;
+            top: 40px;
+            left: 20px;
+            right: 20px;
+            bottom: 20px;
+        }
+
+        .track {
+            height: 40px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .track-label {
+            position: absolute;
+            left: -80px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 12px;
+            color: #6c757d;
+            width: 70px;
+            text-align: right;
+        }
+
+        /* Summary Footer */
+        .summary-footer {
+            background: linear-gradient(90deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 20px 36px;
+            margin-top: 36px;
+            border-top: 2px solid #dee2e6;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+            text-align: center;
+        }
+
+        .summary-item {
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .summary-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1e3a5f;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ODCV Analytics Dashboard - Hierarchical View</h1>
+        <div class="header-subtitle">Grouped analysis by building and performance level for 120 sensor/VAV pairs</div>
+    </div>
+
+    <div class="executive-dashboard">
+        <div class="dashboard-title">Campus-Wide System Performance</div>
+
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <div class="kpi-icon green">⚡</div>
+                    <div>
+                        <div class="kpi-label">Energy Efficiency</div>
+                    </div>
+                </div>
+                <div class="kpi-value" style="color: #28a745;">71%</div>
+                <div class="kpi-subtitle">Average time in standby mode</div>
+                <div class="kpi-bar">
+                    <div class="kpi-bar-fill green" style="width: 71%;"></div>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <div class="kpi-icon yellow">⏱️</div>
+                    <div>
+                        <div class="kpi-label">System Responsiveness</div>
+                    </div>
+                </div>
+                <div class="kpi-value" style="color: #ffc107;">83%</div>
+                <div class="kpi-subtitle">Zones responding when occupied</div>
+                <div class="kpi-bar">
+                    <div class="kpi-bar-fill yellow" style="width: 83%;"></div>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <div class="kpi-icon green">🔗</div>
+                    <div>
+                        <div class="kpi-label">Sensor Correlation</div>
+                    </div>
+                </div>
+                <div class="kpi-value" style="color: #28a745;">88%</div>
+                <div class="kpi-subtitle">Zone alignment with sensors</div>
+                <div class="kpi-bar">
+                    <div class="kpi-bar-fill green" style="width: 88%;"></div>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <div class="kpi-icon red">⚠️</div>
+                    <div>
+                        <div class="kpi-label">Control Compliance</div>
+                    </div>
+                </div>
+                <div class="kpi-value" style="color: #dc3545;">76%</div>
+                <div class="kpi-subtitle">Meeting timing requirements</div>
+                <div class="kpi-bar">
+                    <div class="kpi-bar-fill red" style="width: 76%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="perf-distribution">
+            <div class="dist-title">Performance Distribution Across All Sensors</div>
+            <div class="dist-bars">
+                <div class="dist-bar good" style="height: 65%;" onclick="filterByPerformance('good')">
+                    <div class="dist-value">42</div>
+                </div>
+                <div class="dist-bar fair" style="height: 85%;" onclick="filterByPerformance('fair')">
+                    <div class="dist-value">55</div>
+                </div>
+                <div class="dist-bar poor" style="height: 37%;" onclick="filterByPerformance('poor')">
+                    <div class="dist-value">23</div>
+                </div>
+            </div>
+            <div class="dist-labels">
+                <div class="dist-label">Good (>85%)</div>
+                <div class="dist-label">Fair (70-85%)</div>
+                <div class="dist-label">Poor (<70%)</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="controls">
+            <div class="controls-header">
+                <div class="controls-title">Sensor Performance Matrix</div>
+                <div class="group-toggle">
+                    <button class="toggle-btn active" onclick="setGrouping('building')">By Building</button>
+                    <button class="toggle-btn" onclick="setGrouping('floor')">By Floor</button>
+                    <button class="toggle-btn" onclick="setGrouping('performance')">By Performance</button>
+                </div>
+            </div>
+
+            <div class="filter-grid">
+                <input type="text" class="filter-input" placeholder="Search sensors, VAVs, or locations..." id="searchInput">
+                <select class="filter-input" id="timeRange">
+                    <option value="24h">Last 24 Hours</option>
+                    <option value="7d">Last 7 Days</option>
+                    <option value="30d">Last 30 Days</option>
+                </select>
+                <select class="filter-input" id="alertLevel">
+                    <option value="">All Alert Levels</option>
+                    <option value="critical">Critical</option>
+                    <option value="warning">Warning</option>
+                    <option value="normal">Normal</option>
+                </select>
+                <button class="filter-input" style="background: #007bff; color: white; border: none; cursor: pointer;"
+                        onclick="applyFilters()">Apply Filters</button>
+            </div>
+        </div>
+
+        <div class="grouped-container" id="groupedContainer">
+            <!-- Groups will be dynamically generated -->
+        </div>
+    </div>
+
+    <div class="summary-footer">
+        <div class="summary-grid">
+            <div class="summary-item">
+                <div>Total Sensors Monitored</div>
+                <div class="summary-value">120</div>
+            </div>
+            <div class="summary-item">
+                <div>Daily Energy Savings</div>
+                <div class="summary-value">$3,847</div>
+            </div>
+            <div class="summary-item">
+                <div>CO2 Reduction Today</div>
+                <div class="summary-value">892 kg</div>
+            </div>
+            <div class="summary-item">
+                <div>Active Violations</div>
+                <div class="summary-value" style="color: #dc3545;">17</div>
+            </div>
+            <div class="summary-item">
+                <div>System Uptime</div>
+                <div class="summary-value">99.8%</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data generation
+        const buildings = ['Y2E2', 'Huang Engineering', 'Gates Building', 'Packard Building'];
+        const floors = [1, 2, 3, 4];
+        let allSensors = [];
+        let groupedData = {};
+        let currentGrouping = 'building';
+
+        function generateSensorData() {
+            for (let i = 1; i <= 120; i++) {
+                const building = buildings[Math.floor(Math.random() * buildings.length)];
+                const floor = floors[Math.floor(Math.random() * floors.length)];
+                const standby = Math.random() * 40 + 50;
+                const response = Math.random() * 30 + 65;
+                const correlation = Math.random() * 35 + 60;
+                const violations = Math.random() * 40 + 5;
+
+                const avgPerformance = (standby + response + correlation + (100 - violations)) / 4;
+                let perfLevel = 'poor';
+                if (avgPerformance > 85) perfLevel = 'good';
+                else if (avgPerformance > 70) perfLevel = 'fair';
+
+                allSensors.push({
+                    id: i,
+                    sensor: `${building.substr(0,2).toUpperCase()}-${floor}${String(i).padStart(2,'0')}`,
+                    vav: `VAV-${floor}${String(i).padStart(3,'0')}`,
+                    building: building,
+                    floor: floor,
+                    standby: standby,
+                    response: response,
+                    correlation: correlation,
+                    violations: violations,
+                    performance: perfLevel,
+                    trend: Array.from({length: 24}, () => Math.random() * 100)
+                });
+            }
+        }
+
+        function groupSensorData(groupBy) {
+            groupedData = {};
+
+            allSensors.forEach(sensor => {
+                let groupKey;
+                switch(groupBy) {
+                    case 'building':
+                        groupKey = sensor.building;
+                        break;
+                    case 'floor':
+                        groupKey = `Floor ${sensor.floor}`;
+                        break;
+                    case 'performance':
+                        groupKey = sensor.performance.charAt(0).toUpperCase() + sensor.performance.slice(1) + ' Performance';
+                        break;
+                    default:
+                        groupKey = sensor.building;
+                }
+
+                if (!groupedData[groupKey]) {
+                    groupedData[groupKey] = [];
+                }
+                groupedData[groupKey].push(sensor);
+            });
+        }
+
+        function calculateGroupStats(sensors) {
+            const avgStandby = sensors.reduce((sum, s) => sum + s.standby, 0) / sensors.length;
+            const avgResponse = sensors.reduce((sum, s) => sum + s.response, 0) / sensors.length;
+            const avgCorrelation = sensors.reduce((sum, s) => sum + s.correlation, 0) / sensors.length;
+            const avgViolations = sensors.reduce((sum, s) => sum + s.violations, 0) / sensors.length;
+
+            const avgPerf = (avgStandby + avgResponse + avgCorrelation + (100 - avgViolations)) / 4;
+            let perfLevel = 'poor';
+            if (avgPerf > 85) perfLevel = 'good';
+            else if (avgPerf > 70) perfLevel = 'fair';
+
+            return {
+                standby: avgStandby,
+                response: avgResponse,
+                correlation: avgCorrelation,
+                violations: avgViolations,
+                performance: perfLevel
+            };
+        }
+
+        function renderGroups() {
+            const container = document.getElementById('groupedContainer');
+            container.innerHTML = '';
+
+            Object.keys(groupedData).forEach((groupName, groupIndex) => {
+                const sensors = groupedData[groupName];
+                const stats = calculateGroupStats(sensors);
+
+                // Create group header
+                const groupHeader = document.createElement('div');
+                groupHeader.className = 'group-header';
+                groupHeader.onclick = () => toggleGroup(groupIndex);
+                groupHeader.innerHTML = `
+                    <div class="group-info">
+                        <span class="group-toggle-icon">▼</span>
+                        <span class="group-name">${groupName}</span>
+                        <span class="group-count">${sensors.length} sensors</span>
+                    </div>
+                    <div class="group-stats">
+                        <div class="group-stat">
+                            <span class="group-stat-label">Standby</span>
+                            <span class="group-stat-value ${stats.performance}">${stats.standby.toFixed(0)}%</span>
+                        </div>
+                        <div class="group-stat">
+                            <span class="group-stat-label">Response</span>
+                            <span class="group-stat-value ${stats.performance}">${stats.response.toFixed(0)}%</span>
+                        </div>
+                        <div class="group-stat">
+                            <span class="group-stat-label">Correlation</span>
+                            <span class="group-stat-value ${stats.performance}">${stats.correlation.toFixed(0)}%</span>
+                        </div>
+                        <div class="group-stat">
+                            <span class="group-stat-label">Violations</span>
+                            <span class="group-stat-value ${stats.violations < 15 ? 'good' : stats.violations < 30 ? 'fair' : 'poor'}">
+                                ${stats.violations.toFixed(0)}%
+                            </span>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(groupHeader);
+
+                // Create group content
+                const groupContent = document.createElement('div');
+                groupContent.className = 'group-content';
+                groupContent.id = `group-${groupIndex}`;
+
+                const table = document.createElement('table');
+                table.className = 'data-table';
+                table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>Sensor / VAV</th>
+                            <th>Location</th>
+                            <th>Standby</th>
+                            <th>Response</th>
+                            <th>Correlation</th>
+                            <th>Violations</th>
+                            <th>24h Trend</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${sensors.map((sensor, index) => `
+                            <tr>
+                                <td>
+                                    <div class="sensor-cell">
+                                        <div class="sensor-indicator ${sensor.performance}"></div>
+                                        <div>
+                                            <div class="sensor-name">${sensor.sensor}</div>
+                                            <div class="sensor-id">${sensor.vav}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>${sensor.building}<br>Floor ${sensor.floor}</td>
+                                <td><span class="perf-value ${sensor.standby > 75 ? 'good' : sensor.standby > 60 ? 'fair' : 'poor'}">
+                                    ${sensor.standby.toFixed(1)}%
+                                </span></td>
+                                <td><span class="perf-value ${sensor.response > 85 ? 'good' : sensor.response > 70 ? 'fair' : 'poor'}">
+                                    ${sensor.response.toFixed(1)}%
+                                </span></td>
+                                <td><span class="perf-value ${sensor.correlation > 85 ? 'good' : sensor.correlation > 70 ? 'fair' : 'poor'}">
+                                    ${sensor.correlation.toFixed(1)}%
+                                </span></td>
+                                <td><span class="perf-value ${sensor.violations < 15 ? 'good' : sensor.violations < 30 ? 'fair' : 'poor'}">
+                                    ${sensor.violations.toFixed(1)}%
+                                </span></td>
+                                <td>
+                                    <div class="mini-chart">
+                                        ${generateMiniChart(sensor.trend)}
+                                    </div>
+                                </td>
+                                <td>
+                                    <button class="detail-btn" onclick="toggleDetail(${groupIndex}, ${index})">Details</button>
+                                </td>
+                            </tr>
+                            <tr class="detail-row" id="detail-${groupIndex}-${index}">
+                                <td colspan="8">
+                                    <div class="detail-content">
+                                        <div class="detail-header">Detailed Timeline: ${sensor.sensor} / ${sensor.vav}</div>
+                                        <div class="timeline-view">
+                                            <div class="timeline-labels">
+                                                <span>00:00</span>
+                                                <span>06:00</span>
+                                                <span>12:00</span>
+                                                <span>18:00</span>
+                                                <span>24:00</span>
+                                            </div>
+                                            <div class="timeline-tracks" style="margin-left: 100px;">
+                                                <div class="track">
+                                                    <div class="track-label">Sensor</div>
+                                                    ${generateTimelineEvents('sensor')}
+                                                </div>
+                                                <div class="track">
+                                                    <div class="track-label">Zone</div>
+                                                    ${generateTimelineEvents('zone')}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 20px;">
+                                            <div>
+                                                <strong>Occupied Time:</strong><br>
+                                                ${(Math.random() * 12 + 4).toFixed(1)} hours
+                                            </div>
+                                            <div>
+                                                <strong>Standby Time:</strong><br>
+                                                ${(Math.random() * 12 + 8).toFixed(1)} hours
+                                            </div>
+                                            <div>
+                                                <strong>Energy Saved:</strong><br>
+                                                $${(Math.random() * 50 + 20).toFixed(2)}
+                                            </div>
+                                            <div>
+                                                <strong>CO2 Reduced:</strong><br>
+                                                ${(Math.random() * 15 + 5).toFixed(1)} kg
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                `;
+
+                groupContent.appendChild(table);
+                container.appendChild(groupContent);
+            });
+        }
+
+        function generateMiniChart(data) {
+            return data.map((value, index) => {
+                const height = (value / 100) * 30;
+                const left = (index / data.length) * 100;
+                const color = value > 70 ? '#28a745' : value > 50 ? '#ffc107' : '#dc3545';
+                return `<div class="chart-bar" style="left: ${left}%; height: ${height}px; background: ${color};"></div>`;
+            }).join('');
+        }
+
+        function generateTimelineEvents(type) {
+            let events = '';
+            for (let h = 0; h < 24; h++) {
+                const isActive = Math.random() > 0.5;
+                const color = type === 'sensor'
+                    ? (isActive ? '#dc3545' : '#007bff')
+                    : (isActive ? '#fd7e14' : '#20c997');
+                const left = (h / 24) * 100;
+                const width = 3.8;
+
+                if (isActive || Math.random() > 0.3) {
+                    events += `<div style="position: absolute; left: ${left}%; width: ${width}%; height: 100%;
+                              background: ${color}; opacity: 0.7;"></div>`;
+                }
+
+                // Add violation markers
+                if (Math.random() > 0.85) {
+                    events += `<div style="position: absolute; left: ${left}%; top: -5px; width: 8px; height: 8px;
+                              background: #8b5cf6; border-radius: 50%; border: 2px solid white;"></div>`;
+                }
+            }
+            return events;
+        }
+
+        function toggleGroup(groupIndex) {
+            const header = document.querySelectorAll('.group-header')[groupIndex];
+            const content = document.getElementById(`group-${groupIndex}`);
+
+            header.classList.toggle('collapsed');
+            content.classList.toggle('collapsed');
+        }
+
+        function toggleDetail(groupIndex, sensorIndex) {
+            const detailRow = document.getElementById(`detail-${groupIndex}-${sensorIndex}`);
+            detailRow.classList.toggle('active');
+        }
+
+        function setGrouping(groupBy) {
+            currentGrouping = groupBy;
+
+            // Update toggle buttons
+            document.querySelectorAll('.toggle-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Re-group and render
+            groupSensorData(groupBy);
+            renderGroups();
+        }
+
+        function filterByPerformance(level) {
+            // Filter sensors by performance level
+            const filtered = allSensors.filter(s => s.performance === level);
+            alert(`Filtering to show ${filtered.length} sensors with ${level} performance`);
+        }
+
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const timeRange = document.getElementById('timeRange').value;
+            const alertLevel = document.getElementById('alertLevel').value;
+
+            // Apply filters and re-render
+            alert(`Applying filters:\nSearch: "${searchTerm}"\nTime Range: ${timeRange}\nAlert Level: ${alertLevel}`);
+        }
+
+        // Initialize
+        generateSensorData();
+        groupSensorData('building');
+        renderGroups();
+
+        // Auto-collapse some groups for cleaner initial view
+        setTimeout(() => {
+            [2, 3].forEach(index => {
+                if (document.querySelectorAll('.group-header')[index]) {
+                    toggleGroup(index);
+                }
+            });
+        }, 100);
+    </script>
+</body>
+</html>

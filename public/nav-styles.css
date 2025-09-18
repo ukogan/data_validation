@@ -1,0 +1,168 @@
+/**
+ * Compass-SOO Navigation Styles
+ * Shared navigation styling for SOO Generator application
+ */
+
+/* Main layout container with left navigation */
+.app-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Left navigation */
+.left-nav {
+    width: 280px;
+    background: #1e3a8a;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    z-index: 10;
+}
+
+.nav-header {
+    padding: 1.5rem !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+}
+
+.nav-logo {
+    margin-bottom: 1rem;
+}
+
+.logo-image {
+    max-width: 120px;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+.nav-title {
+    margin-bottom: 0 !important;
+}
+
+.nav-title h1 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0 !important;
+    text-align: center;
+}
+
+.nav-menu {
+    flex: 1;
+    padding: 1rem 0;
+}
+
+/* Section styling */
+.nav-section {
+    margin-bottom: 1.5rem;
+}
+
+.nav-section-header {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.9);
+    padding: 0.5rem 1.5rem;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    transition: all 0.2s;
+    cursor: pointer;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    font-size: 0.95rem;
+}
+
+/* Indent child items within sections */
+.nav-section .nav-item {
+    padding-left: 2.5rem;
+}
+
+.nav-item:hover:not(.disabled) {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.nav-item.active {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border-right: 3px solid #60a5fa;
+}
+
+.nav-item.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.nav-item-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.caution-icon {
+    color: #fbbf24;
+    font-size: 0.875rem;
+    margin-left: 0.5rem;
+}
+
+.compass-icon {
+    font-size: 2rem;
+}
+
+/* Main content */
+.main-content {
+    margin-left: 280px;
+    display: flex;
+    flex-direction: column;
+    background: #f8f9fa;
+    min-height: 100vh;
+}
+
+/* Mobile responsive navigation */
+@media (max-width: 768px) {
+    .left-nav {
+        position: relative;
+        width: 100%;
+        height: auto;
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+
+    .app-container {
+        flex-direction: column;
+    }
+
+    .nav-menu {
+        display: flex;
+        overflow-x: auto;
+        padding: 0.5rem 0;
+    }
+
+    .nav-item {
+        flex-shrink: 0;
+        min-width: fit-content;
+        padding: 0.5rem 1rem;
+    }
+
+    .nav-section .nav-item {
+        padding-left: 1rem;
+    }
+}

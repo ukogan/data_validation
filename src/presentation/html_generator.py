@@ -22,12 +22,28 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Occupancy Control System Timeline Viewer</title>
+    <link rel="stylesheet" href="public/nav-styles.css">
     <style>
         body {{
             font-family: Arial, sans-serif;
-            margin: 20px;
+            margin: 0;
             background-color: #f5f5f5;
             font-size: 14px;
+        }}
+        .app-container {{
+            display: flex;
+            min-height: 100vh;
+        }}
+        .main-content {{
+            flex: 1;
+            margin-left: 250px;
+            padding: 20px;
+            transition: margin-left 0.3s ease;
+        }}
+        @media (max-width: 768px) {{
+            .main-content {{
+                margin-left: 0;
+            }}
         }}
         .container {{
             max-width: 1200px;
@@ -499,7 +515,10 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="app-container">
+        <div id="compass-navigation"></div>
+        <div class="main-content">
+            <div class="container">
         <div class="page-header">
             <h1>ODCV controls analysis: Stanford 3-room POC findings</h1>
             <div style="font-size: 1.1em; color: #495057; margin-bottom: 5px;">BMS Performance Analysis & Timeline Visualization</div>
@@ -1065,6 +1084,10 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
         }});
         }}, 100); // Wait 100ms for all timelines to be fully rendered
     </script>
+            </div>
+        </div>
+    </div>
+    <script src="public/nav-component.js"></script>
 </body>
 </html>
     """
