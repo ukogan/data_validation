@@ -653,8 +653,7 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
             <div class="main-header">
                 <div class="header-info">
                     <div class="header-text">
-                        <h1>ODCV Analytics - Timeline Viewer</h1>
-                        <p>Building management system occupancy control validation and timeline visualization</p>
+                        <h1>Controls Validation & Continuous Commissioning - Stanford Children's Hospital</h1>
                     </div>
 
                     <!-- User info section -->
@@ -670,13 +669,6 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
             </div>
 
             <div class="container">
-        <div class="page-header">
-            <h1>ODCV controls analysis: Stanford 3-room POC findings</h1>
-            <div style="font-size: 1.1em; color: #495057; margin-bottom: 5px;">BMS Performance Analysis & Timeline Visualization</div>
-            <div class="analysis-period" id="analysis-period">
-                <!-- Period will be populated by JavaScript -->
-            </div>
-        </div>
 
         <div class="help-section">
             <div class="help-toggle" onclick="toggleHelp()">How to Read This Dashboard <span id="help-arrow">▶</span></div>
@@ -1068,6 +1060,9 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
 
             dashboard.innerHTML = `
                 <div class="dashboard-title">System Performance Overview</div>
+                <div class="analysis-period" id="analysis-period">
+                    <!-- Period will be populated by JavaScript -->
+                </div>
                 <div class="dashboard-grid">
                     <div class="dashboard-metric">
                         <div class="metric-title">Standby Mode
@@ -1205,8 +1200,12 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
             }}
         }}
 
-        // Set analysis period in header from first timeline data
+        // Create executive dashboard and set analysis period
         if (timelineData.length > 0) {{
+            // Create executive dashboard first (this creates the analysis-period element)
+            createExecutiveDashboard(timelineData);
+
+            // Now populate the analysis period
             const firstData = timelineData[0];
             const startTime = new Date(firstData.start_time);
             const endTime = new Date(firstData.end_time);
@@ -1217,9 +1216,6 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
                 to ${{endTime.toLocaleDateString()}} ${{endTime.toLocaleTimeString([], {{hour: '2-digit', minute:'2-digit'}})}}
                 (${{duration}})
             `;
-
-            // Create executive dashboard
-            createExecutiveDashboard(timelineData);
         }}
 
         // Create all timelines
