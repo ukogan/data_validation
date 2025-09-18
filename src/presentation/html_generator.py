@@ -265,22 +265,23 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
             margin-bottom: 12px;
         }}
         .analysis-period {{
-            font-size: 1.1em;
+            font-size: 0.9em;
             color: #666;
-            margin-bottom: 15px;
+            text-align: center;
+            margin: 8px 0 15px 0;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e9ecef;
         }}
         .legend {{
             display: flex;
             gap: 20px;
             flex-wrap: wrap;
             background: #f8f9fa;
-            padding: 15px;
+            padding: 12px 15px;
             border-radius: 6px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
             border: 1px solid #dee2e6;
-            margin-bottom: 12px;
+            margin: 10px 0 15px 0;
+            font-size: 0.9em;
         }}
         .legend-title {{
             font-weight: bold;
@@ -435,11 +436,9 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
         .dashboard-title {{
             font-size: 1.4em;
             font-weight: 600;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             color: #2c3e50;
             text-align: center;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #e9ecef;
         }}
         .dashboard-grid {{
             display: grid;
@@ -698,29 +697,6 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
             </div>
         </div>
 
-        <div class="legend">
-            <span class="legend-title">Legend:</span>
-            <div class="legend-item">
-                <div class="legend-color" style="background-color: #e74c3c;"></div>
-                <span>Sensor: Occupied</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background-color: #3498db;"></div>
-                <span>Sensor: Unoccupied</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background-color: #f1948a;"></div>
-                <span>Zone: Occupied Mode</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background-color: #85c1e9;"></div>
-                <span>Zone: Standby Mode</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background-color: #8e44ad;"></div>
-                <span>Out of spec mode change</span>
-            </div>
-        </div>
 
         <div id="executive-dashboard" class="executive-dashboard">
             <!-- Executive dashboard will be populated by JavaScript -->
@@ -753,6 +729,28 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
             // Create timeline HTML
             container.innerHTML = `
                 <div class="timeline-header">Sensor (${{data.sensor.replace(' presence', '')}}) → BMS Status (${{data.zone}})</div>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #e74c3c;"></div>
+                        <span>Sensor: Occupied</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #3498db;"></div>
+                        <span>Sensor: Unoccupied</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #f1948a;"></div>
+                        <span>Zone: Occupied Mode</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #85c1e9;"></div>
+                        <span>Zone: Standby Mode</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #8e44ad;"></div>
+                        <span>Out of spec mode change</span>
+                    </div>
+                </div>
 
                 <div class="analytics-row">
                     <div class="statistics-panel">
