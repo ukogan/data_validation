@@ -893,7 +893,13 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
                 <div class="dashboard-title">System Performance Overview</div>
                 <div class="dashboard-grid">
                     <div class="dashboard-metric">
-                        <div class="metric-title tooltip-enhanced" title="Average percentage of time zones spend in standby (energy-saving) mode. Higher percentages indicate better energy efficiency. Target: >50% for optimal savings.">Energy Savings Potential</div>
+                        <div class="metric-title">Energy Savings Potential
+                            <span class="help-icon">i
+                                <div class="tooltip-content">
+                                    Average percentage of time zones spend in standby (energy-saving) mode. Higher percentages indicate better energy efficiency. Target: >50% for optimal savings.
+                                </div>
+                            </span>
+                        </div>
                         <div class="metric-value" style="color: ${{avgStandbyPercent > 50 ? '#28a745' : avgStandbyPercent > 30 ? '#ffc107' : '#dc3545'}};">
                             ${{avgStandbyPercent.toFixed(1)}}%
                         </div>
@@ -901,7 +907,13 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
                     </div>
 
                     <div class="dashboard-metric">
-                        <div class="metric-title tooltip-enhanced" title="Measures how well BMS standby time correlates with sensor unoccupied time. Calculation: (BMS Standby Time ÷ Sensor Unoccupied Time) × 100. Good correlation = 80-120%, meaning zones properly enter standby mode when spaces are unoccupied, maximizing energy savings.">Correlation Health</div>
+                        <div class="metric-title">Correlation Health
+                            <span class="help-icon">i
+                                <div class="tooltip-content">
+                                    Measures how well BMS standby time correlates with sensor unoccupied time. Calculation: (BMS Standby Time ÷ Sensor Unoccupied Time) × 100. Good correlation = 80-120%, meaning zones properly enter standby mode when spaces are unoccupied, maximizing energy savings.
+                                </div>
+                            </span>
+                        </div>
                         <div class="metric-value" style="color: ${{goodCorrelation > poorCorrelation ? '#28a745' : '#dc3545'}};">
                             ${{goodCorrelation}} of ${{totalSensors}}
                         </div>
@@ -909,7 +921,13 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
                     </div>
 
                     <div class="dashboard-metric">
-                        <div class="metric-title tooltip-enhanced" title="Percentage of valid, non-duplicate data records received from BMS and sensor systems. High data quality ensures accurate analysis and reliable insights.">Data Quality</div>
+                        <div class="metric-title">Data Quality
+                            <span class="help-icon">i
+                                <div class="tooltip-content">
+                                    Percentage of valid, non-duplicate data records received from BMS and sensor systems. High data quality ensures accurate analysis and reliable insights.
+                                </div>
+                            </span>
+                        </div>
                         <div class="metric-value" style="color: #28a745;">98%</div>
                         <div class="metric-subtitle">BMS: 98% | Sensors: 99%</div>
                     </div>
