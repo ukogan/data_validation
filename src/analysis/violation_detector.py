@@ -1,9 +1,21 @@
 """
-Violation detection logic for ODCV analytics dashboard.
-Handles timing violations and error rate calculations.
+Specification deviation detection logic for ODCV analytics dashboard.
+Handles timing deviations and error rate calculations.
 """
 
 from datetime import timedelta
+
+# Configurable timing thresholds (in minutes)
+UNOCCUPIED_TO_STANDBY_TARGET = 15  # Base requirement
+OCCUPIED_TO_ACTIVE_TARGET = 5     # Base requirement
+EARLY_TOLERANCE = 2               # Minutes before target (ES/EO)
+LATE_TOLERANCE = 2                # Minutes after target (LS/LO)
+
+# Calculated thresholds
+ES_THRESHOLD = UNOCCUPIED_TO_STANDBY_TARGET - EARLY_TOLERANCE  # 13 min
+LS_THRESHOLD = UNOCCUPIED_TO_STANDBY_TARGET + LATE_TOLERANCE   # 17 min
+EO_THRESHOLD = OCCUPIED_TO_ACTIVE_TARGET - EARLY_TOLERANCE     # 3 min
+LO_THRESHOLD = OCCUPIED_TO_ACTIVE_TARGET + LATE_TOLERANCE      # 7 min
 
 
 def calculate_error_rates(violations, zone_events):
@@ -53,35 +65,47 @@ def calculate_error_rates(violations, zone_events):
     }
 
 
-def detect_timing_violations(events, current_sensor_state, current_zone_state, last_sensor_change, new_zone_state, event_time):
-    """Detect timing violations for zone mode changes"""
-    violations = []
+def detect_timing_deviations(events, current_sensor_state, current_zone_state, last_sensor_change, new_zone_state, event_time):
+    """Detect timing deviations for zone mode changes"""
+    deviations = []
 
     if current_zone_state != new_zone_state:
-        # Check for violations
+        # Check for deviations
         if last_sensor_change and current_sensor_state is not None:
             time_since_change = event_time - last_sensor_change
-            violation = None
+            deviation = None
 
             if current_sensor_state == 0 and new_zone_state == 1:  # Going to standby
-                if time_since_change < timedelta(minutes=13):  # Allow 2 min tolerance
-                    violation = {
-                        'type': 'premature_standby',
+                if time_since_change < timedelta(minutes=ES_THRESHOLD):  # Early Standby
+                    deviation = {
+                        'type': 'early_standby',
                         'message': f"Early standby transition after {time_since_change}",
-                        'expected': '15 minutes unoccupied'
+                        'expected': f'{UNOCCUPIED_TO_STANDBY_TARGET} minutes unoccupied'
+                    }
+                elif time_since_change > timedelta(minutes=LS_THRESHOLD):  # Late Standby
+                    deviation = {
+                        'type': 'late_standby',
+                        'message': f"Late standby transition after {time_since_change}",
+                        'expected': f'{UNOCCUPIED_TO_STANDBY_TARGET} minutes unoccupied'
                     }
             elif current_sensor_state == 1 and new_zone_state == 0:  # Going to occupied
-                if time_since_change < timedelta(minutes=3):  # Allow 2 min tolerance
-                    violation = {
-                        'type': 'premature_occupied',
+                if time_since_change < timedelta(minutes=EO_THRESHOLD):  # Early Occupied
+                    deviation = {
+                        'type': 'early_occupied',
                         'message': f"Early occupied transition after {time_since_change}",
-                        'expected': '5 minutes occupied'
+                        'expected': f'{OCCUPIED_TO_ACTIVE_TARGET} minutes occupied'
+                    }
+                elif time_since_change > timedelta(minutes=LO_THRESHOLD):  # Late Occupied
+                    deviation = {
+                        'type': 'late_occupied',
+                        'message': f"Late occupied transition after {time_since_change}",
+                        'expected': f'{OCCUPIED_TO_ACTIVE_TARGET} minutes occupied'
                     }
 
-            if violation:
-                violations.append({
+            if deviation:
+                deviations.append({
                     'timestamp': event_time.isoformat(),
-                    **violation
+                    **deviation
                 })
 
-    return violations
+    return deviations

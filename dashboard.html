@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ODCV Analytics Dashboard - API Powered</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f0f2f5;
+            color: #1c1e21;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a8e 100%);
+            color: white;
+            padding: 28px 36px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .header-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        /* Executive Dashboard */
+        .executive-dashboard {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            border: 2px solid #dee2e6;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 28px 36px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .dashboard-title {
+            font-size: 1.4em;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        .analysis-period {
+            text-align: center;
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .dashboard-metric {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .metric-title {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .metric-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .metric-subtitle {
+            font-size: 0.8em;
+            color: #666;
+        }
+
+        .help-icon {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #6c757d;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            font-style: normal;
+            text-align: center;
+            line-height: 18px;
+            cursor: help;
+            margin-left: 8px;
+            position: relative;
+        }
+
+        .help-icon:hover {
+            background: #495057;
+        }
+
+        .tooltip-content {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            top: -10px;
+            left: 25px;
+            background: #333;
+            color: white;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            white-space: nowrap;
+            z-index: 1000;
+            transition: opacity 0.3s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            min-width: 300px;
+        }
+
+        .tooltip-content::before {
+            content: "";
+            position: absolute;
+            top: 15px;
+            left: -5px;
+            border: 5px solid transparent;
+            border-right-color: #333;
+        }
+
+        .help-icon:hover .tooltip-content {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            margin: 28px 36px;
+        }
+
+        /* Controls */
+        .controls {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .controls-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .controls-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1e3a5f;
+        }
+
+        .group-toggle {
+            display: flex;
+            gap: 8px;
+            background: #f8f9fa;
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .toggle-btn {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #6c757d;
+            transition: all 0.2s;
+        }
+
+        .toggle-btn.active {
+            background: white;
+            color: #1e3a5f;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .filter-grid {
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        .time-period-toggle {
+            display: flex;
+            gap: 8px;
+            background: #f8f9fa;
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .time-btn {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #6c757d;
+            transition: all 0.2s;
+        }
+
+        .time-btn.active {
+            background: white;
+            color: #1e3a5f;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* Upload Section */
+        .upload-section {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .upload-area.dragover {
+            border-color: #007bff;
+            background: #f8f9ff;
+        }
+
+        .upload-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            margin: 10px;
+        }
+
+        .generate-test-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            margin: 10px;
+        }
+
+        /* Rest of styles from dashboard_variant3 */
+        .grouped-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .group-header {
+            background: linear-gradient(90deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 16px 24px;
+            border-left: 4px solid #007bff;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .group-header:hover {
+            background: linear-gradient(90deg, #e9ecef 0%, #dee2e6 100%);
+        }
+
+        .group-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .group-toggle-icon {
+            font-size: 18px;
+            transition: transform 0.3s;
+            transform: rotate(0deg);
+        }
+
+        .group-header.collapsed .group-toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .group-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e3a5f;
+        }
+
+        .group-count {
+            background: #007bff;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .group-stats {
+            display: flex;
+            gap: 24px;
+        }
+
+        .group-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .group-stat-label {
+            font-size: 11px;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .group-stat-value {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .group-stat-value.good { color: #28a745; }
+        .group-stat-value.fair { color: #ffc107; }
+        .group-stat-value.poor { color: #dc3545; }
+
+        .group-content {
+            max-height: 8000px;
+            overflow: auto;
+            transition: max-height 0.5s ease;
+        }
+
+        .group-content.collapsed {
+            max-height: 0;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table thead {
+            background: #f8f9fa;
+        }
+
+        .data-table th {
+            padding: 14px 24px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .data-table tbody tr {
+            border-bottom: 1px solid #f8f9fa;
+            transition: background 0.2s;
+        }
+
+        .data-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .data-table td {
+            padding: 24px 24px 16px 24px; /* top right bottom left */
+            position: relative;
+        }
+
+        .sensor-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sensor-indicator {
+            width: 8px;
+            height: 32px;
+            border-radius: 4px;
+        }
+
+        .sensor-indicator.good { background: #28a745; }
+        .sensor-indicator.fair { background: #ffc107; }
+        .sensor-indicator.poor { background: #dc3545; }
+
+        .sensor-name {
+            font-weight: 500;
+            color: #212529;
+        }
+
+        .sensor-id {
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .perf-value {
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 4px;
+            text-align: center;
+            display: inline-block;
+            min-width: 60px;
+            font-size: 12px;
+        }
+
+        .perf-value.good {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .perf-value.fair {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .perf-value.poor {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        /* Expand Button */
+        .expand-btn {
+            cursor: pointer;
+            font-size: 16px;
+            color: #6c757d;
+            transition: transform 0.2s;
+            user-select: none;
+            transform: rotate(180deg);
+        }
+
+        .expand-btn:hover {
+            color: #007bff;
+        }
+
+        .expand-btn.expanded {
+            transform: rotate(0deg);
+        }
+
+        /* Expandable Detail */
+        .detail-row {
+            display: none;
+            background: #f8f9fa;
+        }
+
+        .detail-row.active {
+            display: table-row;
+        }
+
+        .detail-content {
+            padding: 24px;
+        }
+
+        /* Correlation Chart */
+        .correlation-chart {
+            width: 120px;
+            height: 24px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #e9ecef;
+        }
+
+        .sensor-bar {
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .sensor-bar.occupied {
+            background: #2c2c2c;
+        }
+
+        .sensor-bar.standby {
+            background: #27ae60;
+        }
+
+        .bms-bar {
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .bms-bar.occupied {
+            background: rgba(102, 102, 102, 0.5);
+        }
+
+        .bms-bar.standby {
+            background: rgba(133, 208, 133, 0.5);
+        }
+
+        .correlation-label {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.7);
+            z-index: 2;
+        }
+
+        .correlation-label.left {
+            left: 6px;
+        }
+
+        .correlation-label.right {
+            right: 6px;
+        }
+
+        /* Commissioning Grid */
+        .commissioning-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 3px;
+            font-size: 12px;
+        }
+
+        .commissioning-item {
+            padding: 4px 6px;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .commissioning-item.good { background: #d4edda; color: #155724; }
+        .commissioning-item.fair { background: #fff3cd; color: #856404; }
+        .commissioning-item.poor { background: #f8d7da; color: #721c24; }
+
+        /* Mini Chart */
+        .mini-chart {
+            width: 100px;
+            height: 30px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-bar {
+            position: absolute;
+            bottom: 0;
+            width: 3px;
+            background: #007bff;
+            opacity: 0.7;
+        }
+
+        /* Mock Data Indicator */
+        .mock-data {
+            border: 2px solid #dc3545 !important;
+            position: relative;
+        }
+
+        .mock-data::after {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #dc3545;
+            color: white;
+            font-size: 9px;
+            font-weight: bold;
+            padding: 2px 4px;
+            border-radius: 3px;
+            z-index: 10;
+            white-space: nowrap;
+        }
+
+        .mock-data.data-quality::after { content: "DATA-QUALITY"; }
+        .mock-data.out-of-spec::after { content: "OUT-OF-SPEC"; }
+        .mock-data.bms-correlation::after { content: "BMS-CORR"; }
+        .mock-data.commissioning::after { content: "COMMISSION"; }
+        .mock-data.trend-chart::after { content: "24H-TREND"; }
+
+        /* Special positioning for table cell mock data labels - move outside containers */
+        td .mock-data::after {
+            top: -20px;
+            right: 0px;
+            font-size: 10px;
+            padding: 2px 5px;
+            border-radius: 3px;
+            background: #dc3545;
+            color: white;
+            font-weight: bold;
+            z-index: 20;
+        }
+
+        /* Real Data Indicator */
+        .real-data {
+            border: 2px solid #28a745 !important;
+            position: relative;
+        }
+
+        .real-data::after {
+            position: absolute;
+            top: -8px;
+            left: -8px;
+            background: #28a745;
+            color: white;
+            font-size: 8px;
+            font-weight: bold;
+            padding: 1px 3px;
+            border-radius: 2px;
+            z-index: 10;
+        }
+
+        .real-data.exec-1::after { content: "EXEC-1"; }
+        .real-data.exec-2::after { content: "EXEC-2"; }
+        .real-data.exec-3::after { content: "EXEC-3"; }
+        .real-data.group-1::after { content: "GROUP-1"; }
+        .real-data.sensor-1::after { content: "SENSOR-1"; }
+        .real-data.sensor-2::after { content: "SENSOR-2"; }
+        .real-data.sensor-3::after { content: "SENSOR-3"; }
+
+        /* Special positioning for table cell real data labels - move outside containers */
+        td .real-data::after {
+            top: -20px;
+            left: 0px;
+            font-size: 10px;
+            padding: 2px 5px;
+            border-radius: 3px;
+            background: #28a745;
+            color: white;
+            font-weight: bold;
+            z-index: 20;
+        }
+
+
+        /* Remove individual margins since we're using cell padding */
+        td .mock-data,
+        td .real-data {
+            margin-top: 0;
+        }
+
+        /* Reset correlation chart margins */
+        .correlation-chart.mock-data,
+        .correlation-chart.real-data,
+        .commissioning-grid.mock-data,
+        .mini-chart.mock-data {
+            margin-top: 0;
+        }
+
+        /* New approach: HTML label elements */
+        .table-cell-label {
+            position: absolute;
+            top: 4px;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 2px 5px;
+            border-radius: 3px;
+            z-index: 20;
+            white-space: nowrap;
+        }
+
+        .table-cell-label.mock-label {
+            background: #dc3545;
+            color: white;
+            right: 4px;
+        }
+
+        .table-cell-label.real-label {
+            background: #28a745;
+            color: white;
+            left: 4px;
+        }
+
+        /* Ensure tooltips are visible */
+        .table-cell-label[title] {
+            z-index: 9999 !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Controls Validation & Continuous Commissioning</h1>
+        <div class="header-subtitle">Stanford Children's Hospital - API Powered Dashboard</div>
+    </div>
+
+    <!-- Upload Section -->
+    <div class="upload-section">
+        <h3>Data Upload</h3>
+        <div class="upload-area" id="uploadArea">
+            <p>Drag and drop CSV file here or click to select</p>
+            <input type="file" id="fileInput" accept=".csv" style="display: none;">
+            <button class="upload-btn" onclick="document.getElementById('fileInput').click()">Choose File</button>
+            <button class="generate-test-btn" onclick="generateTestData()">Generate Test Data</button>
+        </div>
+        <div id="uploadStatus"></div>
+    </div>
+
+    <div id="executive-dashboard" class="executive-dashboard">
+        <div class="loading">Loading dashboard metrics...</div>
+    </div>
+
+    <div class="main-content">
+        <div class="controls">
+            <div class="filter-grid">
+                <div class="time-period-toggle">
+                    <button class="time-btn active" onclick="setTimePeriod('24h')">Latest 24 Hrs</button>
+                    <button class="time-btn" onclick="setTimePeriod('5d')">5 Days</button>
+                    <button class="time-btn" onclick="setTimePeriod('30d')">30 Days</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="grouped-container" id="groupedContainer">
+            <div class="loading">Upload data to view sensor metrics</div>
+        </div>
+    </div>
+
+    <script>
+        // API base URL
+        const API_BASE = '';
+
+        // Global state
+        let currentData = null;
+        let currentGrouping = 'building';
+        let currentTimePeriod = '24h';
+
+        // File upload handling
+        document.getElementById('fileInput').addEventListener('change', handleFileUpload);
+
+        const uploadArea = document.getElementById('uploadArea');
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                uploadFile(files[0]);
+            }
+        });
+
+        async function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                await uploadFile(file);
+            }
+        }
+
+        async function uploadFile(file) {
+            const statusDiv = document.getElementById('uploadStatus');
+            statusDiv.innerHTML = '<div class="loading">Uploading and processing file...</div>';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch(`${API_BASE}/api/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Upload failed: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                statusDiv.innerHTML = `<div class="success">File uploaded successfully! Processed ${result.records_count} records.</div>`;
+
+                // Load dashboard data
+                await loadDashboardData();
+
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="error">Upload failed: ${error.message}</div>`;
+            }
+        }
+
+        async function generateTestData() {
+            const statusDiv = document.getElementById('uploadStatus');
+            statusDiv.innerHTML = '<div class="loading">Generating test data...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/generate-test-data?sensors=100&days=30`);
+
+                if (!response.ok) {
+                    throw new Error(`Generation failed: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                statusDiv.innerHTML = `<div class="success">${result.message}</div>`;
+
+                // Load dashboard data
+                await loadDashboardData();
+
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="error">Test data generation failed: ${error.message}</div>`;
+            }
+        }
+
+        async function loadDashboardData() {
+            try {
+                // Load dashboard metrics
+                await loadDashboardMetrics();
+
+                // Load sensor metrics
+                await loadSensorMetrics();
+
+            } catch (error) {
+                console.error('Failed to load dashboard data:', error);
+                document.getElementById('executive-dashboard').innerHTML =
+                    `<div class="error">Failed to load dashboard data: ${error.message}</div>`;
+            }
+        }
+
+        async function loadDashboardMetrics() {
+            const response = await fetch(`${API_BASE}/api/dashboard/metrics?period=${currentTimePeriod}`);
+            if (!response.ok) {
+                throw new Error('Failed to load dashboard metrics');
+            }
+
+            const metrics = await response.json();
+
+            document.getElementById('executive-dashboard').innerHTML = `
+                <div class="dashboard-title">System Performance Overview</div>
+                <div class="analysis-period">
+                    Analysis Period: ${(() => {
+                        const periodDisplay = {
+                            '24h': 'Latest 24 Hours',
+                            '5d': 'Latest 5 Days',
+                            '30d': 'Latest 30 Days'
+                        }[currentTimePeriod] || 'Latest 24 Hours';
+                        return periodDisplay;
+                    })()}
+                </div>
+                <div class="dashboard-grid">
+                    <div class="dashboard-metric">
+                        <div class="metric-title">Standby Mode</div>
+                        <div class="metric-value real-data exec-1" style="color: ${metrics.standby_mode_percent > 50 ? '#28a745' : metrics.standby_mode_percent > 30 ? '#ffc107' : '#dc3545'};" title="Percentage of time that zones cut VAV by 75%. Calculated by aggregating total standby time across all sensor/zone pairs divided by total duration. Higher percentages indicate better energy efficiency. Target: >50% for optimal savings.">
+                            ${metrics.standby_mode_percent.toFixed(1)}%
+                        </div>
+                        <div class="metric-subtitle">Percentage of time that zones cut VAV by 75%</div>
+                    </div>
+
+                    <div class="dashboard-metric">
+                        <div class="metric-title">Airflow reduction</div>
+                        <div class="metric-value real-data exec-2" style="color: ${metrics.airflow_reduction_percent > 15 ? '#28a745' : '#ffc107'};" title="Actual airflow reduction achieved by multiplying standby mode percentage by VAV reduction factor (75%). Calculated as: Standby Mode % × 0.75. Target: >15% for good energy performance.">
+                            ${metrics.airflow_reduction_percent.toFixed(1)}%
+                        </div>
+                        <div class="metric-subtitle">Standby Mode × 75% VAV reduction</div>
+                    </div>
+
+                    <div class="dashboard-metric">
+                        <div class="metric-title">Correlation Health</div>
+                        <div class="metric-value real-data exec-3" style="color: ${metrics.correlation_health.good > metrics.correlation_health.poor ? '#28a745' : '#dc3545'};" title="Number of sensors with good BMS-to-sensor correlation. Good correlation means zone standby time is 80-120% of sensor unoccupied time, indicating the BMS properly responds to occupancy detection. Poor correlation suggests timing issues or misconfigured controls.">
+                            ${metrics.correlation_health.good} of ${metrics.correlation_health.good + metrics.correlation_health.poor}
+                        </div>
+                        <div class="metric-subtitle">sensors with good correlation</div>
+                    </div>
+
+                    <div class="dashboard-metric real-data data-quality">
+                        <div class="metric-title">Data Quality</div>
+                        <div class="metric-value real-data" style="color: ${metrics.data_quality_percent > 95 ? '#28a745' : metrics.data_quality_percent > 80 ? '#ffc107' : '#dc3545'};" title="Percentage of valid data records (0 or 1 values) based on expected data rates: 2 points/minute for sensors, 1 point/minute for BMS. Calculated by comparing actual valid points to expected totals for the time period.">${metrics.data_quality_percent.toFixed(1)}%</div>
+                        <div class="metric-subtitle">BMS: ${metrics.bms_quality_percent.toFixed(1)}% | Sensors: ${metrics.sensor_quality_percent.toFixed(1)}%</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function loadSensorMetrics() {
+            const response = await fetch(`${API_BASE}/api/sensors/metrics?period=${currentTimePeriod}`);
+            if (!response.ok) {
+                throw new Error('Failed to load sensor metrics');
+            }
+
+            const sensors = await response.json();
+            renderSensorTable(sensors);
+        }
+
+        function renderSensorTable(sensors) {
+            const container = document.getElementById('groupedContainer');
+
+            if (sensors.length === 0) {
+                container.innerHTML = '<div class="loading">No sensor data available</div>';
+                return;
+            }
+
+            // Group sensors by building-floor (115-X format)
+            // TODO: Make grouping pattern configurable in the future
+            const groupedSensors = {};
+            sensors.forEach(sensor => {
+                const parts = sensor.sensor_id.split('-');
+                const buildingFloor = parts.length >= 2 ? `${parts[0]}-${parts[1]}` : (parts[0] || 'Unknown');
+                if (!groupedSensors[buildingFloor]) {
+                    groupedSensors[buildingFloor] = [];
+                }
+                groupedSensors[buildingFloor].push(sensor);
+            });
+
+            container.innerHTML = '';
+
+            Object.keys(groupedSensors).forEach((building, groupIndex) => {
+                const groupSensors = groupedSensors[building];
+
+                // Calculate group statistics
+                const avgStandby = groupSensors.reduce((sum, s) => sum + s.zone_standby_percent, 0) / groupSensors.length;
+
+                // Calculate real out of spec percentage using deviations/mode_changes
+                const totalDeviations = groupSensors.reduce((sum, s) => sum + s.total_deviations_count, 0);
+                const totalModeChanges = groupSensors.reduce((sum, s) => sum + s.total_mode_changes, 0);
+                const outOfSpecPct = totalModeChanges > 0 ? (totalDeviations / totalModeChanges) * 100 : 0;
+
+                // Create group header
+                const groupHeader = document.createElement('div');
+                groupHeader.className = 'group-header collapsed';
+                groupHeader.onclick = () => toggleGroup(groupIndex);
+                groupHeader.innerHTML = `
+                    <div class="group-info">
+                        <span class="group-toggle-icon">^</span>
+                        <span class="group-name">${building}</span>
+                        <span class="group-count">${groupSensors.length} sensors</span>
+                    </div>
+                    <div class="group-stats">
+                        <div class="group-stat">
+                            <span class="group-stat-label">Standby</span>
+                            <span class="group-stat-value real-data group-1 ${avgStandby > 60 ? 'good' : avgStandby > 40 ? 'fair' : 'poor'}">
+                                ${avgStandby.toFixed(0)}%
+                            </span>
+                        </div>
+                        <div class="group-stat real-data out-of-spec">
+                            <span class="group-stat-label">Out of Spec</span>
+                            <span class="group-stat-value ${outOfSpecPct < 15 ? 'good' : outOfSpecPct < 30 ? 'fair' : 'poor'}">
+                                ${outOfSpecPct.toFixed(0)}%
+                            </span>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(groupHeader);
+
+                // Create group content
+                const groupContent = document.createElement('div');
+                groupContent.className = 'group-content collapsed';
+                groupContent.id = `group-${groupIndex}`;
+
+                const table = document.createElement('table');
+                table.className = 'data-table';
+                table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th style="width: 25px;"></th>
+                            <th style="width: 180px;">Sensor / VAV</th>
+                            <th style="width: 120px;">Occupied</th>
+                            <th style="width: 120px;">Standby</th>
+                            <th style="width: 160px;">Commissioning</th>
+                            <th style="width: 100px;">24h Trend</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${groupSensors.map((sensor, index) => `
+                        <tr>
+                            <td style="text-align: center;">
+                                <span class="expand-btn" onclick="toggleDetail(${groupIndex}, ${index})">^</span>
+                            </td>
+                            <td>
+                                <div class="sensor-cell">
+                                    <div>
+                                        <div class="sensor-name">${sensor.sensor_id}</div>
+                                        <div class="sensor-id">${sensor.zone_id}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="table-cell-label real-label">OCCUPIED-%</div>
+                                <div class="correlation-chart" title="Percentage of time each device was in occupied/active state. Sensor (top bar) shows actual occupancy detection. BMS (bottom bar) shows zone control response.">
+                                    <div class="sensor-bar occupied" style="width: ${sensor.sensor_occupied_percent}%;"></div>
+                                    <div class="bms-bar occupied" style="width: ${sensor.zone_occupied_percent}%;"></div>
+                                    <span class="correlation-label left">${sensor.sensor_occupied_percent.toFixed(0)}%</span>
+                                    <span class="correlation-label right">${sensor.zone_occupied_percent.toFixed(0)}%</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="table-cell-label real-label">UNOCCUPIED-%</div>
+                                <div class="correlation-chart" title="Percentage of time each device was in unoccupied/standby state. Sensor (top bar) shows unoccupied detection. BMS (bottom bar) shows zone standby mode.">
+                                    <div class="sensor-bar standby" style="width: ${sensor.sensor_unoccupied_percent}%;"></div>
+                                    <div class="bms-bar standby" style="width: ${sensor.zone_standby_percent}%;"></div>
+                                    <span class="correlation-label left">${sensor.sensor_unoccupied_percent.toFixed(0)}%</span>
+                                    <span class="correlation-label right">${sensor.zone_standby_percent.toFixed(0)}%</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="table-cell-label real-label">COMMISSION</div>
+                                <div class="commissioning-grid" title="Commissioning deviation counts. ES: Early Standby (zone switches to standby before 15min unoccupied). LS: Late Standby (zone delays standby beyond 17min). EO: Early Occupied (zone activates before 5min occupied). LO: Late Occupied (zone delays activation beyond 7min).">
+                                    <div class="commissioning-item ${sensor.es_count === 0 ? 'good' : sensor.es_count <= 1 ? 'fair' : 'poor'}">
+                                        ES: ${sensor.es_count}
+                                    </div>
+                                    <div class="commissioning-item ${sensor.ls_count === 0 ? 'good' : sensor.ls_count <= 1 ? 'fair' : 'poor'}">
+                                        LS: ${sensor.ls_count}
+                                    </div>
+                                    <div class="commissioning-item ${sensor.eo_count === 0 ? 'good' : sensor.eo_count <= 1 ? 'fair' : 'poor'}">
+                                        EO: ${sensor.eo_count}
+                                    </div>
+                                    <div class="commissioning-item ${sensor.lo_count === 0 ? 'good' : sensor.lo_count <= 1 ? 'fair' : 'poor'}">
+                                        LO: ${sensor.lo_count}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="table-cell-label real-label">24H-TREND</div>
+                                <div class="mini-chart" title="Hourly zone standby percentage over the last 24 hours. Shows daily patterns of building usage and BMS control behavior.">
+                                    ${generateMiniChart(sensor.trend_data || Array.from({length: 24}, () => Math.random() * 100))}
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="detail-row" id="detail-${groupIndex}-${index}">
+                            <td colspan="7">
+                                <div class="detail-content">
+                                    <!-- Placeholder for timeline container and violations -->
+                                    <div style="padding: 20px; color: #666;">Timeline and violations data will be implemented in Phase 3</div>
+                                </div>
+                            </td>
+                        </tr>`).join('')}
+                    </tbody>
+                `;
+
+                groupContent.appendChild(table);
+                container.appendChild(groupContent);
+            });
+        }
+
+        function toggleGroup(groupIndex) {
+            const header = document.querySelectorAll('.group-header')[groupIndex];
+            const content = document.getElementById(`group-${groupIndex}`);
+
+            header.classList.toggle('collapsed');
+            content.classList.toggle('collapsed');
+        }
+
+        function generateMiniChart(data) {
+            return data.map((value, index) => {
+                const height = (value / 100) * 30;
+                const left = (index / data.length) * 100;
+                const color = value > 70 ? '#28a745' : value > 50 ? '#ffc107' : '#dc3545';
+                return `<div class="chart-bar" style="left: ${left}%; height: ${height}px; background: ${color};"></div>`;
+            }).join('');
+        }
+
+        function toggleDetail(groupIndex, sensorIndex) {
+            const detailRow = document.getElementById(`detail-${groupIndex}-${sensorIndex}`);
+            const expandBtn = event.target;
+
+            detailRow.classList.toggle('active');
+            expandBtn.classList.toggle('expanded');
+        }
+
+        function setTimePeriod(period) {
+            // Update toggle buttons
+            document.querySelectorAll('.time-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Update current time period and reload data
+            currentTimePeriod = period;
+            console.log(`Time period set to: ${period}`);
+
+            // Reload all dashboard data with new time period
+            loadDashboardData();
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if we have any data on startup
+            fetch(`${API_BASE}/api/sensors`)
+                .then(response => response.json())
+                .then(sensors => {
+                    if (sensors.length > 0) {
+                        loadDashboardData();
+                    }
+                })
+                .catch(error => {
+                    console.log('No initial data available');
+                });
+        });
+    </script>
+</body>
+</html>

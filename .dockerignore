@@ -1,0 +1,14 @@
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.git/
+.gitignore
+*.csv
+node_modules/
+.env
+.DS_Store
+test-results/
+*.md
+!README.md
