@@ -48,6 +48,9 @@ class AnalysisRequest(BaseModel):
     start_time: Optional[str] = None
     duration_hours: Optional[int] = 24
 
+class DatasetRequest(BaseModel):
+    dataset: str
+
 class DashboardMetrics(BaseModel):
     standby_mode_percent: float
     airflow_reduction_percent: float
@@ -183,8 +186,93 @@ async def dashboard_html():
 
 @app.get("/api/health")
 async def health_check():
-    """Health check endpoint"""
-    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+    """Comprehensive health check endpoint with data state validation"""
+    timestamp = datetime.now().isoformat()
+
+    # Basic system health
+    health_status = {
+        "status": "healthy",
+        "timestamp": timestamp,
+        "system": {
+            "api_server": "running",
+            "data_loader": "available"
+        },
+        "data": {
+            "loaded": False,
+            "records_count": 0,
+            "sensors_count": 0,
+            "zones_count": 0,
+            "mappings_count": 0,
+            "time_range": None,
+            "issues": []
+        },
+        "configuration": {
+            "sensor_zone_map": len(SENSOR_ZONE_MAP),
+            "data_source": "none"
+        }
+    }
+
+    # Check data state
+    if uploaded_data:
+        health_status["data"]["loaded"] = True
+        health_status["data"]["records_count"] = len(uploaded_data)
+
+        # Count sensors and zones
+        sensors = [r['name'] for r in uploaded_data if 'presence' in r['name']]
+        zones = [r['name'] for r in uploaded_data if r['name'].startswith('BV')]
+        unique_sensors = list(set(sensors))
+        unique_zones = list(set(zones))
+
+        health_status["data"]["sensors_count"] = len(unique_sensors)
+        health_status["data"]["zones_count"] = len(unique_zones)
+        health_status["data"]["mappings_count"] = len(SENSOR_ZONE_MAP)
+
+        # Time range
+        if uploaded_data:
+            health_status["data"]["time_range"] = {
+                "start": uploaded_data[0]['time'].isoformat(),
+                "end": uploaded_data[-1]['time'].isoformat()
+            }
+
+        # Data validation issues
+        issues = []
+
+        # Check for sensor-zone mapping coverage
+        unmapped_sensors = [s for s in unique_sensors if s not in SENSOR_ZONE_MAP]
+        if unmapped_sensors:
+            issues.append(f"{len(unmapped_sensors)} sensors not mapped to zones")
+
+        # Check for orphaned zones
+        mapped_zones = list(SENSOR_ZONE_MAP.values())
+        orphaned_zones = [z for z in unique_zones if z not in mapped_zones]
+        if orphaned_zones:
+            issues.append(f"{len(orphaned_zones)} zones not mapped to sensors")
+
+        # Check data quality basics
+        if len(unique_sensors) == 0:
+            issues.append("No presence sensors found in data")
+        if len(unique_zones) == 0:
+            issues.append("No BV zones found in data")
+
+        # Check for recent data (within last 7 days)
+        if uploaded_data:
+            latest_time = uploaded_data[-1]['time']
+            days_old = (datetime.now().replace(tzinfo=latest_time.tzinfo) - latest_time).days
+            if days_old > 7:
+                issues.append(f"Data is {days_old} days old")
+
+        health_status["data"]["issues"] = issues
+
+        # Overall health status
+        if issues:
+            health_status["status"] = "degraded"
+            if len(issues) > 2:
+                health_status["status"] = "unhealthy"
+    else:
+        health_status["status"] = "no_data"
+        health_status["data"]["issues"] = ["No data loaded - use dataset selection or upload CSV"]
+
+    return health_status
 
 @app.post("/api/upload")
 async def upload_csv(file: UploadFile = File(...)):
@@ -239,6 +327,66 @@ async def upload_csv(file: UploadFile = File(...)):
         # Clean up temporary file
         os.unlink(tmp_file_path)
 
+@app.post("/api/load-dataset")
+async def load_preset_dataset(request: DatasetRequest):
+    """Load a preset dataset by name"""
+    global uploaded_data, SENSOR_ZONE_MAP
+
+    # Define dataset file mappings
+    dataset_files = {
+        "30_days_mock": "SCH-1_data_30_days_mock.csv",
+        "5_days_mock": "SCH-1_data_5_days_mock.csv",
+        "1_day_mock": "SCH-1_data_1_day_mock.csv",
+        "30_days_sensors_01_04": "SCH-1_data_30_days_sensors_01-04.csv",
+        "30_days_test_subset": "SCH-1_data_30_days_test_subset.csv"
+    }
+
+    dataset_key = request.dataset
+    if dataset_key not in dataset_files:
+        raise HTTPException(status_code=400, detail=f"Unknown dataset: {dataset_key}")
+
+    file_path = dataset_files[dataset_key]
+
+    # Check if file exists
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail=f"Dataset file not found: {file_path}")
+
+    try:
+        # Load data using our existing data loader
+        uploaded_data = load_data(file_path)
+
+        # Auto-generate sensor-zone mapping from the loaded data
+        sensors = [record['name'] for record in uploaded_data if 'presence' in record['name']]
+        zones = [record['name'] for record in uploaded_data if record['name'].startswith('BV')]
+
+        # Create mapping: assume sensors and zones are paired by number
+        new_sensor_zone_map = {}
+        unique_sensors = sorted(list(set(sensors)))
+        unique_zones = sorted(list(set(zones)))
+
+        # Map sensors to zones (1:1 mapping by order)
+        for i, sensor in enumerate(unique_sensors):
+            if i < len(unique_zones):
+                new_sensor_zone_map[sensor] = unique_zones[i]
+
+        # Update global mapping
+        SENSOR_ZONE_MAP.clear()
+        SENSOR_ZONE_MAP.update(new_sensor_zone_map)
+
+        return {
+            "message": f"Dataset {dataset_key} loaded successfully",
+            "records_count": len(uploaded_data),
+            "sensors_found": len(unique_sensors),
+            "zones_found": len(unique_zones),
+            "mappings_created": len(new_sensor_zone_map),
+            "time_range": {
+                "start": uploaded_data[0]['time'].isoformat() if uploaded_data else None,
+                "end": uploaded_data[-1]['time'].isoformat() if uploaded_data else None
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to load dataset: {str(e)}")
+
 @app.get("/api/sensors")
 async def get_sensors() -> List[str]:
     """Get list of available sensors"""
@@ -257,13 +405,9 @@ async def get_sensor_zone_map() -> Dict[str, str]:
 async def get_dashboard_metrics(period: str = Query("24h", description="Time period: 24h, 5d, or 30d")) -> DashboardMetrics:
     """Get system-wide dashboard metrics"""
     if not uploaded_data:
-        return DashboardMetrics(
-            standby_mode_percent=0.0,
-            airflow_reduction_percent=0.0,
-            correlation_health={"good": 0, "poor": 0},
-            data_quality_percent=0.0,
-            sensor_quality_percent=0.0,
-            bms_quality_percent=0.0
+        raise HTTPException(
+            status_code=400,
+            detail="No data loaded. Please use the dataset selection interface or upload a CSV file before requesting metrics."
         )
 
     # Filter data by time period
@@ -319,7 +463,10 @@ async def get_dashboard_metrics(period: str = Query("24h", description="Time per
 async def get_sensor_metrics(period: str = Query("24h", description="Time period: 24h, 5d, or 30d")) -> List[SensorMetrics]:
     """Get detailed metrics for all sensors"""
     if not uploaded_data:
-        return []
+        raise HTTPException(
+            status_code=400,
+            detail="No data loaded. Please use the dataset selection interface or upload a CSV file before requesting sensor metrics."
+        )
 
     # Filter data by time period
     filtered_data = filter_data_by_period(uploaded_data, period)

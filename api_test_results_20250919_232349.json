@@ -1,0 +1,162 @@
+{
+  "timestamp": "2025-09-19T23:23:31.094881",
+  "test_results": {
+    "health_check": {
+      "status": 200,
+      "response_time": 0.040027,
+      "data_loaded": false,
+      "status_level": "healthy"
+    },
+    "dataset_loading": {
+      "30_days_test_subset": {
+        "status": "success",
+        "load_time": 1.86,
+        "records_count": 385978,
+        "sensors_found": 4,
+        "zones_found": 4,
+        "mappings_created": 4
+      },
+      "1_day_mock": {
+        "status": "success",
+        "load_time": 0.76,
+        "records_count": 147475,
+        "sensors_found": 100,
+        "zones_found": 103,
+        "mappings_created": 100
+      },
+      "5_days_mock": {
+        "status": "success",
+        "load_time": 9.22,
+        "records_count": 1833833,
+        "sensors_found": 100,
+        "zones_found": 103,
+        "mappings_created": 100
+      }
+    },
+    "api_endpoints": {
+      "/api/sensors": {
+        "status_code": 200,
+        "response_time": 0.016,
+        "content_length": 113,
+        "has_data": true,
+        "data_type": "list",
+        "list_length": 8
+      },
+      "/api/dashboard/metrics?period=24h": {
+        "status_code": 200,
+        "response_time": 0.032,
+        "content_length": 201,
+        "has_data": true,
+        "data_type": "dict",
+        "keys": [
+          "standby_mode_percent",
+          "airflow_reduction_percent",
+          "correlation_health",
+          "data_quality_percent",
+          "sensor_quality_percent"
+        ]
+      },
+      "/api/dashboard/metrics?period=5d": {
+        "status_code": 200,
+        "response_time": 0.058,
+        "content_length": 201,
+        "has_data": true,
+        "data_type": "dict",
+        "keys": [
+          "standby_mode_percent",
+          "airflow_reduction_percent",
+          "correlation_health",
+          "data_quality_percent",
+          "sensor_quality_percent"
+        ]
+      },
+      "/api/dashboard/metrics?period=30d": {
+        "status_code": 200,
+        "response_time": 0.344,
+        "content_length": 219,
+        "has_data": true,
+        "data_type": "dict",
+        "keys": [
+          "standby_mode_percent",
+          "airflow_reduction_percent",
+          "correlation_health",
+          "data_quality_percent",
+          "sensor_quality_percent"
+        ]
+      },
+      "/api/sensors/metrics?period=24h": {
+        "status_code": 200,
+        "response_time": 0.05,
+        "content_length": 512,
+        "has_data": true,
+        "data_type": "list",
+        "list_length": 1
+      },
+      "/api/sensors/metrics?period=5d": {
+        "status_code": 200,
+        "response_time": 0.071,
+        "content_length": 492,
+        "has_data": true,
+        "data_type": "list",
+        "list_length": 1
+      },
+      "/api/sensors/metrics?period=30d": {
+        "status_code": 200,
+        "response_time": 0.463,
+        "content_length": 2148,
+        "has_data": true,
+        "data_type": "list",
+        "list_length": 4
+      }
+    },
+    "time_period_consistency": {
+      "24h": {
+        "dashboard_status": 200,
+        "sensor_status": 200,
+        "both_successful": true
+      },
+      "5d": {
+        "dashboard_status": 200,
+        "sensor_status": 200,
+        "both_successful": true
+      },
+      "30d": {
+        "dashboard_status": 200,
+        "sensor_status": 200,
+        "both_successful": true
+      }
+    },
+    "error_handling": {
+      "/api/dashboard/metrics?period=24h": {
+        "status_code": 200,
+        "returns_error": false,
+        "response_preview": "{\"standby_mode_percent\":0.0,\"airflow_reduction_percent\":0.0,\"correlation_health\":{\"good\":0,\"poor\":1},\"data_quality_percent\":100.0,\"sensor_quality_perc"
+      },
+      "/api/sensors/metrics?period=24h": {
+        "status_code": 200,
+        "returns_error": false,
+        "response_preview": "[{\"sensor_id\":\"115-2-04\",\"zone_id\":\"BV203\",\"occupancy_correlation\":352.9330065359477,\"standby_correlation\":0.0,\"total_deviations_count\":0,\"es_count\":0"
+      }
+    },
+    "performance_benchmarks": {
+      "/api/dashboard/metrics?period=24h": {
+        "avg_time": 0.033,
+        "min_time": 0.032,
+        "max_time": 0.035,
+        "successful_runs": 5
+      },
+      "/api/sensors/metrics?period=24h": {
+        "avg_time": 0.05,
+        "min_time": 0.05,
+        "max_time": 0.051,
+        "successful_runs": 5
+      },
+      "/api/sensors": {
+        "avg_time": 0.016,
+        "min_time": 0.016,
+        "max_time": 0.016,
+        "successful_runs": 5
+      }
+    }
+  }
+}

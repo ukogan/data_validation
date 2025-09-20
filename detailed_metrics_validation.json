@@ -1,0 +1,12 @@
+{
+  "timestamp": "2025-09-19T20:48:25.245822",
+  "dataset": "SCH-1_data_1_day_mock.csv (Dataset A)",
+  "test_results": {
+    "24h_executive": {},
+    "24h_floors": {},
+    "5d_executive": {},
+    "5d_floors": {},
+    "30d_executive": {},
+    "30d_floors": {}
+  }
+}

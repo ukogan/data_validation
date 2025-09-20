@@ -737,15 +737,54 @@
         <div class="header-subtitle">Stanford Children's Hospital - API Powered Dashboard</div>
     </div>
 
-    <!-- Upload Section -->
+    <!-- Dataset Selection Section -->
     <div class="upload-section">
-        <h3>Data Upload</h3>
-        <div class="upload-area" id="uploadArea">
-            <p>Drag and drop CSV file here or click to select</p>
-            <input type="file" id="fileInput" accept=".csv" style="display: none;">
-            <button class="upload-btn" onclick="document.getElementById('fileInput').click()">Choose File</button>
-            <button class="generate-test-btn" onclick="generateTestData()">Generate Test Data</button>
+        <h3>Dataset Selection</h3>
+
+        <!-- Current Dataset Info -->
+        <div id="currentDatasetInfo" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #007bff;">
+            <strong>Current Dataset:</strong> <span id="currentDatasetName">No dataset loaded</span><br>
+            <span id="currentDatasetDetails" style="font-size: 0.9em; color: #666;"></span>
         </div>
+
+        <!-- Preset Datasets -->
+        <div style="margin-bottom: 20px;">
+            <h4 style="margin-bottom: 15px; color: #1e3a5f;">Preset Datasets</h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px;">
+                <button class="upload-btn" onclick="loadPresetDataset('30_days_mock')">
+                    30 Days / 100 Sensors
+                    <div style="font-size: 0.8em; opacity: 0.8;">Full dataset with BV zones</div>
+                </button>
+                <button class="upload-btn" onclick="loadPresetDataset('5_days_mock')">
+                    5 Days / 100 Sensors
+                    <div style="font-size: 0.8em; opacity: 0.8;">Medium dataset with BV zones</div>
+                </button>
+                <button class="upload-btn" onclick="loadPresetDataset('1_day_mock')">
+                    1 Day / 100 Sensors
+                    <div style="font-size: 0.8em; opacity: 0.8;">Quick test dataset</div>
+                </button>
+                <button class="upload-btn" onclick="loadPresetDataset('30_days_sensors_01_04')">
+                    30 Days / 16 Sensors
+                    <div style="font-size: 0.8em; opacity: 0.8;">Sensors only (no BV zones)</div>
+                </button>
+                <button class="upload-btn" onclick="loadPresetDataset('30_days_test_subset')">
+                    30 Days / 4 Sensors + 4 BV
+                    <div style="font-size: 0.8em; opacity: 0.8;">Test dataset with known mappings</div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Custom Upload -->
+        <div>
+            <h4 style="margin-bottom: 15px; color: #1e3a5f;">Custom Upload</h4>
+            <div class="upload-area" id="uploadArea">
+                <p>Drag and drop CSV file here or click to select</p>
+                <input type="file" id="fileInput" accept=".csv" style="display: none;">
+                <button class="upload-btn" onclick="document.getElementById('fileInput').click()">Choose File</button>
+                <button class="generate-test-btn" onclick="generateTestData()">Generate Test Data</button>
+            </div>
+        </div>
+
         <div id="uploadStatus"></div>
     </div>
 
@@ -827,12 +866,60 @@
                 const result = await response.json();
                 statusDiv.innerHTML = `<div class="success">File uploaded successfully! Processed ${result.records_count} records.</div>`;
 
+                // Update current dataset info
+                updateCurrentDatasetInfo(file.name, `Custom upload - ${result.records_count} records`);
+
                 // Load dashboard data
                 await loadDashboardData();
 
             } catch (error) {
                 statusDiv.innerHTML = `<div class="error">Upload failed: ${error.message}</div>`;
             }
+        }
+
+        async function loadPresetDataset(datasetKey) {
+            const statusDiv = document.getElementById('uploadStatus');
+            statusDiv.innerHTML = '<div class="loading">Loading preset dataset...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/load-dataset`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ dataset: datasetKey })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to load dataset: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                statusDiv.innerHTML = `<div class="success">Dataset loaded successfully! Processed ${result.records_count} records.</div>`;
+
+                // Update current dataset info
+                const datasetInfo = {
+                    '30_days_mock': { name: '30 Days / 100 Sensors', details: 'Full dataset with BV zones' },
+                    '5_days_mock': { name: '5 Days / 100 Sensors', details: 'Medium dataset with BV zones' },
+                    '1_day_mock': { name: '1 Day / 100 Sensors', details: 'Quick test dataset' },
+                    '30_days_sensors_01_04': { name: '30 Days / 16 Sensors', details: 'Sensors only (no BV zones)' },
+                    '30_days_test_subset': { name: '30 Days / 4 Sensors + 4 BV', details: 'Test dataset with known mappings' }
+                };
+
+                const info = datasetInfo[datasetKey] || { name: datasetKey, details: 'Unknown dataset' };
+                updateCurrentDatasetInfo(info.name, `${info.details} - ${result.records_count} records`);
+
+                // Load dashboard data
+                await loadDashboardData();
+
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="error">Failed to load preset dataset: ${error.message}</div>`;
+            }
+        }
+
+        function updateCurrentDatasetInfo(name, details) {
+            document.getElementById('currentDatasetName').textContent = name;
+            document.getElementById('currentDatasetDetails').textContent = details;
         }
 
         async function generateTestData() {

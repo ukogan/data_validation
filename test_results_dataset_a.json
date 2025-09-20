@@ -1,0 +1,33 @@
+{
+  "timestamp": "2025-09-19T20:37:05.761568",
+  "dataset": "SCH-1_data_30_days_sensors_01-04.csv",
+  "test_results": {
+    "initial_load_time": 0.11,
+    "period_switching_times": {
+      "24h": 4.06,
+      "5d": 1.04,
+      "30d": 1.03
+    },
+    "executive_metrics": {
+      "24h": {},
+      "5d": {},
+      "30d": {}
+    },
+    "sensor_count": 0,
+    "trend_chart_screenshots": {},
+    "api_response_times": {
+      "/api/sensors": {
+        "response_time": 10.001,
+        "status": 200
+      },
+      "/api/dashboard/metrics?period=24h": {
+        "response_time": 2.838,
+        "status": 200
+      },
+      "/api/sensors/metrics?period=24h": {
+        "response_time": 3.259,
+        "status": 200
+      }
+    }
+  }
+}
