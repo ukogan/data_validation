@@ -945,27 +945,73 @@
         }
 
         async function loadDashboardData() {
+            console.log(`🚀 [DEBUG] Starting loadDashboardData() for period: ${currentTimePeriod}`);
             try {
                 // Load dashboard metrics
+                console.log(`📊 [DEBUG] Loading dashboard metrics...`);
                 await loadDashboardMetrics();
+                console.log(`✅ [DEBUG] Dashboard metrics loaded successfully`);
 
                 // Load sensor metrics
+                console.log(`🔧 [DEBUG] Loading sensor metrics...`);
                 await loadSensorMetrics();
+                console.log(`✅ [DEBUG] Sensor metrics loaded successfully`);
 
             } catch (error) {
-                console.error('Failed to load dashboard data:', error);
+                console.error('❌ [ERROR] Failed to load dashboard data:', error);
+                console.error('❌ [ERROR] Error details:', {
+                    name: error.name,
+                    message: error.message,
+                    stack: error.stack,
+                    currentTimePeriod: currentTimePeriod
+                });
+
+                // Show detailed error to user
                 document.getElementById('executive-dashboard').innerHTML =
-                    `<div class="error">Failed to load dashboard data: ${error.message}</div>`;
+                    `<div class="error">
+                        <h3>Failed to load dashboard data</h3>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <p><strong>Time Period:</strong> ${currentTimePeriod}</p>
+                        <p><strong>Suggestion:</strong> Try switching to a shorter time period (24h) if the current period is timing out.</p>
+                    </div>`;
             }
         }
 
         async function loadDashboardMetrics() {
+            console.log(`🔍 [DEBUG] Loading dashboard metrics for period: ${currentTimePeriod}`);
+            console.log(`🔍 [DEBUG] Fetching URL: ${API_BASE}/api/dashboard/metrics?period=${currentTimePeriod}`);
+
+            const startTime = performance.now();
             const response = await fetch(`${API_BASE}/api/dashboard/metrics?period=${currentTimePeriod}`);
+            const responseTime = performance.now() - startTime;
+
+            console.log(`🔍 [DEBUG] API Response received in ${responseTime.toFixed(2)}ms`);
+            console.log(`🔍 [DEBUG] Response status: ${response.status} ${response.statusText}`);
+
             if (!response.ok) {
+                console.error(`❌ [ERROR] API failed: ${response.status} ${response.statusText}`);
                 throw new Error('Failed to load dashboard metrics');
             }
 
             const metrics = await response.json();
+            console.log(`🔍 [DEBUG] Raw metrics data received:`, metrics);
+            console.log(`🔍 [DEBUG] Standby mode: ${metrics.standby_mode_percent}%`);
+            console.log(`🔍 [DEBUG] Airflow reduction: ${metrics.airflow_reduction_percent}%`);
+            console.log(`🔍 [DEBUG] Correlation health:`, metrics.correlation_health);
+
+            // Check if we have mostly zero values
+            const hasLowPerformance = metrics.standby_mode_percent === 0 && metrics.airflow_reduction_percent === 0;
+            const alertBanner = hasLowPerformance ? `
+                <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 6px; padding: 15px; margin-bottom: 20px; color: #856404;">
+                    <strong>⚠️ Low Energy Savings Detected</strong><br>
+                    This time period shows minimal energy savings. Consider:
+                    <ul style="margin: 8px 0 0 20px; line-height: 1.4;">
+                        <li>Testing a longer time period (30 days) for better analysis</li>
+                        <li>Checking if BMS controls are properly configured</li>
+                        <li>Verifying sensor-to-zone mappings are correct</li>
+                    </ul>
+                </div>
+            ` : '';
 
             document.getElementById('executive-dashboard').innerHTML = `
                 <div class="dashboard-title">System Performance Overview</div>
@@ -979,13 +1025,21 @@
                         return periodDisplay;
                     })()}
                 </div>
+                ${alertBanner}
                 <div class="dashboard-grid">
                     <div class="dashboard-metric">
                         <div class="metric-title">Standby Mode</div>
                         <div class="metric-value real-data exec-1" style="color: ${metrics.standby_mode_percent > 50 ? '#28a745' : metrics.standby_mode_percent > 30 ? '#ffc107' : '#dc3545'};" title="Percentage of time that zones cut VAV by 75%. Calculated by aggregating total standby time across all sensor/zone pairs divided by total duration. Higher percentages indicate better energy efficiency. Target: >50% for optimal savings.">
                             ${metrics.standby_mode_percent.toFixed(1)}%
                         </div>
-                        <div class="metric-subtitle">Percentage of time that zones cut VAV by 75%</div>
+                        <div class="metric-subtitle">
+                            ${metrics.standby_mode_percent === 0 ?
+                                '⚠️ No energy savings detected in this period' :
+                                'Percentage of time that zones cut VAV by 75%'}
+                        </div>
+                        ${metrics.standby_mode_percent === 0 ?
+                            '<div style="font-size: 0.8em; color: #666; margin-top: 5px;">💡 Try a longer time period (30 days) for better analysis</div>' :
+                            ''}
                     </div>
 
                     <div class="dashboard-metric">
@@ -993,7 +1047,14 @@
                         <div class="metric-value real-data exec-2" style="color: ${metrics.airflow_reduction_percent > 15 ? '#28a745' : '#ffc107'};" title="Actual airflow reduction achieved by multiplying standby mode percentage by VAV reduction factor (75%). Calculated as: Standby Mode % × 0.75. Target: >15% for good energy performance.">
                             ${metrics.airflow_reduction_percent.toFixed(1)}%
                         </div>
-                        <div class="metric-subtitle">Standby Mode × 75% VAV reduction</div>
+                        <div class="metric-subtitle">
+                            ${metrics.airflow_reduction_percent === 0 ?
+                                '⚠️ No airflow reduction achieved' :
+                                'Standby Mode × 75% VAV reduction'}
+                        </div>
+                        ${metrics.airflow_reduction_percent === 0 ?
+                            '<div style="font-size: 0.8em; color: #666; margin-top: 5px;">💡 Derived from standby mode - check BMS controls</div>' :
+                            ''}
                     </div>
 
                     <div class="dashboard-metric">
@@ -1199,6 +1260,8 @@
         }
 
         function setTimePeriod(period) {
+            console.log(`🕐 [DEBUG] Setting time period from ${currentTimePeriod} to ${period}`);
+
             // Update toggle buttons
             document.querySelectorAll('.time-btn').forEach(btn => {
                 btn.classList.remove('active');
@@ -1206,10 +1269,16 @@
             event.target.classList.add('active');
 
             // Update current time period and reload data
+            const previousPeriod = currentTimePeriod;
             currentTimePeriod = period;
-            console.log(`Time period set to: ${period}`);
+            console.log(`✅ [DEBUG] Time period changed: ${previousPeriod} → ${period}`);
+
+            // Show loading state immediately
+            document.getElementById('executive-dashboard').innerHTML =
+                `<div class="loading">Loading ${period} data... This may take a moment for longer periods.</div>`;
 
             // Reload all dashboard data with new time period
+            console.log(`🔄 [DEBUG] Reloading dashboard data for period: ${period}`);
             loadDashboardData();
         }
 

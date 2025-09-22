@@ -334,11 +334,11 @@ async def load_preset_dataset(request: DatasetRequest):
 
     # Define dataset file mappings
     dataset_files = {
-        "30_days_mock": "SCH-1_data_30_days_mock.csv",
-        "5_days_mock": "SCH-1_data_5_days_mock.csv",
-        "1_day_mock": "SCH-1_data_1_day_mock.csv",
-        "30_days_sensors_01_04": "SCH-1_data_30_days_sensors_01-04.csv",
-        "30_days_test_subset": "SCH-1_data_30_days_test_subset.csv"
+        "30_days_mock": "data/SCH-1_data_30_days_mock.csv",
+        "5_days_mock": "data/SCH-1_data_5_days_mock.csv",
+        "1_day_mock": "data/SCH-1_data_1_day_mock.csv",
+        "30_days_sensors_01_04": "data/SCH-1_data_30_days_sensors_01-04.csv",
+        "30_days_test_subset": "data/SCH-1_data_30_days_test_subset.csv"
     }
 
     dataset_key = request.dataset
@@ -404,60 +404,126 @@ async def get_sensor_zone_map() -> Dict[str, str]:
 @app.get("/api/dashboard/metrics")
 async def get_dashboard_metrics(period: str = Query("24h", description="Time period: 24h, 5d, or 30d")) -> DashboardMetrics:
     """Get system-wide dashboard metrics"""
+    print(f"\n🚀 [BACKEND] Dashboard metrics calculation started for period: {period}")
+    print(f"📊 [BACKEND] Total uploaded data records: {len(uploaded_data) if uploaded_data else 0}")
+
     if not uploaded_data:
+        print("❌ [BACKEND] No uploaded data available")
         raise HTTPException(
             status_code=400,
             detail="No data loaded. Please use the dataset selection interface or upload a CSV file before requesting metrics."
         )
 
     # Filter data by time period
+    print(f"🔍 [BACKEND] Filtering data for period: {period}")
     filtered_data = filter_data_by_period(uploaded_data, period)
+    print(f"📋 [BACKEND] Filtered data: {len(filtered_data)} records (from {len(uploaded_data)} total)")
 
     # Calculate metrics using existing analysis modules
     sensors = list(SENSOR_ZONE_MAP.keys())
+    print(f"🎯 [BACKEND] Processing {len(sensors)} sensors: {sensors}")
+    print(f"🗺️ [BACKEND] Sensor-Zone mappings: {SENSOR_ZONE_MAP}")
+
     good_correlation = 0
     poor_correlation = 0
     total_standby_time = 0
     total_time = 0
 
+    sensors_processed = 0
+    sensors_with_data = 0
+
     for sensor_name in sensors:
-        if sensor_name in [r['name'] for r in filtered_data]:
+        print(f"\n🔧 [BACKEND] Processing sensor: {sensor_name}")
+
+        sensor_has_data = sensor_name in [r['name'] for r in filtered_data]
+        print(f"📡 [BACKEND] Sensor {sensor_name} has data in filtered dataset: {sensor_has_data}")
+
+        if sensor_has_data:
             zone_name = SENSOR_ZONE_MAP[sensor_name]
+            print(f"🏢 [BACKEND] Mapped to zone: {zone_name}")
 
             # Get data for this sensor-zone pair from filtered data
             sensor_data = [r for r in filtered_data if r['name'] == sensor_name]
             zone_data = [r for r in filtered_data if r['name'] == zone_name]
 
+            print(f"📊 [BACKEND] Sensor data records: {len(sensor_data)}")
+            print(f"🏢 [BACKEND] Zone data records: {len(zone_data)}")
+
             if sensor_data and zone_data:
+                sensors_with_data += 1
                 start_time = min(r['time'] for r in sensor_data + zone_data)
                 end_time = max(r['time'] for r in sensor_data + zone_data)
+                print(f"⏰ [BACKEND] Time range: {start_time} to {end_time}")
 
                 # Calculate occupancy statistics
+                print(f"🧮 [BACKEND] Calculating occupancy statistics for {sensor_name}...")
                 stats = calculate_occupancy_statistics(sensor_data, zone_data, start_time, end_time)
 
+                print(f"📈 [BACKEND] Stats for {sensor_name}:")
+                print(f"   Zone standby ratio: {stats.get('zone_standby_ratio', 'N/A')}%")
+                print(f"   Zone standby time: {stats.get('zone_standby_time', 'N/A')}")
+                print(f"   Total duration: {stats.get('total_duration', 'N/A')}")
+
                 # Check correlation
-                if 80 <= stats['zone_standby_ratio'] <= 120:
+                ratio = stats['zone_standby_ratio']
+                if 80 <= ratio <= 120:
                     good_correlation += 1
+                    print(f"✅ [BACKEND] Good correlation for {sensor_name} (ratio: {ratio}%)")
                 else:
                     poor_correlation += 1
+                    print(f"❌ [BACKEND] Poor correlation for {sensor_name} (ratio: {ratio}%)")
 
                 # Accumulate standby time
-                total_standby_time += stats['zone_standby_time'].total_seconds()
-                total_time += stats['total_duration'].total_seconds()
+                standby_seconds = stats['zone_standby_time'].total_seconds()
+                duration_seconds = stats['total_duration'].total_seconds()
+                total_standby_time += standby_seconds
+                total_time += duration_seconds
+
+                print(f"⏱️ [BACKEND] Added {standby_seconds:.2f}s standby / {duration_seconds:.2f}s total")
+                print(f"📊 [BACKEND] Running totals: {total_standby_time:.2f}s standby / {total_time:.2f}s total")
+            else:
+                print(f"❌ [BACKEND] Missing data - sensor_data: {len(sensor_data)}, zone_data: {len(zone_data)}")
+
+        sensors_processed += 1
+        print(f"🔄 [BACKEND] Processed {sensors_processed}/{len(sensors)} sensors")
+
+    print(f"\n📊 [BACKEND] CALCULATION SUMMARY:")
+    print(f"   Sensors processed: {sensors_processed}")
+    print(f"   Sensors with data: {sensors_with_data}")
+    print(f"   Good correlations: {good_correlation}")
+    print(f"   Poor correlations: {poor_correlation}")
+    print(f"   Total standby time: {total_standby_time:.2f} seconds")
+    print(f"   Total time: {total_time:.2f} seconds")
 
     standby_percent = (total_standby_time / total_time * 100) if total_time > 0 else 0
+    airflow_percent = standby_percent * 0.75
+
+    print(f"\n🎯 [BACKEND] FINAL CALCULATIONS:")
+    print(f"   Standby percentage: {standby_percent:.4f}% ({total_standby_time:.2f}s / {total_time:.2f}s)")
+    print(f"   Airflow reduction: {airflow_percent:.4f}% (standby × 0.75)")
 
     # Calculate real data quality
+    print(f"\n🔍 [BACKEND] Calculating data quality...")
     data_quality = calculate_data_quality(filtered_data, period)
+    print(f"✅ [BACKEND] Data quality calculated: {data_quality}")
 
-    return DashboardMetrics(
+    final_result = DashboardMetrics(
         standby_mode_percent=standby_percent,
-        airflow_reduction_percent=standby_percent * 0.75,
+        airflow_reduction_percent=airflow_percent,
         correlation_health={"good": good_correlation, "poor": poor_correlation},
         data_quality_percent=data_quality['overall_quality'],
         sensor_quality_percent=data_quality['sensor_quality'],
         bms_quality_percent=data_quality['bms_quality']
     )
+
+    print(f"\n📋 [BACKEND] RETURNING RESULT:")
+    print(f"   standby_mode_percent: {final_result.standby_mode_percent}")
+    print(f"   airflow_reduction_percent: {final_result.airflow_reduction_percent}")
+    print(f"   correlation_health: good={final_result.correlation_health['good']}, poor={final_result.correlation_health['poor']}")
+    print(f"   data_quality_percent: {final_result.data_quality_percent}")
+    print(f"🏁 [BACKEND] Dashboard metrics calculation completed\n")
+
+    return final_result
 
 @app.get("/api/sensors/metrics")
 async def get_sensor_metrics(period: str = Query("24h", description="Time period: 24h, 5d, or 30d")) -> List[SensorMetrics]:

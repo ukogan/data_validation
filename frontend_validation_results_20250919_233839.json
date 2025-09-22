@@ -1,0 +1,99 @@
+{
+  "timestamp": "2025-09-19T23:37:19.467936",
+  "critical_findings": [
+    "30 Days / 4 Sensors + 4 BV: NO valid data in any time period",
+    "1 Day / 100 Sensors: Test failed - Page.goto: Timeout 30000ms exceeded.\nCall log:\n  - navigating to \"http://localhost:8000/\", waiting until \"load\"\n",
+    "5 Days / 100 Sensors: Test failed - Page.goto: Timeout 30000ms exceeded.\nCall log:\n  - navigating to \"http://localhost:8000/\", waiting until \"load\"\n"
+  ],
+  "dataset_results": {
+    "30_days_test_subset": {
+      "dataset_info": {
+        "key": "30_days_test_subset",
+        "name": "30 Days / 4 Sensors + 4 BV",
+        "expected_non_zero": true
+      },
+      "load_time": 4.47,
+      "data_validation": {},
+      "time_period_validation": {
+        "24h": {
+          "period": "24h",
+          "executive_metrics": {
+            "non_zero_values_found": 2,
+            "sample_values": [
+              "0 of 1",
+              "100.0%"
+            ]
+          },
+          "sensor_data_found": false,
+          "data_appears_valid": false,
+          "screenshot_file": "screenshots/validation/30_days_test_subset_24h_validation.png",
+          "error": "Page.query_selector_all: Unknown engine \"text-content\" while parsing selector text-content=/[0-9]+\\.[0-9]+%/"
+        },
+        "5d": {
+          "period": "5d",
+          "executive_metrics": {
+            "non_zero_values_found": 2,
+            "sample_values": [
+              "0 of 1",
+              "100.0%"
+            ]
+          },
+          "sensor_data_found": false,
+          "data_appears_valid": false,
+          "screenshot_file": "screenshots/validation/30_days_test_subset_5d_validation.png",
+          "error": "Page.query_selector_all: Unknown engine \"text-content\" while parsing selector text-content=/[0-9]+\\.[0-9]+%/"
+        },
+        "30d": {
+          "period": "30d",
+          "executive_metrics": {
+            "non_zero_values_found": 2,
+            "sample_values": [
+              "0 of 1",
+              "100.0%"
+            ]
+          },
+          "sensor_data_found": false,
+          "data_appears_valid": false,
+          "screenshot_file": "screenshots/validation/30_days_test_subset_30d_validation.png",
+          "error": "Page.query_selector_all: Unknown engine \"text-content\" while parsing selector text-content=/[0-9]+\\.[0-9]+%/"
+        }
+      },
+      "issues_found": [
+        "24h: Data extraction error - Page.query_selector_all: Unknown engine \"text-content\" while parsing selector text-content=/[0-9]+\\.[0-9]+%/",
+        "5d: Data extraction error - Page.query_selector_all: Unknown engine \"text-content\" while parsing selector text-content=/[0-9]+\\.[0-9]+%/",
+        "30d: Data extraction error - Page.query_selector_all: Unknown engine \"text-content\" while parsing selector text-content=/[0-9]+\\.[0-9]+%/"
+      ],
+      "data_loads_correctly": false,
+      "valid_periods_count": 0,
+      "total_periods_tested": 3
+    },
+    "1_day_mock": {
+      "dataset_info": {
+        "key": "1_day_mock",
+        "name": "1 Day / 100 Sensors",
+        "expected_non_zero": true
+      },
+      "load_time": 0,
+      "data_validation": {},
+      "time_period_validation": {},
+      "issues_found": [],
+      "data_loads_correctly": false,
+      "test_error": "Page.goto: Timeout 30000ms exceeded.\nCall log:\n  - navigating to \"http://localhost:8000/\", waiting until \"load\"\n"
+    },
+    "5_days_mock": {
+      "dataset_info": {
+        "key": "5_days_mock",
+        "name": "5 Days / 100 Sensors",
+        "expected_non_zero": true
+      },
+      "load_time": 0,
+      "data_validation": {},
+      "time_period_validation": {},
+      "issues_found": [],
+      "data_loads_correctly": false,
+      "test_error": "Page.goto: Timeout 30000ms exceeded.\nCall log:\n  - navigating to \"http://localhost:8000/\", waiting until \"load\"\n"
+    }
+  },
+  "overall_status": "CRITICAL_FAILURE",
+  "summary": "\ud83d\udea8 CRITICAL: NO datasets display valid data on frontend"
+}
