@@ -104,7 +104,7 @@ def filter_data_by_period(data, period: str):
     return [record for record in data if record['time'] >= start_time]
 
 def calculate_data_quality(filtered_data, period: str):
-    """Calculate data quality based on expected data rates and validity"""
+    """Calculate data quality based on missing intervals (not duplicate points)"""
     if not filtered_data:
         return {
             'overall_quality': 0.0,
@@ -112,49 +112,88 @@ def calculate_data_quality(filtered_data, period: str):
             'bms_quality': 0.0
         }
 
-    # Calculate expected data points based on time period duration
-    if period == "24h":
-        hours = 24
-    elif period == "5d":
-        hours = 5 * 24
-    elif period == "30d":
-        hours = 30 * 24
-    else:
-        hours = 24  # Default to 24h
+    # Get actual time range from the data
+    timestamps = [record['time'] for record in filtered_data]
+    start_time = min(timestamps)
+    end_time = max(timestamps)
+    actual_duration = end_time - start_time
 
-    # Expected totals (2 points/min for sensors, 1 point/min for BMS)
-    expected_sensor_points = hours * 120  # 2 per minute
-    expected_bms_points = hours * 60      # 1 per minute
+    # Separate sensor and BMS data by device
+    sensor_intervals = {}  # sensor_name -> set of 30s interval slots
+    bms_intervals = {}     # bms_name -> set of 60s interval slots
 
-    # Count actual valid data points
-    valid_sensor_points = 0
-    valid_bms_points = 0
-
+    # Process each data point to find which intervals have data
     for record in filtered_data:
-        # Check if value is valid (0 or 1)
-        if record['value'] in [0, 1]:
-            if 'presence' in record['name']:  # Sensor data
-                valid_sensor_points += 1
-            elif record['name'].startswith('BV'):  # BMS/Zone data
-                valid_bms_points += 1
+        if record['value'] not in [0, 1]:  # Skip invalid values
+            continue
 
-    # Calculate quality percentages
-    sensor_quality = (valid_sensor_points / expected_sensor_points) * 100 if expected_sensor_points > 0 else 0
-    bms_quality = (valid_bms_points / expected_bms_points) * 100 if expected_bms_points > 0 else 0
+        timestamp = record['time']
 
-    # Overall quality (weighted average)
-    total_expected = expected_sensor_points + expected_bms_points
-    total_valid = valid_sensor_points + valid_bms_points
-    overall_quality = (total_valid / total_expected) * 100 if total_expected > 0 else 0
+        if 'presence' in record['name']:  # Sensor data (30s intervals)
+            # Calculate which 30-second slot this timestamp falls into
+            seconds_from_start = (timestamp - start_time).total_seconds()
+            interval_slot = int(seconds_from_start // 30)
+
+            if record['name'] not in sensor_intervals:
+                sensor_intervals[record['name']] = set()
+            sensor_intervals[record['name']].add(interval_slot)
+
+        elif record['name'].startswith('BV'):  # BMS data (60s intervals)
+            # Calculate which 60-second slot this timestamp falls into
+            seconds_from_start = (timestamp - start_time).total_seconds()
+            interval_slot = int(seconds_from_start // 60)
+
+            if record['name'] not in bms_intervals:
+                bms_intervals[record['name']] = set()
+            bms_intervals[record['name']].add(interval_slot)
+
+    # Calculate total expected intervals
+    total_30s_intervals = int(actual_duration.total_seconds() // 30)
+    total_60s_intervals = int(actual_duration.total_seconds() // 60)
+
+    # Calculate sensor coverage (% of 30s intervals with data)
+    sensor_coverage_rates = []
+    for sensor_name in SENSOR_ZONE_MAP.keys():
+        if sensor_name in sensor_intervals:
+            covered_intervals = len(sensor_intervals[sensor_name])
+            coverage_rate = (covered_intervals / total_30s_intervals) * 100 if total_30s_intervals > 0 else 0
+            sensor_coverage_rates.append(coverage_rate)
+        else:
+            sensor_coverage_rates.append(0.0)  # No data for this sensor
+
+    # Calculate BMS coverage (% of 60s intervals with data)
+    bms_coverage_rates = []
+    for bms_name in set(SENSOR_ZONE_MAP.values()):
+        if bms_name in bms_intervals:
+            covered_intervals = len(bms_intervals[bms_name])
+            coverage_rate = (covered_intervals / total_60s_intervals) * 100 if total_60s_intervals > 0 else 0
+            bms_coverage_rates.append(coverage_rate)
+        else:
+            bms_coverage_rates.append(0.0)  # No data for this BMS
+
+    # Average coverage across all devices
+    sensor_quality = sum(sensor_coverage_rates) / len(sensor_coverage_rates) if sensor_coverage_rates else 0
+    bms_quality = sum(bms_coverage_rates) / len(bms_coverage_rates) if bms_coverage_rates else 0
+    overall_quality = (sensor_quality + bms_quality) / 2
+
+    # Debug logging
+    print(f"📊 [DATA QUALITY DEBUG] Period: {period}")
+    print(f"   Time span: {actual_duration} ({start_time} to {end_time})")
+    print(f"   Total 30s intervals: {total_30s_intervals}, Total 60s intervals: {total_60s_intervals}")
+    print(f"   Sensor coverage rates: {[f'{rate:.1f}%' for rate in sensor_coverage_rates]}")
+    print(f"   BMS coverage rates: {[f'{rate:.1f}%' for rate in bms_coverage_rates]}")
+    print(f"   Average sensor quality: {sensor_quality:.1f}% (% of 30s intervals with data)")
+    print(f"   Average BMS quality: {bms_quality:.1f}% (% of 60s intervals with data)")
+    print(f"   Overall quality: {overall_quality:.1f}%")
 
     return {
-        'overall_quality': min(100.0, overall_quality),  # Cap at 100%
-        'sensor_quality': min(100.0, sensor_quality),
-        'bms_quality': min(100.0, bms_quality),
-        'valid_sensor_points': valid_sensor_points,
-        'expected_sensor_points': expected_sensor_points,
-        'valid_bms_points': valid_bms_points,
-        'expected_bms_points': expected_bms_points
+        'overall_quality': overall_quality,
+        'sensor_quality': sensor_quality,
+        'bms_quality': bms_quality,
+        'total_30s_intervals': total_30s_intervals,
+        'total_60s_intervals': total_60s_intervals,
+        'sensor_coverage_rates': sensor_coverage_rates,
+        'bms_coverage_rates': bms_coverage_rates
     }
 
 @app.get("/", response_class=HTMLResponse)
