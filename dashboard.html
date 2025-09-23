@@ -557,6 +557,18 @@
             border-bottom: none;
         }
 
+        .timeline-day-header {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 6px 12px;
+            margin: 8px 0 4px 0;
+            font-size: 12px;
+            font-weight: bold;
+            color: #495057;
+            width: 100%;
+        }
+
         .timeline {
             position: relative;
             height: 24px;
@@ -1522,9 +1534,17 @@
                     throw new Error('Sensor name not provided');
                 }
 
-                // Calculate time period limits (max 5 days for performance)
-                const maxDays = currentTimePeriod === '30d' ? 5 : (currentTimePeriod === '5d' ? 5 : 1);
-                const durationHours = Math.min(maxDays * 24, currentTimePeriod === '24h' ? 24 : (currentTimePeriod === '5d' ? 120 : 120));
+                // Calculate duration based on time period toggle
+                let durationHours;
+                if (currentTimePeriod === '24h') {
+                    durationHours = 24;
+                } else if (currentTimePeriod === '5d') {
+                    durationHours = 5 * 24; // 120 hours
+                } else if (currentTimePeriod === '30d') {
+                    durationHours = 5 * 24; // Limited to 5 days for performance
+                } else {
+                    durationHours = 24; // Default to 24h
+                }
 
                 console.log(`🔍 [DEBUG] Loading timeline for sensor: ${sensorName}, period: ${currentTimePeriod}, duration: ${durationHours}h`);
 
@@ -1558,11 +1578,12 @@
             }
         }
 
-        function calculateTimelineRows(events, maxDays = 5) {
+        function calculateTimelineRows(events, maxHours = 120) {
             if (!events || events.length === 0) {
                 const now = new Date();
                 const gridStartTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0); // Start at midnight
-                return { numRows: 3, totalHours: 24, gridStartTime, dataStartTime: now, dataEndTime: now };
+                const maxDays = Math.ceil(maxHours / 24);
+                return { numRows: maxDays * 3, totalHours: maxHours, gridStartTime, dataStartTime: now, dataEndTime: now };
             }
 
             // Find actual data time span
@@ -1570,24 +1591,43 @@
             const dataStartTime = new Date(Math.min(...timestamps));
             const dataEndTime = new Date(Math.max(...timestamps));
 
-            // Calculate grid start time (midnight of the earliest day)
-            const gridStartTime = new Date(dataStartTime.getFullYear(), dataStartTime.getMonth(), dataStartTime.getDate(), 0, 0, 0);
+            // Calculate from most recent data backwards
+            // Find the end day (midnight after the last data point)
+            const endDayMidnight = new Date(dataEndTime.getFullYear(), dataEndTime.getMonth(), dataEndTime.getDate() + 1, 0, 0, 0);
 
-            // Calculate grid end time (limited by maxDays for performance)
-            const maxEndTime = new Date(gridStartTime.getTime() + maxDays * 24 * 60 * 60 * 1000);
-            const gridEndTime = dataEndTime > maxEndTime ? maxEndTime : dataEndTime;
+            // Calculate start time by going back maxHours from end
+            const calculatedStartTime = new Date(endDayMidnight.getTime() - maxHours * 60 * 60 * 1000);
 
-            // Calculate number of days from grid start to grid end
+            // Align start time to midnight
+            const gridStartTime = new Date(calculatedStartTime.getFullYear(), calculatedStartTime.getMonth(), calculatedStartTime.getDate(), 0, 0, 0);
+
+            // Grid end time is the end day midnight (or data end if earlier)
+            const gridEndTime = endDayMidnight;
+
+            // Calculate number of days and rows
             const totalDays = Math.ceil((gridEndTime - gridStartTime) / (1000 * 60 * 60 * 24));
             const numRows = totalDays * 3; // 3 rows per day (00:00, 08:00, 16:00)
-            const totalHours = totalDays * 24;
+            const totalHours = (gridEndTime - gridStartTime) / (1000 * 60 * 60);
 
             return { numRows, totalHours, gridStartTime, dataStartTime, dataEndTime };
         }
 
         function generateTimelineVisualization(timelineGrid, timelineData, groupIndex, sensorIndex) {
             const { events = [], violations = [] } = timelineData;
-            const { numRows, totalHours, gridStartTime, dataStartTime, dataEndTime } = calculateTimelineRows(events);
+
+            // Determine max hours based on current time period
+            let maxHours;
+            if (currentTimePeriod === '24h') {
+                maxHours = 24;
+            } else if (currentTimePeriod === '5d') {
+                maxHours = 5 * 24; // 120 hours
+            } else if (currentTimePeriod === '30d') {
+                maxHours = 5 * 24; // Limited to 5 days for performance
+            } else {
+                maxHours = 24; // Default to 24h
+            }
+
+            const { numRows, totalHours, gridStartTime, dataStartTime, dataEndTime } = calculateTimelineRows(events, maxHours);
 
             console.log(`🔍 [DEBUG] Generating ${numRows} timeline rows for ${totalHours.toFixed(1)} hours (grid starts at ${gridStartTime.toISOString()})`);
 
@@ -1595,21 +1635,35 @@
             timelineGrid.innerHTML = '';
 
             // Generate timeline rows (3 per day: 00:00, 08:00, 16:00)
+            let currentDayIndex = -1;
             for (let row = 0; row < numRows; row++) {
-                const timelineRow = document.createElement('div');
-                timelineRow.className = 'timeline-row';
-
                 // Calculate row time based on fixed 8-hour schedule
                 const dayIndex = Math.floor(row / 3);
                 const timeSlot = row % 3;
                 const rowStartHour = timeSlot * 8; // 0, 8, or 16
                 const rowDate = new Date(gridStartTime.getTime() + dayIndex * 24 * 60 * 60 * 1000 + rowStartHour * 60 * 60 * 1000);
 
-                // Add row label
+                // Add day header when starting a new day
+                if (dayIndex !== currentDayIndex) {
+                    currentDayIndex = dayIndex;
+                    const dayHeader = document.createElement('div');
+                    dayHeader.className = 'timeline-day-header';
+
+                    const dayDate = new Date(gridStartTime.getTime() + dayIndex * 24 * 60 * 60 * 1000);
+                    const dayName = dayDate.toLocaleDateString('en-US', { weekday: 'long' });
+                    const dateStr = dayDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+                    dayHeader.textContent = `${dayName}, ${dateStr}`;
+                    timelineGrid.appendChild(dayHeader);
+                }
+
+                const timelineRow = document.createElement('div');
+                timelineRow.className = 'timeline-row';
+
+                // Add row label (time only, since day is in header)
                 const label = document.createElement('div');
                 label.className = 'timeline-row-label';
-                label.textContent = rowDate.toLocaleDateString() + ' ' +
-                    String(rowDate.getHours()).padStart(2, '0') + ':00';
+                label.textContent = String(rowDate.getHours()).padStart(2, '0') + ':00';
                 timelineRow.appendChild(label);
 
                 // Create timeline container for this row
@@ -1679,7 +1733,19 @@
             const sensorEvents = events.filter(e => e.type === 'sensor').length;
             const zoneEvents = events.filter(e => e.type === 'zone').length;
 
-            const { totalHours, gridStartTime, dataStartTime, dataEndTime } = calculateTimelineRows(events);
+            // Determine max hours based on current time period
+            let maxHours;
+            if (currentTimePeriod === '24h') {
+                maxHours = 24;
+            } else if (currentTimePeriod === '5d') {
+                maxHours = 5 * 24; // 120 hours
+            } else if (currentTimePeriod === '30d') {
+                maxHours = 5 * 24; // Limited to 5 days for performance
+            } else {
+                maxHours = 24; // Default to 24h
+            }
+
+            const { totalHours, gridStartTime, dataStartTime, dataEndTime } = calculateTimelineRows(events, maxHours);
 
             timelineInfo.innerHTML = `
                 Events: ${sensorEvents} sensor, ${zoneEvents} zone |
