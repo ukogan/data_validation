@@ -1560,42 +1560,52 @@
 
         function calculateTimelineRows(events, maxDays = 5) {
             if (!events || events.length === 0) {
-                return { numRows: 1, totalHours: 8, startTime: new Date(), endTime: new Date() };
+                const now = new Date();
+                const gridStartTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0); // Start at midnight
+                return { numRows: 3, totalHours: 24, gridStartTime, dataStartTime: now, dataEndTime: now };
             }
 
-            // Find actual time span
+            // Find actual data time span
             const timestamps = events.map(e => new Date(e.timestamp));
-            const startTime = new Date(Math.min(...timestamps));
-            const endTime = new Date(Math.max(...timestamps));
+            const dataStartTime = new Date(Math.min(...timestamps));
+            const dataEndTime = new Date(Math.max(...timestamps));
 
-            // Calculate hours, limited by maxDays for performance
-            const totalHours = Math.min(
-                (endTime - startTime) / (1000 * 60 * 60),
-                maxDays * 24
-            );
+            // Calculate grid start time (midnight of the earliest day)
+            const gridStartTime = new Date(dataStartTime.getFullYear(), dataStartTime.getMonth(), dataStartTime.getDate(), 0, 0, 0);
 
-            const numRows = Math.max(1, Math.ceil(totalHours / 8)); // 8 hours per row
+            // Calculate grid end time (limited by maxDays for performance)
+            const maxEndTime = new Date(gridStartTime.getTime() + maxDays * 24 * 60 * 60 * 1000);
+            const gridEndTime = dataEndTime > maxEndTime ? maxEndTime : dataEndTime;
 
-            return { numRows, totalHours, startTime, endTime };
+            // Calculate number of days from grid start to grid end
+            const totalDays = Math.ceil((gridEndTime - gridStartTime) / (1000 * 60 * 60 * 24));
+            const numRows = totalDays * 3; // 3 rows per day (00:00, 08:00, 16:00)
+            const totalHours = totalDays * 24;
+
+            return { numRows, totalHours, gridStartTime, dataStartTime, dataEndTime };
         }
 
         function generateTimelineVisualization(timelineGrid, timelineData, groupIndex, sensorIndex) {
             const { events = [], violations = [] } = timelineData;
-            const { numRows, totalHours, startTime, endTime } = calculateTimelineRows(events);
+            const { numRows, totalHours, gridStartTime, dataStartTime, dataEndTime } = calculateTimelineRows(events);
 
-            console.log(`🔍 [DEBUG] Generating ${numRows} timeline rows for ${totalHours.toFixed(1)} hours`);
+            console.log(`🔍 [DEBUG] Generating ${numRows} timeline rows for ${totalHours.toFixed(1)} hours (grid starts at ${gridStartTime.toISOString()})`);
 
             // Clear loading message
             timelineGrid.innerHTML = '';
 
-            // Generate timeline rows
+            // Generate timeline rows (3 per day: 00:00, 08:00, 16:00)
             for (let row = 0; row < numRows; row++) {
                 const timelineRow = document.createElement('div');
                 timelineRow.className = 'timeline-row';
 
+                // Calculate row time based on fixed 8-hour schedule
+                const dayIndex = Math.floor(row / 3);
+                const timeSlot = row % 3;
+                const rowStartHour = timeSlot * 8; // 0, 8, or 16
+                const rowDate = new Date(gridStartTime.getTime() + dayIndex * 24 * 60 * 60 * 1000 + rowStartHour * 60 * 60 * 1000);
+
                 // Add row label
-                const rowStartHour = row * 8;
-                const rowDate = new Date(startTime.getTime() + rowStartHour * 60 * 60 * 1000);
                 const label = document.createElement('div');
                 label.className = 'timeline-row-label';
                 label.textContent = rowDate.toLocaleDateString() + ' ' +
@@ -1608,20 +1618,19 @@
                 timeline.dataset.row = row;
 
                 // Add events for this 8-hour period
-                addEventsToTimelineRow(timeline, events, violations, rowStartHour, startTime);
+                addEventsToGridTimelineRow(timeline, events, violations, rowDate);
 
                 timelineRow.appendChild(timeline);
                 timelineGrid.appendChild(timelineRow);
             }
 
             // Add hover functionality
-            addTimelineLoupeHover(timelineGrid, events, violations, startTime);
+            addTimelineLoupeHover(timelineGrid, events, violations, gridStartTime);
         }
 
-        function addEventsToTimelineRow(timeline, events, violations, rowStartHour, startTime) {
-            const rowEndHour = rowStartHour + 8;
-            const rowStartTime = new Date(startTime.getTime() + rowStartHour * 60 * 60 * 1000);
-            const rowEndTime = new Date(startTime.getTime() + rowEndHour * 60 * 60 * 1000);
+        function addEventsToGridTimelineRow(timeline, events, violations, rowDate) {
+            const rowStartTime = new Date(rowDate);
+            const rowEndTime = new Date(rowStartTime.getTime() + 8 * 60 * 60 * 1000); // 8 hours later
 
             // Filter events for this row's time period
             const rowEvents = events.filter(event => {
@@ -1670,12 +1679,12 @@
             const sensorEvents = events.filter(e => e.type === 'sensor').length;
             const zoneEvents = events.filter(e => e.type === 'zone').length;
 
-            const { totalHours } = calculateTimelineRows(events);
+            const { totalHours, gridStartTime, dataStartTime, dataEndTime } = calculateTimelineRows(events);
 
             timelineInfo.innerHTML = `
                 Events: ${sensorEvents} sensor, ${zoneEvents} zone |
                 Violations: ${violations.length} |
-                Duration: ${totalHours.toFixed(1)} hours
+                Grid Duration: ${totalHours.toFixed(1)} hours (${gridStartTime.toLocaleDateString()} 00:00 - ${new Date(gridStartTime.getTime() + totalHours * 60 * 60 * 1000).toLocaleDateString()})
                 ${totalHours >= 120 ? ' <span style="color: #856404;">(Limited to 5 days for performance)</span>' : ''}
             `;
         }
