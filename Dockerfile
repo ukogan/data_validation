@@ -19,6 +19,9 @@ COPY main.py .
 COPY dashboard.html .
 COPY mockups/ ./mockups/
 
+# Set Python path for module imports
+ENV PYTHONPATH=/app
+
 # Create a non-root user
 RUN useradd -m appuser && chown -R appuser:appuser /app
 USER appuser
