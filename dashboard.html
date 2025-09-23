@@ -537,6 +537,7 @@
             background: white;
             min-height: 120px;
             padding: 10px;
+            padding-left: 70px; /* Add space for row labels */
         }
 
         .timeline-grid {
@@ -974,12 +975,20 @@
 <body>
     <div class="header">
         <h1>Controls Validation & Continuous Commissioning</h1>
-        <div class="header-subtitle">Stanford Children's Hospital - API Powered Dashboard</div>
+        <div class="header-subtitle" id="headerSubtitle">API Powered Dashboard</div>
     </div>
 
     <!-- Dataset Selection Section -->
     <div class="upload-section">
         <h3>Dataset Selection</h3>
+
+        <!-- Customer Name Input -->
+        <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #28a745;">
+            <label for="customerName" style="display: block; margin-bottom: 8px; font-weight: 600; color: #1e3a5f;">Customer Name:</label>
+            <input type="text" id="customerName" placeholder="Enter customer/facility name"
+                   style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;"
+                   onchange="updateCustomerName()" />
+        </div>
 
         <!-- Current Dataset Info -->
         <div id="currentDatasetInfo" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #007bff;">
@@ -987,36 +996,9 @@
             <span id="currentDatasetDetails" style="font-size: 0.9em; color: #666;"></span>
         </div>
 
-        <!-- Preset Datasets -->
-        <div style="margin-bottom: 20px;">
-            <h4 style="margin-bottom: 15px; color: #1e3a5f;">Preset Datasets</h4>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px;">
-                <button class="upload-btn" onclick="loadPresetDataset('30_days_mock')">
-                    30 Days / 100 Sensors
-                    <div style="font-size: 0.8em; opacity: 0.8;">Full dataset with BV zones</div>
-                </button>
-                <button class="upload-btn" onclick="loadPresetDataset('5_days_mock')">
-                    5 Days / 100 Sensors
-                    <div style="font-size: 0.8em; opacity: 0.8;">Medium dataset with BV zones</div>
-                </button>
-                <button class="upload-btn" onclick="loadPresetDataset('1_day_mock')">
-                    1 Day / 100 Sensors
-                    <div style="font-size: 0.8em; opacity: 0.8;">Quick test dataset</div>
-                </button>
-                <button class="upload-btn" onclick="loadPresetDataset('30_days_sensors_01_04')">
-                    30 Days / 16 Sensors
-                    <div style="font-size: 0.8em; opacity: 0.8;">Sensors only (no BV zones)</div>
-                </button>
-                <button class="upload-btn" onclick="loadPresetDataset('30_days_test_subset')">
-                    30 Days / 4 Sensors + 4 BV
-                    <div style="font-size: 0.8em; opacity: 0.8;">Test dataset with known mappings</div>
-                </button>
-            </div>
-        </div>
-
-        <!-- Custom Upload -->
+        <!-- Upload Data -->
         <div>
-            <h4 style="margin-bottom: 15px; color: #1e3a5f;">Custom Upload</h4>
+            <h4 style="margin-bottom: 15px; color: #1e3a5f;">Upload Data</h4>
             <div class="upload-area" id="uploadArea">
                 <p>Drag and drop CSV file here or click to select</p>
                 <input type="file" id="fileInput" accept=".csv" style="display: none;">
@@ -1056,6 +1038,7 @@
         let currentData = null;
         let currentGrouping = 'building';
         let currentTimePeriod = '24h';
+        let violationsData = {}; // Store violations by sensor ID for CSV export
 
         // File upload handling
         document.getElementById('fileInput').addEventListener('change', handleFileUpload);
@@ -1107,7 +1090,7 @@
                 statusDiv.innerHTML = `<div class="success">File uploaded successfully! Processed ${result.records_count} records.</div>`;
 
                 // Update current dataset info
-                updateCurrentDatasetInfo(file.name, `Custom upload - ${result.records_count} records`);
+                updateCurrentDatasetInfo(file.name, `Upload - ${result.records_count} records`);
 
                 // Load dashboard data
                 await loadDashboardData();
@@ -1139,11 +1122,11 @@
 
                 // Update current dataset info
                 const datasetInfo = {
-                    '30_days_mock': { name: '30 Days / 100 Sensors', details: 'Full dataset with BV zones' },
-                    '5_days_mock': { name: '5 Days / 100 Sensors', details: 'Medium dataset with BV zones' },
-                    '1_day_mock': { name: '1 Day / 100 Sensors', details: 'Quick test dataset' },
-                    '30_days_sensors_01_04': { name: '30 Days / 16 Sensors', details: 'Sensors only (no BV zones)' },
-                    '30_days_test_subset': { name: '30 Days / 4 Sensors + 4 BV', details: 'Test dataset with known mappings' }
+                    'SCH-1_data_30_days_mock': { name: '30 Days / 100 Sensors (Mock)', details: 'Full dataset with BV zones' },
+                    'SCH-1_data_5_days_mock': { name: '5 Days / 100 Sensors (Mock)', details: 'Medium dataset with BV zones' },
+                    'SCH-1_data_1_day_mock': { name: '1 Day / 100 Sensors (Mock)', details: 'Quick test dataset' },
+                    'SCH-1_data_20250916': { name: 'Real Data - 23.5 Hours', details: 'Actual sensor data from Sept 16' },
+                    'SCH1_Since915': { name: 'Real Data - 4 Days', details: 'Extended dataset from Sept 15-19' }
                 };
 
                 const info = datasetInfo[datasetKey] || { name: datasetKey, details: 'Unknown dataset' };
@@ -1160,6 +1143,17 @@
         function updateCurrentDatasetInfo(name, details) {
             document.getElementById('currentDatasetName').textContent = name;
             document.getElementById('currentDatasetDetails').textContent = details;
+        }
+
+        function updateCustomerName() {
+            const customerName = document.getElementById('customerName').value.trim();
+            const headerSubtitle = document.getElementById('headerSubtitle');
+
+            if (customerName) {
+                headerSubtitle.textContent = `${customerName} - API Powered Dashboard`;
+            } else {
+                headerSubtitle.textContent = 'API Powered Dashboard';
+            }
         }
 
         async function generateTestData() {
@@ -1749,7 +1743,6 @@
 
             timelineInfo.innerHTML = `
                 Events: ${sensorEvents} sensor, ${zoneEvents} zone |
-                Violations: ${violations.length} |
                 Grid Duration: ${totalHours.toFixed(1)} hours (${gridStartTime.toLocaleDateString()} 00:00 - ${new Date(gridStartTime.getTime() + totalHours * 60 * 60 * 1000).toLocaleDateString()})
                 ${totalHours >= 120 ? ' <span style="color: #856404;">(Limited to 5 days for performance)</span>' : ''}
             `;
@@ -1760,8 +1753,19 @@
 
             const { violations = [] } = timelineData;
 
+            // Get sensor and zone names from timeline data
+            let sensorName = timelineData.sensor || 'Unknown Sensor';
+            let zoneName = timelineData.zone || 'Unknown Zone';
+
+            console.log('🔍 [DEBUG] Timeline data keys:', Object.keys(timelineData));
+            console.log('🔍 [DEBUG] Extracted names - Sensor:', sensorName, 'Zone:', zoneName);
+
+            // Store violations data for CSV export
+            const sensorKey = `${groupIndex}-${sensorIndex}`;
+            violationsData[sensorKey] = { violations, timelineData, sensorName, zoneName };
+
             if (violations.length === 0) {
-                violationsSection.innerHTML = '<div style="color: #28a745; font-size: 0.9em; padding: 8px;">✓ No timing violations detected</div>';
+                violationsSection.innerHTML = '<div style="color: #28a745; font-size: 0.9em; padding: 8px;">✓ No out of spec mode changes detected</div>';
                 return;
             }
 
@@ -1775,7 +1779,10 @@
             violationsSection.innerHTML = `
                 <div class="collapsible-header" onclick="toggleViolations('${containerId}')" title="Click to expand/collapse timing details">
                     <span><strong>Out of spec mode changes (${violations.length})</strong></span>
-                    <span id="toggle-${containerId}">+</span>
+                    <span style="display: flex; align-items: center; gap: 10px;">
+                        ${violations.length > 0 ? `<a href="#" onclick="downloadOutOfSpecCSV('${groupIndex}-${sensorIndex}'); return false;" style="font-size: 0.8em; color: #007bff; text-decoration: none;">Download all to CSV</a>` : ''}
+                        <span id="toggle-${containerId}">+</span>
+                    </span>
                 </div>
                 <div class="collapsible-content collapsed" id="violations-${containerId}">
                     <div class="violations-columns">
@@ -1827,6 +1834,95 @@
                 content.classList.add('collapsed');
                 toggle.textContent = '+';
             }
+        }
+
+        function downloadOutOfSpecCSV(sensorKey) {
+            const data = violationsData[sensorKey];
+            if (!data || !data.violations || data.violations.length === 0) {
+                alert('No out of spec mode changes data available for download.');
+                return;
+            }
+
+            const { violations, timelineData, sensorName, zoneName } = data;
+
+            // CSV headers
+            const headers = [
+                'Date',
+                'Time',
+                'Out of Spec Type',
+                'Duration'
+            ];
+
+            // Helper function to extract duration from message and convert to HH:MM:SS
+            function extractDuration(message) {
+                if (!message) return '';
+
+                // Extract duration from messages like "Early standby transition after 17s" or "Early standby transition after 2min 17s"
+                const match = message.match(/after\s+(.+?)$/i);
+                if (!match) return message;
+
+                const durationStr = match[1].trim();
+
+                // Parse various time formats and convert to total seconds
+                let totalSeconds = 0;
+
+                // Match patterns like "2min 17s", "17s", "1h 30min", etc.
+                const hourMatch = durationStr.match(/(\d+)h(?:our)?s?/i);
+                const minMatch = durationStr.match(/(\d+)min(?:ute)?s?/i);
+                const secMatch = durationStr.match(/(\d+)s(?:ec(?:ond)?s?)?(?:\s|$)/i);
+
+                if (hourMatch) totalSeconds += parseInt(hourMatch[1]) * 3600;
+                if (minMatch) totalSeconds += parseInt(minMatch[1]) * 60;
+                if (secMatch) totalSeconds += parseInt(secMatch[1]);
+
+                // If no pattern matched, try to parse as pure number (assume seconds)
+                if (totalSeconds === 0) {
+                    const numMatch = durationStr.match(/^(\d+)$/);
+                    if (numMatch) {
+                        totalSeconds = parseInt(numMatch[1]);
+                    } else {
+                        return durationStr; // Return original if can't parse
+                    }
+                }
+
+                // Convert to HH:MM:SS format
+                const hours = Math.floor(totalSeconds / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
+
+                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+
+            // Convert violations to CSV rows
+            const rows = violations.map(violation => {
+                const timestamp = new Date(violation.timestamp);
+                return [
+                    timestamp.toLocaleDateString(),
+                    timestamp.toLocaleTimeString(),
+                    violation.type || '',
+                    extractDuration(violation.message)
+                ].map(field => `"${String(field).replace(/"/g, '""')}"`); // Escape quotes
+            });
+
+            // Combine headers and rows
+            const csvContent = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+
+            // Create and download file
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+
+            const customerName = document.getElementById('customerName').value.trim() || 'ODCV';
+            const currentDate = new Date().toISOString().split('T')[0];
+            const sensorClean = (sensorName || 'Unknown_Sensor').replace(/[^a-zA-Z0-9]/g, '_');
+            const zoneClean = (zoneName || 'Unknown_Zone').replace(/[^a-zA-Z0-9]/g, '_');
+            const filename = `${customerName}_out_of_spec_mode_changes_${sensorClean}_${zoneClean}_${currentDate}.csv`;
+
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         function addTimelineLoupeHover(timelineGrid, events, violations, startTime) {
@@ -1995,5 +2091,35 @@
             </div>
         </div>
     </div>
+
+    <!-- Test Datasets Section -->
+    <div class="upload-section" style="margin-top: 40px; border-top: 2px solid #dee2e6; padding-top: 30px;">
+        <h3>Test Datasets</h3>
+        <p style="margin-bottom: 20px; color: #666; font-size: 0.9em;">These datasets are for testing and demonstration purposes only.</p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
+            <button class="upload-btn" onclick="loadPresetDataset('SCH-1_data_30_days_mock')">
+                30 Days / 100 Sensors (Mock)
+                <div style="font-size: 0.8em; opacity: 0.8;">Full dataset with BV zones</div>
+            </button>
+            <button class="upload-btn" onclick="loadPresetDataset('SCH-1_data_5_days_mock')">
+                5 Days / 100 Sensors (Mock)
+                <div style="font-size: 0.8em; opacity: 0.8;">Medium dataset with BV zones</div>
+            </button>
+            <button class="upload-btn" onclick="loadPresetDataset('SCH-1_data_1_day_mock')">
+                1 Day / 100 Sensors (Mock)
+                <div style="font-size: 0.8em; opacity: 0.8;">Quick test dataset</div>
+            </button>
+            <button class="upload-btn" onclick="loadPresetDataset('SCH-1_data_20250916')">
+                Real Data - 23.5 Hours
+                <div style="font-size: 0.8em; opacity: 0.8;">Actual sensor data from Sept 16</div>
+            </button>
+            <button class="upload-btn" onclick="loadPresetDataset('SCH1_Since915')">
+                Real Data - 4 Days
+                <div style="font-size: 0.8em; opacity: 0.8;">Extended dataset from Sept 15-19</div>
+            </button>
+        </div>
+    </div>
+
 </body>
 </html>
