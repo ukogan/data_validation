@@ -1,5 +1,7 @@
 # Data files
 *.csv
+*.csv.zip
+data/
 
 # Environment variables
 .env
