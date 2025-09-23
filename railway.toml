@@ -4,7 +4,7 @@ builder = "dockerfile"
 [deploy]
 startCommand = "uvicorn main:app --host 0.0.0.0 --port $PORT"
 healthcheckPath = "/api/health"
-healthcheckTimeout = 30
+healthcheckTimeout = 60
 
 [env]
 PORT = "8000"
