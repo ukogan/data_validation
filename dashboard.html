@@ -623,8 +623,8 @@
         /* Zoom Loupe */
         .zoom-loupe {
             position: fixed;
-            width: 300px;
-            height: 90px;
+            width: 600px;
+            height: 140px;
             background: white;
             border: 2px solid #333;
             border-radius: 8px;
@@ -650,33 +650,33 @@
 
         .zoom-content {
             position: relative;
-            height: 65px;
+            height: 115px;
             background: white;
             padding: 5px 5px 10px 5px;
         }
 
         .zoom-timeline {
             position: relative;
-            height: 50px;
+            height: 100px;
             width: 100%;
             background: white;
         }
 
         .zoom-event {
             position: absolute;
-            width: 3px;
+            width: 2px;
             cursor: pointer;
             border-radius: 1px;
         }
 
         .zoom-event.sensor {
-            top: 5px;
-            height: 18px;
+            top: 10px;
+            height: 36px;
         }
 
         .zoom-event.zone {
-            top: 28px;
-            height: 18px;
+            top: 56px;
+            height: 36px;
         }
 
         .zoom-event.sensor.occupied { background-color: #2c2c2c; }
@@ -686,12 +686,12 @@
 
         .zoom-violation {
             position: absolute;
-            top: 5px;
-            height: 40px;
-            width: 3px;
+            top: 10px;
+            height: 80px;
+            width: 2px;
             background-color: #8e44ad;
             border-radius: 1px;
-            box-shadow: 0 0 2px rgba(142, 68, 173, 0.8);
+            box-shadow: 0 0 4px rgba(142, 68, 173, 0.8);
         }
 
         .zoom-labels {
@@ -704,12 +704,12 @@
 
         .zoom-labels .sensor-label {
             position: absolute;
-            top: 8px;
+            top: 18px;
         }
 
         .zoom-labels .zone-label {
             position: absolute;
-            top: 31px;
+            top: 64px;
         }
 
         /* Timeline Info */
@@ -1774,27 +1774,27 @@
 
             violationsSection.innerHTML = `
                 <div class="collapsible-header" onclick="toggleViolations('${containerId}')" title="Click to expand/collapse timing details">
-                    <span><strong>Timing Violations (${violations.length})</strong></span>
+                    <span><strong>Out of spec mode changes (${violations.length})</strong></span>
                     <span id="toggle-${containerId}">+</span>
                 </div>
                 <div class="collapsible-content collapsed" id="violations-${containerId}">
                     <div class="violations-columns">
                         <div class="violation-column">
-                            <div class="violation-column-header">Standby Violations (${standbyViolations.length})</div>
-                            <div style="font-size: 0.75em; color: #666; margin-bottom: 6px;">Zone switched to standby too early</div>
+                            <div class="violation-column-header">Occupied → Standby (${standbyViolations.length})</div>
+                            <div style="font-size: 0.75em; color: #666; margin-bottom: 8px;">Zone switched to standby before 15-minute delay</div>
                             ${standbyViolations.slice(-8).map(v => `
                                 <div class="violation-item">
-                                    ${new Date(v.timestamp).toLocaleTimeString()} - ${v.description || v.type}
+                                    ${new Date(v.timestamp).toLocaleTimeString()} - ${v.message ? v.message.replace('Early standby transition after ', '') : (v.description || v.type)}
                                 </div>
                             `).join('')}
                             ${standbyViolations.length > 8 ? `<div style="font-style: italic; font-size: 0.75em; padding: 4px;">... and ${standbyViolations.length - 8} more</div>` : ''}
                         </div>
                         <div class="violation-column">
-                            <div class="violation-column-header">Occupied Violations (${occupiedViolations.length})</div>
-                            <div style="font-size: 0.75em; color: #666; margin-bottom: 6px;">Zone activated too early</div>
+                            <div class="violation-column-header">Standby → Occupied (${occupiedViolations.length})</div>
+                            <div style="font-size: 0.75em; color: #666; margin-bottom: 8px;">Zone activated before 5-minute delay</div>
                             ${occupiedViolations.slice(-8).map(v => `
                                 <div class="violation-item">
-                                    ${new Date(v.timestamp).toLocaleTimeString()} - ${v.description || v.type}
+                                    ${new Date(v.timestamp).toLocaleTimeString()} - ${v.message ? v.message.replace('Early occupied transition after ', '') : (v.description || v.type)}
                                 </div>
                             `).join('')}
                             ${occupiedViolations.length > 8 ? `<div style="font-style: italic; font-size: 0.75em; padding: 4px;">... and ${occupiedViolations.length - 8} more</div>` : ''}
@@ -1861,15 +1861,32 @@
                 const rowStartTime = new Date(startTime.getTime() + activeRow * 8 * 60 * 60 * 1000);
                 const hoverTime = new Date(rowStartTime.getTime() + minutesIntoRow * 60 * 1000);
 
-                // Show loupe
+                // Show loupe with smart positioning
                 loupe.classList.add('visible');
-                loupe.style.left = `${e.clientX + 20}px`;
+
+                // Smart flip positioning to avoid viewport overflow
+                const loupeWidth = 600; // loupe width in pixels
+                const margin = 20; // margin from cursor
+                const viewportWidth = window.innerWidth;
+
+                let leftPos;
+                if (e.clientX + loupeWidth + margin > viewportWidth) {
+                    // Position to left of cursor when near right edge
+                    leftPos = e.clientX - loupeWidth - margin;
+                    // Ensure we don't go negative
+                    leftPos = Math.max(margin, leftPos);
+                } else {
+                    // Normal position to right of cursor
+                    leftPos = e.clientX + margin;
+                }
+
+                loupe.style.left = `${leftPos}px`;
                 loupe.style.top = `${e.clientY - 45}px`;
 
                 // Update header with time
                 const hours = hoverTime.getHours().toString().padStart(2, '0');
                 const minutes = hoverTime.getMinutes().toString().padStart(2, '0');
-                loupeHeader.textContent = `${hoverTime.toLocaleDateString()} ${hours}:${minutes} - 30min window`;
+                loupeHeader.textContent = `${hoverTime.toLocaleDateString()} ${hours}:${minutes} - 2hr window`;
 
                 // Generate zoomed timeline content
                 generateLoupeContent(loupeTimeline, events, violations, hoverTime);
@@ -1884,9 +1901,9 @@
             // Clear existing content
             loupeTimeline.innerHTML = '';
 
-            // 30-minute window (15 minutes before and after)
-            const windowStart = new Date(centerTime.getTime() - 15 * 60 * 1000);
-            const windowEnd = new Date(centerTime.getTime() + 15 * 60 * 1000);
+            // 2-hour window (1 hour before and after)
+            const windowStart = new Date(centerTime.getTime() - 60 * 60 * 1000);
+            const windowEnd = new Date(centerTime.getTime() + 60 * 60 * 1000);
 
             // Filter events within the window
             const windowEvents = events.filter(event => {
@@ -1904,7 +1921,7 @@
                 const eventElement = document.createElement('div');
                 const eventTime = new Date(event.timestamp);
                 const minutesFromStart = (eventTime - windowStart) / (1000 * 60);
-                const xPos = (minutesFromStart / 30) * 100; // 30-minute window
+                const xPos = (minutesFromStart / 120) * 100; // 2-hour window
 
                 eventElement.className = `zoom-event ${event.type} ${event.value === 1 ? (event.type === 'sensor' ? 'occupied' : 'occupied') : (event.type === 'sensor' ? 'unoccupied' : 'standby')}`;
                 eventElement.style.left = `${Math.max(0, Math.min(100, xPos))}%`;
@@ -1918,7 +1935,7 @@
                 const violationElement = document.createElement('div');
                 const violationTime = new Date(violation.timestamp);
                 const minutesFromStart = (violationTime - windowStart) / (1000 * 60);
-                const xPos = (minutesFromStart / 30) * 100;
+                const xPos = (minutesFromStart / 120) * 100;
 
                 violationElement.className = 'zoom-violation';
                 violationElement.style.left = `${Math.max(0, Math.min(100, xPos))}%`;

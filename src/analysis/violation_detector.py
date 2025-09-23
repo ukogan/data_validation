@@ -65,6 +65,17 @@ def calculate_error_rates(violations, zone_events):
     }
 
 
+def format_duration(td):
+    """Format timedelta as human-readable duration"""
+    total_seconds = int(td.total_seconds())
+    minutes = total_seconds // 60
+    seconds = total_seconds % 60
+
+    if minutes > 0:
+        return f"{minutes}min {seconds}s"
+    else:
+        return f"{seconds}s"
+
 def detect_timing_deviations(events, current_sensor_state, current_zone_state, last_sensor_change, new_zone_state, event_time):
     """Detect timing deviations for zone mode changes"""
     deviations = []
@@ -73,32 +84,33 @@ def detect_timing_deviations(events, current_sensor_state, current_zone_state, l
         # Check for deviations
         if last_sensor_change and current_sensor_state is not None:
             time_since_change = event_time - last_sensor_change
+            duration_str = format_duration(time_since_change)
             deviation = None
 
             if current_sensor_state == 0 and new_zone_state == 1:  # Going to standby
                 if time_since_change < timedelta(minutes=ES_THRESHOLD):  # Early Standby
                     deviation = {
                         'type': 'early_standby',
-                        'message': f"Early standby transition after {time_since_change}",
+                        'message': f"Early standby transition after {duration_str}",
                         'expected': f'{UNOCCUPIED_TO_STANDBY_TARGET} minutes unoccupied'
                     }
                 elif time_since_change > timedelta(minutes=LS_THRESHOLD):  # Late Standby
                     deviation = {
                         'type': 'late_standby',
-                        'message': f"Late standby transition after {time_since_change}",
+                        'message': f"Late standby transition after {duration_str}",
                         'expected': f'{UNOCCUPIED_TO_STANDBY_TARGET} minutes unoccupied'
                     }
             elif current_sensor_state == 1 and new_zone_state == 0:  # Going to occupied
                 if time_since_change < timedelta(minutes=EO_THRESHOLD):  # Early Occupied
                     deviation = {
                         'type': 'early_occupied',
-                        'message': f"Early occupied transition after {time_since_change}",
+                        'message': f"Early occupied transition after {duration_str}",
                         'expected': f'{OCCUPIED_TO_ACTIVE_TARGET} minutes occupied'
                     }
                 elif time_since_change > timedelta(minutes=LO_THRESHOLD):  # Late Occupied
                     deviation = {
                         'type': 'late_occupied',
-                        'message': f"Late occupied transition after {time_since_change}",
+                        'message': f"Late occupied transition after {duration_str}",
                         'expected': f'{OCCUPIED_TO_ACTIVE_TARGET} minutes occupied'
                     }
 

@@ -632,6 +632,18 @@ async def get_sensor_timeline(
     if not (sensor_data and zone_data):
         raise HTTPException(status_code=404, detail="No data found for sensor")
 
+    # Filter data by time period if duration_hours is specified
+    if duration_hours:
+        # Get the latest timestamp from the data
+        all_data = sensor_data + zone_data
+        if all_data:
+            latest_time = max(r['time'] for r in all_data)
+            filter_start_time = latest_time - timedelta(hours=duration_hours)
+
+            # Filter data to the specified time window
+            sensor_data = [r for r in sensor_data if r['time'] >= filter_start_time]
+            zone_data = [r for r in zone_data if r['time'] >= filter_start_time]
+
     # Process timeline data
     timeline_data = process_timeline_data(sensor_data, zone_data, sensor_name, zone_name)
 
@@ -650,8 +662,11 @@ def detect_spec_deviations_for_sensor(sensor_data, zone_data, start_time, end_ti
 
     for record in combined_data:
         if record['name'] in SENSOR_ZONE_MAP:  # Sensor data
-            current_sensor_state = int(record['value'])
-            last_sensor_change = record['time']
+            new_sensor_state = int(record['value'])
+            # Only update last_sensor_change when sensor state actually changes
+            if current_sensor_state != new_sensor_state:
+                last_sensor_change = record['time']
+            current_sensor_state = new_sensor_state
         else:  # Zone data
             new_zone_state = int(record['value'])
 
@@ -714,7 +729,7 @@ def process_timeline_data(sensor_data, zone_data, sensor_name, zone_name):
     events.sort(key=lambda x: x['timestamp'])
 
     # Detect violations
-    violations = detect_violations_for_sensor(sensor_data, zone_data, start_time, end_time)
+    violations = detect_spec_deviations_for_sensor(sensor_data, zone_data, start_time, end_time)
 
     # Calculate error rates
     error_rates = calculate_error_rates(violations, zone_data)
