@@ -266,7 +266,7 @@
         }
 
         .generate-test-btn {
-            background: #28a745;
+            background: #6c757d;
             color: white;
             border: none;
             padding: 12px 24px;
@@ -510,6 +510,272 @@
             padding: 24px;
         }
 
+        .detail-header {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #1e3a5f;
+        }
+
+        /* Timeline Visualization Styles */
+        .timeline-section {
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 15px;
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        .timeline-container {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin: 15px 0;
+            background: white;
+            min-height: 120px;
+            padding: 10px;
+        }
+
+        .timeline-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .timeline-row {
+            position: relative;
+            height: 24px;
+            background: white;
+            width: 100%;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .timeline-row:last-child {
+            border-bottom: none;
+        }
+
+        .timeline {
+            position: relative;
+            height: 24px;
+            background: white;
+            width: 100%;
+        }
+
+        .timeline-row-label {
+            position: absolute;
+            left: -60px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 10px;
+            color: #666;
+            width: 55px;
+            text-align: right;
+        }
+
+        .event {
+            position: absolute;
+            width: 1px;
+            cursor: pointer;
+            border-radius: 1px;
+        }
+
+        .event.sensor {
+            top: 2px;
+            height: 9px;
+        }
+
+        .event.zone {
+            top: 13px;
+            height: 9px;
+        }
+
+        .event.sensor.occupied { background-color: #2c2c2c; }
+        .event.sensor.unoccupied { background-color: #27ae60; }
+        .event.zone.standby { background-color: #85d085; }
+        .event.zone.occupied { background-color: #666666; }
+
+        .violation {
+            position: absolute;
+            top: 2px;
+            height: 20px;
+            width: 1px;
+            background-color: #8e44ad;
+            border-radius: 1px;
+            cursor: pointer;
+            box-shadow: 0 0 2px rgba(142, 68, 173, 0.8);
+        }
+
+        /* Zoom Loupe */
+        .zoom-loupe {
+            position: fixed;
+            width: 300px;
+            height: 90px;
+            background: white;
+            border: 2px solid #333;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            pointer-events: none;
+            z-index: 1000;
+            display: none;
+            overflow: hidden;
+        }
+
+        .zoom-loupe.visible {
+            display: block;
+        }
+
+        .zoom-header {
+            background: #f8f9fa;
+            padding: 4px 8px;
+            font-size: 10px;
+            font-weight: bold;
+            color: #333;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .zoom-content {
+            position: relative;
+            height: 65px;
+            background: white;
+            padding: 5px 5px 10px 5px;
+        }
+
+        .zoom-timeline {
+            position: relative;
+            height: 50px;
+            width: 100%;
+            background: white;
+        }
+
+        .zoom-event {
+            position: absolute;
+            width: 3px;
+            cursor: pointer;
+            border-radius: 1px;
+        }
+
+        .zoom-event.sensor {
+            top: 5px;
+            height: 18px;
+        }
+
+        .zoom-event.zone {
+            top: 28px;
+            height: 18px;
+        }
+
+        .zoom-event.sensor.occupied { background-color: #2c2c2c; }
+        .zoom-event.sensor.unoccupied { background-color: #27ae60; }
+        .zoom-event.zone.standby { background-color: #85d085; }
+        .zoom-event.zone.occupied { background-color: #666666; }
+
+        .zoom-violation {
+            position: absolute;
+            top: 5px;
+            height: 40px;
+            width: 3px;
+            background-color: #8e44ad;
+            border-radius: 1px;
+            box-shadow: 0 0 2px rgba(142, 68, 173, 0.8);
+        }
+
+        .zoom-labels {
+            position: absolute;
+            top: 5px;
+            left: 2px;
+            font-size: 8px;
+            color: #666;
+        }
+
+        .zoom-labels .sensor-label {
+            position: absolute;
+            top: 8px;
+        }
+
+        .zoom-labels .zone-label {
+            position: absolute;
+            top: 31px;
+        }
+
+        /* Timeline Info */
+        .timeline-info {
+            background: #f9f9f9;
+            padding: 8px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        /* Violations Section */
+        .violations-section {
+            margin-top: 15px;
+        }
+
+        .collapsible-header {
+            background: #e9ecef;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+
+        .collapsible-header:hover {
+            background: #dee2e6;
+        }
+
+        .collapsible-content {
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .collapsible-content.collapsed {
+            max-height: 0;
+        }
+
+        .collapsible-content.expanded {
+            max-height: 400px;
+        }
+
+        .violations-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 8px 0;
+        }
+
+        .violation-column {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 8px;
+        }
+
+        .violation-column-header {
+            font-weight: bold;
+            margin-bottom: 6px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #eee;
+            font-size: 0.85em;
+        }
+
+        .violation-item {
+            margin: 2px 0;
+            padding: 2px 4px;
+            background: #f9f9f9;
+            border-radius: 2px;
+            font-size: 0.75em;
+            color: #555;
+        }
+
         /* Correlation Chart */
         .correlation-chart {
             width: 120px;
@@ -648,43 +914,10 @@
 
         /* Real Data Indicator */
         .real-data {
-            border: 2px solid #28a745 !important;
             position: relative;
         }
 
-        .real-data::after {
-            position: absolute;
-            top: -8px;
-            left: -8px;
-            background: #28a745;
-            color: white;
-            font-size: 8px;
-            font-weight: bold;
-            padding: 1px 3px;
-            border-radius: 2px;
-            z-index: 10;
-        }
 
-        .real-data.exec-1::after { content: "EXEC-1"; }
-        .real-data.exec-2::after { content: "EXEC-2"; }
-        .real-data.exec-3::after { content: "EXEC-3"; }
-        .real-data.group-1::after { content: "GROUP-1"; }
-        .real-data.sensor-1::after { content: "SENSOR-1"; }
-        .real-data.sensor-2::after { content: "SENSOR-2"; }
-        .real-data.sensor-3::after { content: "SENSOR-3"; }
-
-        /* Special positioning for table cell real data labels - move outside containers */
-        td .real-data::after {
-            top: -20px;
-            left: 0px;
-            font-size: 10px;
-            padding: 2px 5px;
-            border-radius: 3px;
-            background: #28a745;
-            color: white;
-            font-weight: bold;
-            z-index: 20;
-        }
 
 
         /* Remove individual margins since we're using cell padding */
@@ -719,11 +952,6 @@
             right: 4px;
         }
 
-        .table-cell-label.real-label {
-            background: #28a745;
-            color: white;
-            left: 4px;
-        }
 
         /* Ensure tooltips are visible */
         .table-cell-label[title] {
@@ -1166,7 +1394,7 @@
                         ${groupSensors.map((sensor, index) => `
                         <tr>
                             <td style="text-align: center;">
-                                <span class="expand-btn" onclick="toggleDetail(${groupIndex}, ${index})">^</span>
+                                <span class="expand-btn" onclick="toggleDetail(${groupIndex}, ${index}, '${sensor.sensor_id}')">^</span>
                             </td>
                             <td>
                                 <div class="sensor-cell">
@@ -1177,7 +1405,6 @@
                                 </div>
                             </td>
                             <td>
-                                <div class="table-cell-label real-label">OCCUPIED-%</div>
                                 <div class="correlation-chart" title="Percentage of time each device was in occupied/active state. Sensor (top bar) shows actual occupancy detection. BMS (bottom bar) shows zone control response.">
                                     <div class="sensor-bar occupied" style="width: ${sensor.sensor_occupied_percent}%;"></div>
                                     <div class="bms-bar occupied" style="width: ${sensor.zone_occupied_percent}%;"></div>
@@ -1186,7 +1413,6 @@
                                 </div>
                             </td>
                             <td>
-                                <div class="table-cell-label real-label">UNOCCUPIED-%</div>
                                 <div class="correlation-chart" title="Percentage of time each device was in unoccupied/standby state. Sensor (top bar) shows unoccupied detection. BMS (bottom bar) shows zone standby mode.">
                                     <div class="sensor-bar standby" style="width: ${sensor.sensor_unoccupied_percent}%;"></div>
                                     <div class="bms-bar standby" style="width: ${sensor.zone_standby_percent}%;"></div>
@@ -1195,7 +1421,6 @@
                                 </div>
                             </td>
                             <td>
-                                <div class="table-cell-label real-label">COMMISSION</div>
                                 <div class="commissioning-grid" title="Commissioning deviation counts. ES: Early Standby (zone switches to standby before 15min unoccupied). LS: Late Standby (zone delays standby beyond 17min). EO: Early Occupied (zone activates before 5min occupied). LO: Late Occupied (zone delays activation beyond 7min).">
                                     <div class="commissioning-item ${sensor.es_count === 0 ? 'good' : sensor.es_count <= 1 ? 'fair' : 'poor'}">
                                         ES: ${sensor.es_count}
@@ -1212,7 +1437,6 @@
                                 </div>
                             </td>
                             <td>
-                                <div class="table-cell-label real-label">24H-TREND</div>
                                 <div class="mini-chart" title="Hourly zone standby percentage over the last 24 hours. Shows daily patterns of building usage and BMS control behavior.">
                                     ${generateMiniChart(sensor.trend_data || Array.from({length: 24}, () => Math.random() * 100))}
                                 </div>
@@ -1221,8 +1445,22 @@
                         <tr class="detail-row" id="detail-${groupIndex}-${index}">
                             <td colspan="7">
                                 <div class="detail-content">
-                                    <!-- Placeholder for timeline container and violations -->
-                                    <div style="padding: 20px; color: #666;">Timeline and violations data will be implemented in Phase 3</div>
+                                    <div class="detail-header">Sensor Timeline - ${sensor.sensor_id} / ${sensor.zone_id}</div>
+                                    <div class="timeline-section">
+                                        <div class="timeline-container" data-timeline-container data-sensor="${sensor.sensor}" data-group="${groupIndex}" data-index="${index}">
+                                            <div class="timeline-grid" id="timeline-grid-${groupIndex}-${index}">
+                                                <div style="color: #999; padding: 10px; font-size: 12px; text-align: center;">
+                                                    <div class="loading">Loading timeline data...</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="timeline-info" id="timeline-info-${groupIndex}-${index}">
+                                            <!-- Timeline info will be populated by JavaScript -->
+                                        </div>
+                                        <div class="violations-section" id="violations-section-${groupIndex}-${index}">
+                                            <!-- Violations section will be populated by JavaScript -->
+                                        </div>
+                                    </div>
                                 </div>
                             </td>
                         </tr>`).join('')}
@@ -1251,12 +1489,368 @@
             }).join('');
         }
 
-        function toggleDetail(groupIndex, sensorIndex) {
+        async function toggleDetail(groupIndex, sensorIndex, sensorName) {
             const detailRow = document.getElementById(`detail-${groupIndex}-${sensorIndex}`);
             const expandBtn = event.target;
 
             detailRow.classList.toggle('active');
             expandBtn.classList.toggle('expanded');
+
+            // If expanding and timeline not yet loaded, load it
+            if (detailRow.classList.contains('active')) {
+                await loadSensorTimeline(groupIndex, sensorIndex, sensorName);
+            }
+        }
+
+        async function loadSensorTimeline(groupIndex, sensorIndex, sensorName) {
+            const timelineGrid = document.getElementById(`timeline-grid-${groupIndex}-${sensorIndex}`);
+            const timelineInfo = document.getElementById(`timeline-info-${groupIndex}-${sensorIndex}`);
+            const violationsSection = document.getElementById(`violations-section-${groupIndex}-${sensorIndex}`);
+
+            if (!timelineGrid) return;
+
+            // Skip if already loaded (check for timeline rows)
+            if (timelineGrid.querySelector('.timeline-row')) {
+                return;
+            }
+
+            // Show loading state
+            timelineGrid.innerHTML = '<div style="color: #999; padding: 10px; font-size: 12px; text-align: center;"><div class="loading">Loading timeline data...</div></div>';
+
+            try {
+                if (!sensorName) {
+                    throw new Error('Sensor name not provided');
+                }
+
+                // Calculate time period limits (max 5 days for performance)
+                const maxDays = currentTimePeriod === '30d' ? 5 : (currentTimePeriod === '5d' ? 5 : 1);
+                const durationHours = Math.min(maxDays * 24, currentTimePeriod === '24h' ? 24 : (currentTimePeriod === '5d' ? 120 : 120));
+
+                console.log(`🔍 [DEBUG] Loading timeline for sensor: ${sensorName}, period: ${currentTimePeriod}, duration: ${durationHours}h`);
+
+                // Fetch timeline data from API
+                const response = await fetch(`${API_BASE}/api/sensors/${encodeURIComponent(sensorName)}/timeline?duration_hours=${durationHours}`);
+
+                if (!response.ok) {
+                    throw new Error(`Failed to load timeline: ${response.statusText}`);
+                }
+
+                const timelineData = await response.json();
+                console.log(`🔍 [DEBUG] Timeline data received:`, timelineData);
+
+                // Generate timeline visualization
+                generateTimelineVisualization(timelineGrid, timelineData, groupIndex, sensorIndex);
+
+                // Update timeline info
+                updateTimelineInfo(timelineInfo, timelineData);
+
+                // Update violations section
+                updateViolationsSection(violationsSection, timelineData, groupIndex, sensorIndex);
+
+            } catch (error) {
+                console.error('Error loading timeline:', error);
+                timelineGrid.innerHTML = `
+                    <div style="color: #dc3545; padding: 10px; font-size: 12px; text-align: center;">
+                        Error loading timeline: ${error.message}
+                        <br><small>Try selecting a shorter time period or check if sensor data is available.</small>
+                    </div>
+                `;
+            }
+        }
+
+        function calculateTimelineRows(events, maxDays = 5) {
+            if (!events || events.length === 0) {
+                return { numRows: 1, totalHours: 8, startTime: new Date(), endTime: new Date() };
+            }
+
+            // Find actual time span
+            const timestamps = events.map(e => new Date(e.timestamp));
+            const startTime = new Date(Math.min(...timestamps));
+            const endTime = new Date(Math.max(...timestamps));
+
+            // Calculate hours, limited by maxDays for performance
+            const totalHours = Math.min(
+                (endTime - startTime) / (1000 * 60 * 60),
+                maxDays * 24
+            );
+
+            const numRows = Math.max(1, Math.ceil(totalHours / 8)); // 8 hours per row
+
+            return { numRows, totalHours, startTime, endTime };
+        }
+
+        function generateTimelineVisualization(timelineGrid, timelineData, groupIndex, sensorIndex) {
+            const { events = [], violations = [] } = timelineData;
+            const { numRows, totalHours, startTime, endTime } = calculateTimelineRows(events);
+
+            console.log(`🔍 [DEBUG] Generating ${numRows} timeline rows for ${totalHours.toFixed(1)} hours`);
+
+            // Clear loading message
+            timelineGrid.innerHTML = '';
+
+            // Generate timeline rows
+            for (let row = 0; row < numRows; row++) {
+                const timelineRow = document.createElement('div');
+                timelineRow.className = 'timeline-row';
+
+                // Add row label
+                const rowStartHour = row * 8;
+                const rowDate = new Date(startTime.getTime() + rowStartHour * 60 * 60 * 1000);
+                const label = document.createElement('div');
+                label.className = 'timeline-row-label';
+                label.textContent = rowDate.toLocaleDateString() + ' ' +
+                    String(rowDate.getHours()).padStart(2, '0') + ':00';
+                timelineRow.appendChild(label);
+
+                // Create timeline container for this row
+                const timeline = document.createElement('div');
+                timeline.className = 'timeline';
+                timeline.dataset.row = row;
+
+                // Add events for this 8-hour period
+                addEventsToTimelineRow(timeline, events, violations, rowStartHour, startTime);
+
+                timelineRow.appendChild(timeline);
+                timelineGrid.appendChild(timelineRow);
+            }
+
+            // Add hover functionality
+            addTimelineLoupeHover(timelineGrid, events, violations, startTime);
+        }
+
+        function addEventsToTimelineRow(timeline, events, violations, rowStartHour, startTime) {
+            const rowEndHour = rowStartHour + 8;
+            const rowStartTime = new Date(startTime.getTime() + rowStartHour * 60 * 60 * 1000);
+            const rowEndTime = new Date(startTime.getTime() + rowEndHour * 60 * 60 * 1000);
+
+            // Filter events for this row's time period
+            const rowEvents = events.filter(event => {
+                const eventTime = new Date(event.timestamp);
+                return eventTime >= rowStartTime && eventTime < rowEndTime;
+            });
+
+            const rowViolations = violations.filter(violation => {
+                const violationTime = new Date(violation.timestamp);
+                return violationTime >= rowStartTime && violationTime < rowEndTime;
+            });
+
+            // Add sensor and zone events
+            rowEvents.forEach(event => {
+                const eventElement = document.createElement('div');
+                const eventTime = new Date(event.timestamp);
+                const minutesFromRowStart = (eventTime - rowStartTime) / (1000 * 60);
+                const xPos = (minutesFromRowStart / (8 * 60)) * 100; // Position within 8-hour row
+
+                eventElement.className = `event ${event.type} ${event.value === 1 ? (event.type === 'sensor' ? 'occupied' : 'occupied') : (event.type === 'sensor' ? 'unoccupied' : 'standby')}`;
+                eventElement.style.left = `${Math.max(0, Math.min(100, xPos))}%`;
+                eventElement.title = `${event.timestamp}: ${event.description || event.type}`;
+
+                timeline.appendChild(eventElement);
+            });
+
+            // Add violations
+            rowViolations.forEach(violation => {
+                const violationElement = document.createElement('div');
+                const violationTime = new Date(violation.timestamp);
+                const minutesFromRowStart = (violationTime - rowStartTime) / (1000 * 60);
+                const xPos = (minutesFromRowStart / (8 * 60)) * 100;
+
+                violationElement.className = 'violation';
+                violationElement.style.left = `${Math.max(0, Math.min(100, xPos))}%`;
+                violationElement.title = `Violation: ${violation.description || violation.type}`;
+
+                timeline.appendChild(violationElement);
+            });
+        }
+
+        function updateTimelineInfo(timelineInfo, timelineData) {
+            if (!timelineInfo) return;
+
+            const { events = [], violations = [] } = timelineData;
+            const sensorEvents = events.filter(e => e.type === 'sensor').length;
+            const zoneEvents = events.filter(e => e.type === 'zone').length;
+
+            const { totalHours } = calculateTimelineRows(events);
+
+            timelineInfo.innerHTML = `
+                Events: ${sensorEvents} sensor, ${zoneEvents} zone |
+                Violations: ${violations.length} |
+                Duration: ${totalHours.toFixed(1)} hours
+                ${totalHours >= 120 ? ' <span style="color: #856404;">(Limited to 5 days for performance)</span>' : ''}
+            `;
+        }
+
+        function updateViolationsSection(violationsSection, timelineData, groupIndex, sensorIndex) {
+            if (!violationsSection) return;
+
+            const { violations = [] } = timelineData;
+
+            if (violations.length === 0) {
+                violationsSection.innerHTML = '<div style="color: #28a745; font-size: 0.9em; padding: 8px;">✓ No timing violations detected</div>';
+                return;
+            }
+
+            // Separate violations by type
+            const standbyViolations = violations.filter(v => v.type?.includes('standby') || v.description?.includes('standby'));
+            const occupiedViolations = violations.filter(v => v.type?.includes('occupied') || v.description?.includes('occupied'));
+            const otherViolations = violations.filter(v => !standbyViolations.includes(v) && !occupiedViolations.includes(v));
+
+            const containerId = `${groupIndex}-${sensorIndex}`;
+
+            violationsSection.innerHTML = `
+                <div class="collapsible-header" onclick="toggleViolations('${containerId}')" title="Click to expand/collapse timing details">
+                    <span><strong>Timing Violations (${violations.length})</strong></span>
+                    <span id="toggle-${containerId}">+</span>
+                </div>
+                <div class="collapsible-content collapsed" id="violations-${containerId}">
+                    <div class="violations-columns">
+                        <div class="violation-column">
+                            <div class="violation-column-header">Standby Violations (${standbyViolations.length})</div>
+                            <div style="font-size: 0.75em; color: #666; margin-bottom: 6px;">Zone switched to standby too early</div>
+                            ${standbyViolations.slice(-8).map(v => `
+                                <div class="violation-item">
+                                    ${new Date(v.timestamp).toLocaleTimeString()} - ${v.description || v.type}
+                                </div>
+                            `).join('')}
+                            ${standbyViolations.length > 8 ? `<div style="font-style: italic; font-size: 0.75em; padding: 4px;">... and ${standbyViolations.length - 8} more</div>` : ''}
+                        </div>
+                        <div class="violation-column">
+                            <div class="violation-column-header">Occupied Violations (${occupiedViolations.length})</div>
+                            <div style="font-size: 0.75em; color: #666; margin-bottom: 6px;">Zone activated too early</div>
+                            ${occupiedViolations.slice(-8).map(v => `
+                                <div class="violation-item">
+                                    ${new Date(v.timestamp).toLocaleTimeString()} - ${v.description || v.type}
+                                </div>
+                            `).join('')}
+                            ${occupiedViolations.length > 8 ? `<div style="font-style: italic; font-size: 0.75em; padding: 4px;">... and ${occupiedViolations.length - 8} more</div>` : ''}
+                        </div>
+                    </div>
+                    ${otherViolations.length > 0 ? `
+                        <div class="violation-column" style="grid-column: 1 / -1; margin-top: 8px;">
+                            <div class="violation-column-header">Other Violations (${otherViolations.length})</div>
+                            ${otherViolations.slice(-8).map(v => `
+                                <div class="violation-item">
+                                    ${new Date(v.timestamp).toLocaleTimeString()} - ${v.description || v.type}
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        function toggleViolations(containerId) {
+            const content = document.getElementById(`violations-${containerId}`);
+            const toggle = document.getElementById(`toggle-${containerId}`);
+
+            if (content.classList.contains('collapsed')) {
+                content.classList.remove('collapsed');
+                content.classList.add('expanded');
+                toggle.textContent = '−';
+            } else {
+                content.classList.remove('expanded');
+                content.classList.add('collapsed');
+                toggle.textContent = '+';
+            }
+        }
+
+        function addTimelineLoupeHover(timelineGrid, events, violations, startTime) {
+            const loupe = document.getElementById('zoom-loupe');
+            const loupeHeader = document.getElementById('zoom-header');
+            const loupeTimeline = document.getElementById('zoom-timeline');
+
+            timelineGrid.addEventListener('mousemove', (e) => {
+                const rect = timelineGrid.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                // Determine which row we're hovering over
+                const timelineRows = timelineGrid.querySelectorAll('.timeline-row');
+                let activeRow = 0;
+                let rowY = 0;
+
+                for (let i = 0; i < timelineRows.length; i++) {
+                    const rowRect = timelineRows[i].getBoundingClientRect();
+                    const relativeY = e.clientY - rowRect.top;
+                    if (relativeY >= 0 && relativeY <= rowRect.height) {
+                        activeRow = i;
+                        rowY = relativeY;
+                        break;
+                    }
+                }
+
+                // Calculate time position within the row
+                const rowWidth = rect.width;
+                const xPercent = (x / rowWidth) * 100;
+                const minutesIntoRow = (xPercent / 100) * (8 * 60); // 8 hours = 480 minutes
+                const rowStartTime = new Date(startTime.getTime() + activeRow * 8 * 60 * 60 * 1000);
+                const hoverTime = new Date(rowStartTime.getTime() + minutesIntoRow * 60 * 1000);
+
+                // Show loupe
+                loupe.classList.add('visible');
+                loupe.style.left = `${e.clientX + 20}px`;
+                loupe.style.top = `${e.clientY - 45}px`;
+
+                // Update header with time
+                const hours = hoverTime.getHours().toString().padStart(2, '0');
+                const minutes = hoverTime.getMinutes().toString().padStart(2, '0');
+                loupeHeader.textContent = `${hoverTime.toLocaleDateString()} ${hours}:${minutes} - 30min window`;
+
+                // Generate zoomed timeline content
+                generateLoupeContent(loupeTimeline, events, violations, hoverTime);
+            });
+
+            timelineGrid.addEventListener('mouseleave', () => {
+                loupe.classList.remove('visible');
+            });
+        }
+
+        function generateLoupeContent(loupeTimeline, events, violations, centerTime) {
+            // Clear existing content
+            loupeTimeline.innerHTML = '';
+
+            // 30-minute window (15 minutes before and after)
+            const windowStart = new Date(centerTime.getTime() - 15 * 60 * 1000);
+            const windowEnd = new Date(centerTime.getTime() + 15 * 60 * 1000);
+
+            // Filter events within the window
+            const windowEvents = events.filter(event => {
+                const eventTime = new Date(event.timestamp);
+                return eventTime >= windowStart && eventTime <= windowEnd;
+            });
+
+            const windowViolations = violations.filter(violation => {
+                const violationTime = new Date(violation.timestamp);
+                return violationTime >= windowStart && violationTime <= windowEnd;
+            });
+
+            // Add events to loupe
+            windowEvents.forEach(event => {
+                const eventElement = document.createElement('div');
+                const eventTime = new Date(event.timestamp);
+                const minutesFromStart = (eventTime - windowStart) / (1000 * 60);
+                const xPos = (minutesFromStart / 30) * 100; // 30-minute window
+
+                eventElement.className = `zoom-event ${event.type} ${event.value === 1 ? (event.type === 'sensor' ? 'occupied' : 'occupied') : (event.type === 'sensor' ? 'unoccupied' : 'standby')}`;
+                eventElement.style.left = `${Math.max(0, Math.min(100, xPos))}%`;
+                eventElement.title = `${event.timestamp}: ${event.description || event.type}`;
+
+                loupeTimeline.appendChild(eventElement);
+            });
+
+            // Add violations to loupe
+            windowViolations.forEach(violation => {
+                const violationElement = document.createElement('div');
+                const violationTime = new Date(violation.timestamp);
+                const minutesFromStart = (violationTime - windowStart) / (1000 * 60);
+                const xPos = (minutesFromStart / 30) * 100;
+
+                violationElement.className = 'zoom-violation';
+                violationElement.style.left = `${Math.max(0, Math.min(100, xPos))}%`;
+                violationElement.title = `Violation: ${violation.description || violation.type}`;
+
+                loupeTimeline.appendChild(violationElement);
+            });
         }
 
         function setTimePeriod(period) {
@@ -1297,5 +1891,17 @@
                 });
         });
     </script>
+
+    <!-- Zoom Loupe -->
+    <div class="zoom-loupe" id="zoom-loupe">
+        <div class="zoom-header" id="zoom-header">Hover View</div>
+        <div class="zoom-content">
+            <div class="zoom-timeline" id="zoom-timeline"></div>
+            <div class="zoom-labels">
+                <div class="sensor-label">Sensor</div>
+                <div class="zone-label">Zone</div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
