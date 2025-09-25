@@ -380,20 +380,58 @@ async def load_dataset(request: DatasetRequest):
     """Load a preset dataset by name or database data"""
     global uploaded_data, SENSOR_ZONE_MAP
 
+    print(f"🚀 [ENDPOINT] /api/load-dataset called with request: {request}")
+    print(f"🚀 [ENDPOINT] Raw request dict: {request.dict() if hasattr(request, 'dict') else 'no dict method'}")
+
     dataset_key = request.dataset
+    print(f"🚀 [ENDPOINT] Extracted dataset_key: '{dataset_key}'")
+    print(f"🚀 [ENDPOINT] Dataset key type: {type(dataset_key)}")
+    print(f"🚀 [ENDPOINT] HAS_DATABASE_INTEGRATION global: {HAS_DATABASE_INTEGRATION}")
+
+    # Log current environment variables (without password)
+    import os
+    print(f"🚀 [ENDPOINT] DB_HOST env: {os.environ.get('DB_HOST', 'NOT_SET')}")
+    print(f"🚀 [ENDPOINT] DB_PORT env: {os.environ.get('DB_PORT', 'NOT_SET')}")
+    print(f"🚀 [ENDPOINT] DB_NAME env: {os.environ.get('DB_NAME', 'NOT_SET')}")
+    print(f"🚀 [ENDPOINT] DB_USER env: {os.environ.get('DB_USER', 'NOT_SET')}")
+    print(f"🚀 [ENDPOINT] DB_PASSWORD env: {'SET' if os.environ.get('DB_PASSWORD') else 'NOT_SET'}")
+    print(f"🚀 [ENDPOINT] DB_TYPE env: {os.environ.get('DB_TYPE', 'NOT_SET')}")
+    print(f"🚀 [ENDPOINT] Starting processing for dataset: '{dataset_key}'")
 
     # Handle database integration
     if dataset_key == "database":
+        print(f"🔍 [DATABASE] Processing database dataset request")
+        print(f"🔍 [DATABASE] HAS_DATABASE_INTEGRATION: {HAS_DATABASE_INTEGRATION}")
+
         if not HAS_DATABASE_INTEGRATION:
+            print(f"❌ [DATABASE] Database integration not available")
             raise HTTPException(status_code=400, detail="Database integration not available")
 
         try:
+            print(f"🔍 [DATABASE] Starting database integration process...")
+
+            # Check environment variables
+            import os
+            db_host = os.environ.get('DB_HOST')
+            db_port = os.environ.get('DB_PORT')
+            db_name = os.environ.get('DB_NAME')
+            db_user = os.environ.get('DB_USER')
+            print(f"🔍 [DATABASE] Environment variables - Host: {db_host}, Port: {db_port}, DB: {db_name}, User: {db_user}")
+
             # Initialize pipeline if not already done
             if not hasattr(load_dataset, 'pipeline'):
+                print(f"🔍 [DATABASE] Initializing ODCVPipeline...")
                 load_dataset.pipeline = ODCVPipeline()
+            else:
+                print(f"🔍 [DATABASE] Using existing pipeline")
 
             # Connect to database
-            if not load_dataset.pipeline.setup_database():
+            print(f"🔍 [DATABASE] Setting up database connection...")
+            db_setup_result = load_dataset.pipeline.setup_database()
+            print(f"🔍 [DATABASE] Database setup result: {db_setup_result}")
+
+            if not db_setup_result:
+                print(f"❌ [DATABASE] Database connection failed")
                 raise HTTPException(status_code=500, detail="Database connection failed")
 
             # Execute the SCH-1 query - get ALL data from the view
@@ -402,41 +440,59 @@ async def load_dataset(request: DatasetRequest):
             FROM r0_bacnet_dw.r0_vw_sch1_pilot_since_20250915
             ORDER BY "time", name
             """
+            print(f"🔍 [DATABASE] Executing query: {query[:100]}...")
 
             # Execute query
+            print(f"🔍 [DATABASE] Calling execute_query...")
             df = load_dataset.pipeline.db_connector.execute_query(query, {})
+            print(f"🔍 [DATABASE] Query executed successfully, got {len(df) if df is not None else 'None'} rows")
 
+            if df is None or len(df) == 0:
+                print(f"⚠️ [DATABASE] No data returned from query")
+                raise HTTPException(status_code=500, detail="No data returned from database query")
+
+            print(f"🔍 [DATABASE] Processing {len(df)} rows into expected format...")
             # Process the data to match expected format
             processed_data = []
-            for _, row in df.iterrows():
+            for idx, row in df.iterrows():
                 processed_data.append({
                     'time': row['time'],
                     'name': row['name'],
                     'value': row['value']
                 })
+                if idx < 3:  # Log first few rows
+                    print(f"🔍 [DATABASE] Row {idx}: time={row['time']}, name={row['name']}, value={row['value']}")
 
+            print(f"🔍 [DATABASE] Sorting {len(processed_data)} records by time...")
             # Sort by time
             uploaded_data = sorted(processed_data, key=lambda x: x['time'])
 
+            print(f"🔍 [DATABASE] Generating sensor-zone mapping...")
             # Auto-generate sensor-zone mapping from the loaded data
             sensors = [record['name'] for record in uploaded_data if 'presence' in record['name']]
             zones = [record['name'] for record in uploaded_data if record['name'].startswith('BV')]
+            print(f"🔍 [DATABASE] Found {len(sensors)} sensors and {len(zones)} zones")
 
             # Create mapping: assume sensors and zones are paired by number
             new_sensor_zone_map = {}
             unique_sensors = sorted(list(set(sensors)))
             unique_zones = sorted(list(set(zones)))
+            print(f"🔍 [DATABASE] Unique sensors: {unique_sensors}")
+            print(f"🔍 [DATABASE] Unique zones: {unique_zones}")
 
             # Map sensors to zones (1:1 mapping by order)
             for i, sensor in enumerate(unique_sensors):
                 if i < len(unique_zones):
                     new_sensor_zone_map[sensor] = unique_zones[i]
 
+            print(f"🔍 [DATABASE] Created mapping: {new_sensor_zone_map}")
+
             # Update global mapping
             SENSOR_ZONE_MAP.clear()
             SENSOR_ZONE_MAP.update(new_sensor_zone_map)
+            print(f"🔍 [DATABASE] Updated global SENSOR_ZONE_MAP: {SENSOR_ZONE_MAP}")
 
-            return {
+            result = {
                 "message": f"Database dataset loaded successfully",
                 "records_count": len(uploaded_data),
                 "sensors_found": len(unique_sensors),
@@ -447,7 +503,13 @@ async def load_dataset(request: DatasetRequest):
                     "end": uploaded_data[-1]['time'].isoformat() if uploaded_data else None
                 }
             }
+            print(f"✅ [DATABASE] Success! Returning result: {result}")
+            return result
+
         except Exception as e:
+            print(f"❌ [DATABASE] Exception occurred: {type(e).__name__}: {str(e)}")
+            import traceback
+            print(f"❌ [DATABASE] Traceback: {traceback.format_exc()}")
             raise HTTPException(status_code=500, detail=f"Database loading failed: {str(e)}")
 
     # Handle preset dataset files
