@@ -23,6 +23,15 @@ from src.analysis.violation_detector import calculate_error_rates, detect_timing
 from src.analysis.validations.validation_manager import ValidationManager
 from src.presentation.html_generator import create_html_viewer
 
+# Database integration imports
+try:
+    from automated_pipeline import ODCVPipeline
+    from src.data.data_loader import load_data
+    from src.analysis.timeline_processor import create_timeline_data
+    HAS_DATABASE_INTEGRATION = True
+except ImportError:
+    HAS_DATABASE_INTEGRATION = False
+
 app = FastAPI(
     title="ODCV Analytics Dashboard API",
     description="Building Management System validation and continuous commissioning",
@@ -890,6 +899,67 @@ async def generate_test_data(
             "end": uploaded_data[-1]['time'].isoformat()
         }
     }
+
+# Database integration endpoints
+if HAS_DATABASE_INTEGRATION:
+    # Initialize pipeline
+    pipeline = ODCVPipeline()
+
+    @app.post("/api/load-dataset")
+    async def load_database_dataset(request: dict):
+        """Load dataset from database - compatible with dashboard API"""
+        try:
+            dataset = request.get('dataset', 'database')
+
+            if dataset != 'database':
+                raise HTTPException(status_code=400, detail=f"Dataset {dataset} not available. Use 'database' for live data.")
+
+            # Connect to database
+            if not pipeline.setup_database():
+                raise HTTPException(status_code=500, detail="Database connection failed")
+
+            # Execute the SCH-1 query - get ALL data from the view
+            query = """
+            SELECT point_id, name, parent_name, "time", insert_time, value
+            FROM r0_bacnet_dw.r0_vw_sch1_pilot_since_20250915
+            ORDER BY "time", name
+            """
+
+            # Execute query
+            df = pipeline.db_connector.execute_query(query, {})
+
+            # Create CSV file for processing
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            csv_path = f"database_export_{timestamp}.csv"
+
+            # Save in format expected by data loader: time, name, value
+            output_df = df[['time', 'name', 'value']].copy()
+            output_df.to_csv(csv_path, index=False)
+
+            # Process through ODCV pipeline
+            sensor_data = load_data(csv_path)
+            timeline_data = create_timeline_data(sensor_data, None, None)  # Auto-detect from data
+
+            # Generate dashboard
+            dashboard_path = f"database_dashboard_{timestamp}.html"
+            create_html_viewer(timeline_data, dashboard_path)
+
+            # Clean up temporary CSV
+            try:
+                os.remove(csv_path)
+            except:
+                pass
+
+            return {
+                "success": True,
+                "records_count": len(df),
+                "source": "database",
+                "dashboard_path": dashboard_path,
+                "message": f"Processed {len(df)} records through full ODCV pipeline"
+            }
+
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn
