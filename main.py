@@ -376,10 +376,81 @@ async def upload_csv(file: UploadFile = File(...)):
         os.unlink(tmp_file_path)
 
 @app.post("/api/load-dataset")
-async def load_preset_dataset(request: DatasetRequest):
-    """Load a preset dataset by name"""
+async def load_dataset(request: DatasetRequest):
+    """Load a preset dataset by name or database data"""
     global uploaded_data, SENSOR_ZONE_MAP
 
+    dataset_key = request.dataset
+
+    # Handle database integration
+    if dataset_key == "database":
+        if not HAS_DATABASE_INTEGRATION:
+            raise HTTPException(status_code=400, detail="Database integration not available")
+
+        try:
+            # Initialize pipeline if not already done
+            if not hasattr(load_dataset, 'pipeline'):
+                load_dataset.pipeline = ODCVPipeline()
+
+            # Connect to database
+            if not load_dataset.pipeline.setup_database():
+                raise HTTPException(status_code=500, detail="Database connection failed")
+
+            # Execute the SCH-1 query - get ALL data from the view
+            query = """
+            SELECT point_id, name, parent_name, "time", insert_time, value
+            FROM r0_bacnet_dw.r0_vw_sch1_pilot_since_20250915
+            ORDER BY "time", name
+            """
+
+            # Execute query
+            df = load_dataset.pipeline.db_connector.execute_query(query, {})
+
+            # Process the data to match expected format
+            processed_data = []
+            for _, row in df.iterrows():
+                processed_data.append({
+                    'time': row['time'],
+                    'name': row['name'],
+                    'value': row['value']
+                })
+
+            # Sort by time
+            uploaded_data = sorted(processed_data, key=lambda x: x['time'])
+
+            # Auto-generate sensor-zone mapping from the loaded data
+            sensors = [record['name'] for record in uploaded_data if 'presence' in record['name']]
+            zones = [record['name'] for record in uploaded_data if record['name'].startswith('BV')]
+
+            # Create mapping: assume sensors and zones are paired by number
+            new_sensor_zone_map = {}
+            unique_sensors = sorted(list(set(sensors)))
+            unique_zones = sorted(list(set(zones)))
+
+            # Map sensors to zones (1:1 mapping by order)
+            for i, sensor in enumerate(unique_sensors):
+                if i < len(unique_zones):
+                    new_sensor_zone_map[sensor] = unique_zones[i]
+
+            # Update global mapping
+            SENSOR_ZONE_MAP.clear()
+            SENSOR_ZONE_MAP.update(new_sensor_zone_map)
+
+            return {
+                "message": f"Database dataset loaded successfully",
+                "records_count": len(uploaded_data),
+                "sensors_found": len(unique_sensors),
+                "zones_found": len(unique_zones),
+                "mappings_created": len(new_sensor_zone_map),
+                "time_range": {
+                    "start": uploaded_data[0]['time'].isoformat() if uploaded_data else None,
+                    "end": uploaded_data[-1]['time'].isoformat() if uploaded_data else None
+                }
+            }
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Database loading failed: {str(e)}")
+
+    # Handle preset dataset files
     # Define dataset file mappings
     dataset_files = {
         "30_days_mock": "data/SCH-1_data_30_days_mock.csv",
@@ -389,7 +460,6 @@ async def load_preset_dataset(request: DatasetRequest):
         "30_days_test_subset": "data/SCH-1_data_30_days_test_subset.csv"
     }
 
-    dataset_key = request.dataset
     if dataset_key not in dataset_files:
         raise HTTPException(status_code=400, detail=f"Unknown dataset: {dataset_key}")
 
@@ -900,66 +970,6 @@ async def generate_test_data(
         }
     }
 
-# Database integration endpoints
-if HAS_DATABASE_INTEGRATION:
-    # Initialize pipeline
-    pipeline = ODCVPipeline()
-
-    @app.post("/api/load-dataset")
-    async def load_database_dataset(request: dict):
-        """Load dataset from database - compatible with dashboard API"""
-        try:
-            dataset = request.get('dataset', 'database')
-
-            if dataset != 'database':
-                raise HTTPException(status_code=400, detail=f"Dataset {dataset} not available. Use 'database' for live data.")
-
-            # Connect to database
-            if not pipeline.setup_database():
-                raise HTTPException(status_code=500, detail="Database connection failed")
-
-            # Execute the SCH-1 query - get ALL data from the view
-            query = """
-            SELECT point_id, name, parent_name, "time", insert_time, value
-            FROM r0_bacnet_dw.r0_vw_sch1_pilot_since_20250915
-            ORDER BY "time", name
-            """
-
-            # Execute query
-            df = pipeline.db_connector.execute_query(query, {})
-
-            # Create CSV file for processing
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            csv_path = f"database_export_{timestamp}.csv"
-
-            # Save in format expected by data loader: time, name, value
-            output_df = df[['time', 'name', 'value']].copy()
-            output_df.to_csv(csv_path, index=False)
-
-            # Process through ODCV pipeline
-            sensor_data = load_data(csv_path)
-            timeline_data = create_timeline_data(sensor_data, None, None)  # Auto-detect from data
-
-            # Generate dashboard
-            dashboard_path = f"database_dashboard_{timestamp}.html"
-            create_html_viewer(timeline_data, dashboard_path)
-
-            # Clean up temporary CSV
-            try:
-                os.remove(csv_path)
-            except:
-                pass
-
-            return {
-                "success": True,
-                "records_count": len(df),
-                "source": "database",
-                "dashboard_path": dashboard_path,
-                "message": f"Processed {len(df)} records through full ODCV pipeline"
-            }
-
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn
