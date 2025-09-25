@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Option 2 Variation - Right Justified Labels</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .chart-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .chart-title {
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .description {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        /* Current design */
+        .current-chart {
+            width: 120px;
+            height: 24px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #e9ecef;
+            padding: 2px;
+            margin: 0 auto;
+        }
+
+        .current-chart .sensor-bar {
+            height: 10px;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            border-radius: 2px;
+            background: #2c2c2c;
+            width: 35%;
+        }
+
+        .current-chart .bms-bar {
+            height: 10px;
+            position: absolute;
+            top: 12px;
+            left: 2px;
+            border-radius: 2px;
+            background: rgba(102, 102, 102, 0.5);
+            width: 29%;
+        }
+
+        .current-chart .correlation-label {
+            position: absolute;
+            font-size: 12px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .current-chart .correlation-label.left {
+            left: 8px;
+            top: -2px;
+        }
+
+        .current-chart .correlation-label.right {
+            right: 8px;
+            top: 8px;
+        }
+
+        /* New variation design */
+        .new-chart {
+            width: 120px;
+            height: 24px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #e9ecef;
+            padding: 2px;
+            margin: 0 auto;
+        }
+
+        .new-chart .sensor-bar {
+            height: 10px;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            border-radius: 2px;
+            background: #2c2c2c;
+            width: 35%;
+        }
+
+        .new-chart .bms-bar {
+            height: 10px;
+            position: absolute;
+            top: 12px;
+            left: 2px;
+            border-radius: 2px;
+            background: rgba(102, 102, 102, 0.5);
+            width: 29%;
+        }
+
+        .new-chart .label-container {
+            position: absolute;
+            right: 4px;
+            top: 2px;
+            display: flex;
+            flex-direction: column;
+            gap: 0px;
+            align-items: flex-end;
+        }
+
+        .new-chart .percentage-label {
+            font-size: 9px;
+            font-weight: 600;
+            padding: 1px 3px;
+            border-radius: 2px;
+            min-width: 20px;
+            text-align: center;
+            line-height: 10px;
+        }
+
+        .new-chart .percentage-label.sensor {
+            background: rgba(44, 44, 44, 0.9);
+            color: white;
+        }
+
+        .new-chart .percentage-label.bms {
+            background: rgba(102, 102, 102, 0.9);
+            color: white;
+            margin-top: 1px;
+        }
+
+        /* Alternative with outside labels */
+        .alt-chart {
+            width: 140px;
+            height: 24px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            position: relative;
+            overflow: visible;
+            border: 1px solid #e9ecef;
+            padding: 2px;
+            margin: 0 auto;
+        }
+
+        .alt-chart .sensor-bar {
+            height: 10px;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            border-radius: 2px;
+            background: #2c2c2c;
+            width: 35%;
+        }
+
+        .alt-chart .bms-bar {
+            height: 10px;
+            position: absolute;
+            top: 12px;
+            left: 2px;
+            border-radius: 2px;
+            background: rgba(102, 102, 102, 0.5);
+            width: 29%;
+        }
+
+        .alt-chart .label-container {
+            position: absolute;
+            right: -18px;
+            top: 3px;
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            align-items: flex-start;
+        }
+
+        .alt-chart .percentage-label {
+            font-size: 9px;
+            font-weight: 600;
+            line-height: 9px;
+            height: 9px;
+        }
+
+        .alt-chart .percentage-label.sensor {
+            color: #2c2c2c;
+        }
+
+        .alt-chart .percentage-label.bms {
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center; margin-bottom: 30px;">Option 2 Variation: Right-Justified Vertical Labels</h1>
+
+    <div class="container">
+        <!-- Current design -->
+        <div class="chart-section">
+            <div class="chart-title">Current Design</div>
+            <div class="description">Diagonal label placement</div>
+            <div class="current-chart">
+                <div class="sensor-bar"></div>
+                <div class="bms-bar"></div>
+                <span class="correlation-label left">35%</span>
+                <span class="correlation-label right">29%</span>
+            </div>
+        </div>
+
+        <!-- New variation 1 -->
+        <div class="chart-section">
+            <div class="chart-title">Variation A</div>
+            <div class="description">Right-aligned, stacked badges<br>Inside chart area</div>
+            <div class="new-chart">
+                <div class="sensor-bar"></div>
+                <div class="bms-bar"></div>
+                <div class="label-container">
+                    <div class="percentage-label sensor">35%</div>
+                    <div class="percentage-label bms">29%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alternative variation 2 -->
+        <div class="chart-section">
+            <div class="chart-title">Variation B</div>
+            <div class="description">Right-aligned, outside chart<br>Color-coded text</div>
+            <div class="alt-chart">
+                <div class="sensor-bar"></div>
+                <div class="bms-bar"></div>
+                <div class="label-container">
+                    <div class="percentage-label sensor">35%</div>
+                    <div class="percentage-label bms">29%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 40px;">
+        <h3>Both Correlation Types Side-by-Side</h3>
+        <div style="display: flex; gap: 20px; justify-content: center; margin-top: 20px;">
+            <!-- Occupied -->
+            <div>
+                <div style="font-weight: bold; margin-bottom: 10px;">Occupied Correlation</div>
+                <div class="new-chart">
+                    <div class="sensor-bar" style="background: #2c2c2c; width: 35%;"></div>
+                    <div class="bms-bar" style="background: rgba(102, 102, 102, 0.5); width: 29%;"></div>
+                    <div class="label-container">
+                        <div class="percentage-label sensor">35%</div>
+                        <div class="percentage-label bms">29%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Standby -->
+            <div>
+                <div style="font-weight: bold; margin-bottom: 10px;">Standby Correlation</div>
+                <div class="new-chart">
+                    <div class="sensor-bar" style="background: #27ae60; width: 65%;"></div>
+                    <div class="bms-bar" style="background: rgba(133, 208, 133, 0.5); width: 71%;"></div>
+                    <div class="label-container">
+                        <div class="percentage-label sensor" style="background: rgba(39, 174, 96, 0.9);">65%</div>
+                        <div class="percentage-label bms" style="background: rgba(133, 208, 133, 0.9);">71%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

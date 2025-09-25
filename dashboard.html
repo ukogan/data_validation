@@ -36,6 +36,31 @@
             opacity: 0.9;
         }
 
+        .load-db-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+        }
+
+        .load-db-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+        }
+
+        .load-db-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
         /* Executive Dashboard */
         .executive-dashboard {
             background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
@@ -798,13 +823,15 @@
             position: relative;
             overflow: hidden;
             border: 1px solid #e9ecef;
+            padding: 2px;
         }
 
         .sensor-bar {
-            height: 100%;
+            height: 10px;
             position: absolute;
-            top: 0;
-            left: 0;
+            top: 2px;
+            left: 2px;
+            border-radius: 2px;
         }
 
         .sensor-bar.occupied {
@@ -816,10 +843,11 @@
         }
 
         .bms-bar {
-            height: 100%;
+            height: 10px;
             position: absolute;
-            top: 0;
-            left: 0;
+            top: 12px;
+            left: 2px;
+            border-radius: 2px;
         }
 
         .bms-bar.occupied {
@@ -830,23 +858,46 @@
             background: rgba(133, 208, 133, 0.5);
         }
 
-        .correlation-label {
+        .label-container {
             position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 12px;
+            right: 4px;
+            top: 2px;
+            display: flex;
+            flex-direction: column;
+            gap: 0px;
+            align-items: flex-end;
+        }
+
+        .percentage-label {
+            font-size: 8px;
             font-weight: 600;
+            padding: 0px 2px;
+            border-radius: 1px;
+            min-width: 16px;
+            text-align: center;
+            line-height: 8px;
+        }
+
+        .percentage-label.sensor.occupied {
+            background: rgba(44, 44, 44, 0.9);
             color: white;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.7);
-            z-index: 2;
         }
 
-        .correlation-label.left {
-            left: 6px;
+        .percentage-label.sensor.standby {
+            background: rgba(39, 174, 96, 0.9);
+            color: white;
         }
 
-        .correlation-label.right {
-            right: 6px;
+        .percentage-label.bms.occupied {
+            background: rgba(102, 102, 102, 0.9);
+            color: white;
+            margin-top: 1px;
+        }
+
+        .percentage-label.bms.standby {
+            background: rgba(133, 208, 133, 0.9);
+            color: white;
+            margin-top: 1px;
         }
 
         /* Commissioning Grid */
@@ -970,6 +1021,189 @@
         .table-cell-label[title] {
             z-index: 9999 !important;
         }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6c757d;
+            padding: 0.25rem;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+        }
+
+        .close-btn:hover {
+            background: #f8f9fa;
+            color: #dc3545;
+        }
+
+        .progress-section {
+            margin: 1.5rem 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            width: 0%;
+            transition: width 0.3s ease;
+            position: relative;
+        }
+
+        .progress-fill.animating::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .status-message {
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            font-weight: 500;
+        }
+
+        .status-info {
+            background: #e8f4fd;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+
+        .status-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .execute-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .execute-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+
+        .execute-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .time-inputs {
+            display: flex;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .input-group {
+            flex: 1;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
     </style>
 </head>
 <body>
@@ -1032,7 +1266,7 @@
 
     <script>
         // API base URL
-        const API_BASE = '';
+        const API_BASE = 'http://localhost:8000';
 
         // Global state
         let currentData = null;
@@ -1105,13 +1339,27 @@
             statusDiv.innerHTML = '<div class="loading">Loading preset dataset...</div>';
 
             try {
-                const response = await fetch(`${API_BASE}/api/load-dataset`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ dataset: datasetKey })
-                });
+                let response;
+
+                // For database dataset, call the database server on port 5001
+                if (datasetKey === 'database') {
+                    response = await fetch('http://localhost:5001/api/load-dataset', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ dataset: datasetKey })
+                    });
+                } else {
+                    // For other datasets, use the main API server
+                    response = await fetch(`${API_BASE}/api/load-dataset`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ dataset: datasetKey })
+                    });
+                }
 
                 if (!response.ok) {
                     throw new Error(`Failed to load dataset: ${response.statusText}`);
@@ -1126,7 +1374,8 @@
                     'SCH-1_data_5_days_mock': { name: '5 Days / 100 Sensors (Mock)', details: 'Medium dataset with BV zones' },
                     'SCH-1_data_1_day_mock': { name: '1 Day / 100 Sensors (Mock)', details: 'Quick test dataset' },
                     'SCH-1_data_20250916': { name: 'Real Data - 23.5 Hours', details: 'Actual sensor data from Sept 16' },
-                    'SCH1_Since915': { name: 'Real Data - 4 Days', details: 'Extended dataset from Sept 15-19' }
+                    'SCH1_Since915': { name: 'Real Data - 4 Days', details: 'Extended dataset from Sept 15-19' },
+                    'database': { name: 'Live Database Data', details: 'Latest data from TimescaleDB' }
                 };
 
                 const info = datasetInfo[datasetKey] || { name: datasetKey, details: 'Unknown dataset' };
@@ -1414,16 +1663,20 @@
                                 <div class="correlation-chart" title="Percentage of time each device was in occupied/active state. Sensor (top bar) shows actual occupancy detection. BMS (bottom bar) shows zone control response.">
                                     <div class="sensor-bar occupied" style="width: ${sensor.sensor_occupied_percent}%;"></div>
                                     <div class="bms-bar occupied" style="width: ${sensor.zone_occupied_percent}%;"></div>
-                                    <span class="correlation-label left">${sensor.sensor_occupied_percent.toFixed(0)}%</span>
-                                    <span class="correlation-label right">${sensor.zone_occupied_percent.toFixed(0)}%</span>
+                                    <div class="label-container">
+                                        <div class="percentage-label sensor occupied">${sensor.sensor_occupied_percent.toFixed(0)}%</div>
+                                        <div class="percentage-label bms occupied">${sensor.zone_occupied_percent.toFixed(0)}%</div>
+                                    </div>
                                 </div>
                             </td>
                             <td>
                                 <div class="correlation-chart" title="Percentage of time each device was in unoccupied/standby state. Sensor (top bar) shows unoccupied detection. BMS (bottom bar) shows zone standby mode.">
                                     <div class="sensor-bar standby" style="width: ${sensor.sensor_unoccupied_percent}%;"></div>
                                     <div class="bms-bar standby" style="width: ${sensor.zone_standby_percent}%;"></div>
-                                    <span class="correlation-label left">${sensor.sensor_unoccupied_percent.toFixed(0)}%</span>
-                                    <span class="correlation-label right">${sensor.zone_standby_percent.toFixed(0)}%</span>
+                                    <div class="label-container">
+                                        <div class="percentage-label sensor standby">${sensor.sensor_unoccupied_percent.toFixed(0)}%</div>
+                                        <div class="percentage-label bms standby">${sensor.zone_standby_percent.toFixed(0)}%</div>
+                                    </div>
                                 </div>
                             </td>
                             <td>
@@ -2118,8 +2371,13 @@
                 Real Data - 4 Days
                 <div style="font-size: 0.8em; opacity: 0.8;">Extended dataset from Sept 15-19</div>
             </button>
+            <button class="upload-btn" onclick="loadPresetDataset('database')" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white;">
+                📊 Latest from Database
+                <div style="font-size: 0.8em; opacity: 0.9;">Live data from TimescaleDB (last 24hrs)</div>
+            </button>
         </div>
     </div>
+
 
 </body>
 </html>

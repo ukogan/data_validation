@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diverging Bar Chart for Correlation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            padding: 20px;
+            background: #f0f2f5;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        /* Diverging Bar Chart */
+        .diverging-chart {
+            width: 200px;
+            height: 60px;
+            position: relative;
+            margin: 20px auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            background: #f8f9fa;
+        }
+
+        .chart-container {
+            height: 100%;
+            display: flex;
+            position: relative;
+        }
+
+        .chart-center {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #dee2e6;
+            z-index: 2;
+        }
+
+        .occupied-side {
+            width: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            padding: 4px;
+        }
+
+        .standby-side {
+            width: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            padding: 4px;
+        }
+
+        .sensor-bar, .bms-bar {
+            height: 20px;
+            position: relative;
+            border-radius: 2px;
+            margin: 2px 0;
+        }
+
+        /* Occupied bars grow leftward */
+        .occupied-side .sensor-bar {
+            background: #2c2c2c;
+            margin-left: auto;
+        }
+
+        .occupied-side .bms-bar {
+            background: rgba(102, 102, 102, 0.5);
+            margin-left: auto;
+        }
+
+        /* Standby bars grow rightward */
+        .standby-side .sensor-bar {
+            background: #27ae60;
+        }
+
+        .standby-side .bms-bar {
+            background: rgba(133, 208, 133, 0.5);
+        }
+
+        .bar-label {
+            position: absolute;
+            font-size: 10px;
+            font-weight: 600;
+            color: white;
+            top: 50%;
+            transform: translateY(-50%);
+            text-shadow: 0 1px 1px rgba(0,0,0,0.5);
+        }
+
+        .occupied-side .bar-label {
+            left: 4px;
+        }
+
+        .standby-side .bar-label {
+            right: 4px;
+        }
+
+        .chart-legend {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+            font-size: 11px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 8px;
+            border-radius: 2px;
+        }
+
+        .center-label {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        /* Table integration example */
+        .table-example {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .table-example th, .table-example td {
+            padding: 12px 8px;
+            text-align: center;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .table-example th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #666;
+        }
+
+        .sensor-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .sensor-name {
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .zone-id {
+            font-size: 11px;
+            color: #666;
+        }
+
+        /* Compact version for table cells */
+        .compact-diverging {
+            width: 140px;
+            height: 50px;
+        }
+
+        .compact-diverging .sensor-bar,
+        .compact-diverging .bms-bar {
+            height: 16px;
+        }
+
+        .compact-diverging .bar-label {
+            font-size: 9px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Concept Explanation -->
+        <div class="section">
+            <div class="section-title">Diverging Bar Chart Concept</div>
+            <p style="text-align: center; color: #666; margin-bottom: 20px;">
+                Occupied percentages grow <strong>←LEFT</strong> | Standby percentages grow <strong>RIGHT→</strong>
+            </p>
+
+            <div class="diverging-chart">
+                <div class="chart-container">
+                    <div class="occupied-side">
+                        <div class="sensor-bar" style="width: 70%;">
+                            <span class="bar-label">35%</span>
+                        </div>
+                        <div class="bms-bar" style="width: 58%;">
+                            <span class="bar-label">29%</span>
+                        </div>
+                    </div>
+                    <div class="chart-center"></div>
+                    <div class="standby-side">
+                        <div class="sensor-bar" style="width: 65%;">
+                            <span class="bar-label">65%</span>
+                        </div>
+                        <div class="bms-bar" style="width: 71%;">
+                            <span class="bar-label">71%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="center-label">0%</div>
+            </div>
+
+            <div class="chart-legend">
+                <div style="display: flex; gap: 20px;">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #2c2c2c;"></div>
+                        <span>Sensor</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: rgba(102, 102, 102, 0.5);"></div>
+                        <span>BMS</span>
+                    </div>
+                </div>
+                <div>
+                    <span style="color: #2c3e50; font-weight: 600;">OCCUPIED ←</span>
+                    <span style="margin: 0 10px;">|</span>
+                    <span style="color: #27ae60; font-weight: 600;">→ STANDBY</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Multiple Examples -->
+        <div class="section">
+            <div class="section-title">Different Scenarios</div>
+
+            <!-- Good correlation -->
+            <div style="margin-bottom: 30px;">
+                <h4 style="text-align: center; color: #27ae60;">✅ Good Correlation Example</h4>
+                <p style="text-align: center; color: #666; font-size: 14px;">Sensor and BMS percentages are very close</p>
+                <div class="diverging-chart">
+                    <div class="chart-container">
+                        <div class="occupied-side">
+                            <div class="sensor-bar" style="width: 60%;">
+                                <span class="bar-label">30%</span>
+                            </div>
+                            <div class="bms-bar" style="width: 56%;">
+                                <span class="bar-label">28%</span>
+                            </div>
+                        </div>
+                        <div class="chart-center"></div>
+                        <div class="standby-side">
+                            <div class="sensor-bar" style="width: 70%;">
+                                <span class="bar-label">70%</span>
+                            </div>
+                            <div class="bms-bar" style="width: 72%;">
+                                <span class="bar-label">72%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="center-label">0%</div>
+                </div>
+            </div>
+
+            <!-- Poor correlation -->
+            <div>
+                <h4 style="text-align: center; color: #dc3545;">⚠️ Poor Correlation Example</h4>
+                <p style="text-align: center; color: #666; font-size: 14px;">Large gaps indicate system problems</p>
+                <div class="diverging-chart">
+                    <div class="chart-container">
+                        <div class="occupied-side">
+                            <div class="sensor-bar" style="width: 84%;">
+                                <span class="bar-label">42%</span>
+                            </div>
+                            <div class="bms-bar" style="width: 50%;">
+                                <span class="bar-label">25%</span>
+                            </div>
+                        </div>
+                        <div class="chart-center"></div>
+                        <div class="standby-side">
+                            <div class="sensor-bar" style="width: 58%;">
+                                <span class="bar-label">58%</span>
+                            </div>
+                            <div class="bms-bar" style="width: 75%;">
+                                <span class="bar-label">75%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="center-label">0%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table Integration -->
+        <div class="section">
+            <div class="section-title">In Data Table Context</div>
+            <table class="table-example">
+                <thead>
+                    <tr>
+                        <th>Sensor/Zone</th>
+                        <th>Occupancy vs Standby Correlation</th>
+                        <th>Commissioning</th>
+                        <th>Timeline</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <div class="sensor-info">
+                                <div class="sensor-name">115-4-01 presence</div>
+                                <div class="zone-id">BV200</div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="diverging-chart compact-diverging">
+                                <div class="chart-container">
+                                    <div class="occupied-side">
+                                        <div class="sensor-bar" style="width: 70%;">
+                                            <span class="bar-label">35%</span>
+                                        </div>
+                                        <div class="bms-bar" style="width: 58%;">
+                                            <span class="bar-label">29%</span>
+                                        </div>
+                                    </div>
+                                    <div class="chart-center"></div>
+                                    <div class="standby-side">
+                                        <div class="sensor-bar" style="width: 65%;">
+                                            <span class="bar-label">65%</span>
+                                        </div>
+                                        <div class="bms-bar" style="width: 71%;">
+                                            <span class="bar-label">71%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>ES:0 LS:1<br>EO:0 LO:2</td>
+                        <td>📊 View</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="sensor-info">
+                                <div class="sensor-name">115-4-06 presence</div>
+                                <div class="zone-id">BV201</div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="diverging-chart compact-diverging">
+                                <div class="chart-container">
+                                    <div class="occupied-side">
+                                        <div class="sensor-bar" style="width: 84%;">
+                                            <span class="bar-label">42%</span>
+                                        </div>
+                                        <div class="bms-bar" style="width: 50%;">
+                                            <span class="bar-label">25%</span>
+                                        </div>
+                                    </div>
+                                    <div class="chart-center"></div>
+                                    <div class="standby-side">
+                                        <div class="sensor-bar" style="width: 58%;">
+                                            <span class="bar-label">58%</span>
+                                        </div>
+                                        <div class="bms-bar" style="width: 75%;">
+                                            <span class="bar-label">75%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>ES:2 LS:0<br>EO:1 LO:1</td>
+                        <td>📊 View</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Benefits Summary -->
+        <div class="section">
+            <div class="section-title">Benefits of This Approach</div>
+            <ul style="color: #666; line-height: 1.6;">
+                <li><strong>Standby Emphasis:</strong> Right side (green) standby percentages are prominent and easy to scan</li>
+                <li><strong>Visual Balance:</strong> Well-balanced systems show symmetrical patterns</li>
+                <li><strong>Immediate Correlation Assessment:</strong> Misaligned bars instantly show correlation problems</li>
+                <li><strong>Space Efficiency:</strong> Single chart replaces two separate correlation charts</li>
+                <li><strong>Intuitive Reading:</strong> Left=occupied, Right=standby mirrors natural reading patterns</li>
+                <li><strong>Pattern Recognition:</strong> System health becomes visual pattern matching</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

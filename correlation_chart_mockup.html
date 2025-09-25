@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ODCV Correlation Chart - Improved Design Mockup</title>
+    <style>
+        :root {
+            /* Color scheme for occupied states */
+            --occupied-sensor: #2563eb;
+            --occupied-bms: #1e40af;
+
+            /* Color scheme for standby states */
+            --standby-sensor: #dc2626;
+            --standby-bms: #991b1b;
+
+            /* Neutral colors */
+            --background: #f8fafc;
+            --card-background: #ffffff;
+            --border: #e2e8f0;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --text-muted: #94a3b8;
+            --bar-background: #f1f5f9;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background: var(--background);
+            padding: 40px 20px;
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .subtitle {
+            font-size: 16px;
+            color: var(--text-secondary);
+        }
+
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .chart-card {
+            background: var(--card-background);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+            transition: box-shadow 0.2s ease;
+        }
+
+        .chart-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .chart-header {
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chart-title {
+            font-size: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-indicator.occupied {
+            background: var(--occupied-sensor);
+        }
+
+        .status-indicator.standby {
+            background: var(--standby-sensor);
+        }
+
+        .correlation-score {
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            padding: 4px 12px;
+            background: var(--bar-background);
+            border-radius: 20px;
+        }
+
+        .bars-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .bar-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .bar-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .data-source-badge {
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: var(--bar-background);
+            font-weight: 500;
+        }
+
+        .bar-wrapper {
+            position: relative;
+            height: 40px;
+            background: var(--bar-background);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .bar {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .bar-value {
+            font-size: 15px;
+            font-weight: 600;
+            color: white;
+            z-index: 2;
+        }
+
+        .bar-description {
+            position: absolute;
+            right: 16px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* Occupied state colors */
+        .occupied-chart .bar.sensor {
+            background: var(--occupied-sensor);
+        }
+
+        .occupied-chart .bar.bms {
+            background: var(--occupied-bms);
+        }
+
+        /* Standby state colors */
+        .standby-chart .bar.sensor {
+            background: var(--standby-sensor);
+        }
+
+        .standby-chart .bar.bms {
+            background: var(--standby-bms);
+        }
+
+        .chart-footer {
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+
+        .metric-label {
+            font-weight: 500;
+        }
+
+        .metric-value {
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        /* Legend */
+        .legend {
+            background: var(--card-background);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            margin-bottom: 30px;
+        }
+
+        .legend-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .legend-items {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        /* Interactive elements */
+        .toggle-button {
+            padding: 8px 16px;
+            background: var(--card-background);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-primary);
+        }
+
+        .toggle-button:hover {
+            background: var(--bar-background);
+            border-color: var(--text-secondary);
+        }
+
+        .toggle-button.active {
+            background: var(--text-primary);
+            color: white;
+            border-color: var(--text-primary);
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+
+        /* Annotations */
+        .improvement-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #10b981;
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: 8px;
+        }
+
+        .info-tooltip {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            background: var(--text-muted);
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 16px;
+            font-size: 11px;
+            cursor: help;
+            margin-left: 6px;
+        }
+
+        .comparison-indicator {
+            position: absolute;
+            top: 50%;
+            right: -30px;
+            transform: translateY(-50%);
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        @media (max-width: 1100px) {
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>ODCV Correlation Charts - Improved Design
+                <span class="improvement-badge">New Layout</span>
+            </h1>
+            <p class="subtitle">Non-overlapping bars for clear sensor vs BMS comparison</p>
+        </header>
+
+        <div class="controls">
+            <button class="toggle-button active" onclick="toggleAnimation()">Toggle Animation</button>
+            <button class="toggle-button" onclick="randomizeData()">Randomize Data</button>
+            <button class="toggle-button" onclick="resetData()">Reset to Sample</button>
+        </div>
+
+        <div class="legend">
+            <div class="legend-title">Data Sources</div>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--occupied-sensor)"></div>
+                    <span>Sensor - Occupied Detection</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--occupied-bms)"></div>
+                    <span>BMS - Occupied Mode</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--standby-sensor)"></div>
+                    <span>Sensor - Unoccupied Detection</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--standby-bms)"></div>
+                    <span>BMS - Standby Mode</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="charts-container">
+            <!-- Occupied Correlation Chart -->
+            <div class="chart-card occupied-chart">
+                <div class="chart-header">
+                    <h2 class="chart-title">
+                        <span class="status-indicator occupied"></span>
+                        Occupied Correlation
+                    </h2>
+                    <span class="correlation-score">Correlation: 82.9%</span>
+                </div>
+
+                <div class="bars-container">
+                    <div class="bar-group">
+                        <div class="bar-label">
+                            Sensor Data
+                            <span class="data-source-badge">Occupancy Detection</span>
+                            <span class="info-tooltip" title="Percentage of time sensor detected occupancy">?</span>
+                        </div>
+                        <div class="bar-wrapper">
+                            <div class="bar sensor" style="width: 35%">
+                                <span class="bar-value">35%</span>
+                            </div>
+                            <span class="bar-description">of total time</span>
+                        </div>
+                    </div>
+
+                    <div class="bar-group">
+                        <div class="bar-label">
+                            BMS Response
+                            <span class="data-source-badge">Zone Control</span>
+                            <span class="info-tooltip" title="Percentage of time BMS was in occupied mode">?</span>
+                        </div>
+                        <div class="bar-wrapper">
+                            <div class="bar bms" style="width: 29%">
+                                <span class="bar-value">29%</span>
+                            </div>
+                            <span class="bar-description">of total time</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-footer">
+                    <div class="metric">
+                        <span class="metric-label">Detection Gap:</span>
+                        <span class="metric-value">6% (Sensor > BMS)</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Response Efficiency:</span>
+                        <span class="metric-value">82.9%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Standby Correlation Chart -->
+            <div class="chart-card standby-chart">
+                <div class="chart-header">
+                    <h2 class="chart-title">
+                        <span class="status-indicator standby"></span>
+                        Standby Correlation
+                    </h2>
+                    <span class="correlation-score">Correlation: 109.2%</span>
+                </div>
+
+                <div class="bars-container">
+                    <div class="bar-group">
+                        <div class="bar-label">
+                            Sensor Data
+                            <span class="data-source-badge">Unoccupied Detection</span>
+                            <span class="info-tooltip" title="Percentage of time sensor detected no occupancy">?</span>
+                        </div>
+                        <div class="bar-wrapper">
+                            <div class="bar sensor" style="width: 65%">
+                                <span class="bar-value">65%</span>
+                            </div>
+                            <span class="bar-description">of total time</span>
+                        </div>
+                    </div>
+
+                    <div class="bar-group">
+                        <div class="bar-label">
+                            BMS Response
+                            <span class="data-source-badge">Zone Control</span>
+                            <span class="info-tooltip" title="Percentage of time BMS was in standby mode">?</span>
+                        </div>
+                        <div class="bar-wrapper">
+                            <div class="bar bms" style="width: 71%">
+                                <span class="bar-value">71%</span>
+                            </div>
+                            <span class="bar-description">of total time</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-footer">
+                    <div class="metric">
+                        <span class="metric-label">Detection Gap:</span>
+                        <span class="metric-value">6% (BMS > Sensor)</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Response Efficiency:</span>
+                        <span class="metric-value">109.2%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample data storage
+        const originalData = {
+            occupied: {
+                sensor: 35,
+                bms: 29
+            },
+            standby: {
+                sensor: 65,
+                bms: 71
+            }
+        };
+
+        let animationEnabled = true;
+        let animationIntervals = [];
+
+        // Calculate correlation percentage
+        function calculateCorrelation(sensor, bms) {
+            return ((bms / sensor) * 100).toFixed(1);
+        }
+
+        // Update bar widths and values
+        function updateBars(data) {
+            // Update occupied chart
+            const occupiedSensorBar = document.querySelector('.occupied-chart .bar.sensor');
+            const occupiedBmsBar = document.querySelector('.occupied-chart .bar.bms');
+            occupiedSensorBar.style.width = data.occupied.sensor + '%';
+            occupiedSensorBar.querySelector('.bar-value').textContent = data.occupied.sensor + '%';
+            occupiedBmsBar.style.width = data.occupied.bms + '%';
+            occupiedBmsBar.querySelector('.bar-value').textContent = data.occupied.bms + '%';
+
+            // Update standby chart
+            const standbySensorBar = document.querySelector('.standby-chart .bar.sensor');
+            const standbyBmsBar = document.querySelector('.standby-chart .bar.bms');
+            standbySensorBar.style.width = data.standby.sensor + '%';
+            standbySensorBar.querySelector('.bar-value').textContent = data.standby.sensor + '%';
+            standbyBmsBar.style.width = data.standby.bms + '%';
+            standbyBmsBar.querySelector('.bar-value').textContent = data.standby.bms + '%';
+
+            // Update correlation scores
+            const occupiedCorr = calculateCorrelation(data.occupied.sensor, data.occupied.bms);
+            const standbyCorr = calculateCorrelation(data.standby.sensor, data.standby.bms);
+            document.querySelector('.occupied-chart .correlation-score').textContent = `Correlation: ${occupiedCorr}%`;
+            document.querySelector('.standby-chart .correlation-score').textContent = `Correlation: ${standbyCorr}%`;
+
+            // Update gaps
+            const occupiedGap = Math.abs(data.occupied.sensor - data.occupied.bms);
+            const standbyGap = Math.abs(data.standby.sensor - data.standby.bms);
+
+            const occupiedGapText = data.occupied.sensor > data.occupied.bms ?
+                `${occupiedGap}% (Sensor > BMS)` : `${occupiedGap}% (BMS > Sensor)`;
+            const standbyGapText = data.standby.sensor > data.standby.bms ?
+                `${standbyGap}% (Sensor > BMS)` : `${standbyGap}% (BMS > Sensor)`;
+
+            document.querySelector('.occupied-chart .metric-value').textContent = occupiedGapText;
+            document.querySelector('.standby-chart .metric-value').textContent = standbyGapText;
+
+            // Update efficiency
+            document.querySelector('.occupied-chart .metric:last-child .metric-value').textContent = `${occupiedCorr}%`;
+            document.querySelector('.standby-chart .metric:last-child .metric-value').textContent = `${standbyCorr}%`;
+        }
+
+        // Toggle animation
+        function toggleAnimation() {
+            const button = event.target;
+            animationEnabled = !animationEnabled;
+
+            if (animationEnabled) {
+                button.classList.add('active');
+                startAnimation();
+            } else {
+                button.classList.remove('active');
+                stopAnimation();
+            }
+        }
+
+        // Start animation
+        function startAnimation() {
+            if (!animationEnabled) return;
+
+            // Clear existing intervals
+            stopAnimation();
+
+            // Animate occupied sensor
+            animationIntervals.push(setInterval(() => {
+                const bars = document.querySelectorAll('.bar');
+                bars.forEach(bar => {
+                    const currentWidth = parseFloat(bar.style.width);
+                    const variance = (Math.random() - 0.5) * 4; // ±2%
+                    const newWidth = Math.max(10, Math.min(90, currentWidth + variance));
+                    bar.style.width = newWidth + '%';
+                    bar.querySelector('.bar-value').textContent = Math.round(newWidth) + '%';
+                });
+            }, 2000));
+        }
+
+        // Stop animation
+        function stopAnimation() {
+            animationIntervals.forEach(clearInterval);
+            animationIntervals = [];
+        }
+
+        // Randomize data
+        function randomizeData() {
+            const data = {
+                occupied: {
+                    sensor: Math.floor(Math.random() * 40) + 20, // 20-60%
+                    bms: Math.floor(Math.random() * 40) + 18      // 18-58%
+                },
+                standby: {
+                    sensor: 0,
+                    bms: 0
+                }
+            };
+
+            // Ensure standby is complement of occupied
+            data.standby.sensor = 100 - data.occupied.sensor;
+            data.standby.bms = 100 - data.occupied.bms;
+
+            updateBars(data);
+        }
+
+        // Reset to original data
+        function resetData() {
+            updateBars(originalData);
+        }
+
+        // Initialize animation on load
+        window.addEventListener('load', () => {
+            if (animationEnabled) {
+                setTimeout(startAnimation, 1000);
+            }
+        });
+    </script>
+</body>
+</html>

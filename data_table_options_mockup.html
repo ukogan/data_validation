@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Table Correlation Chart Options</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            padding: 20px;
+            background: #f0f2f5;
+            color: #1c1e21;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .data-table {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 40px;
+        }
+
+        .table-header {
+            background: #f8f9fa;
+            padding: 15px;
+            font-weight: 600;
+            border-bottom: 2px solid #dee2e6;
+            text-align: center;
+            color: #2c3e50;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f8f9fa;
+            padding: 12px 8px;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            border-bottom: 1px solid #dee2e6;
+            color: #666;
+        }
+
+        td {
+            padding: 8px;
+            text-align: center;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: middle;
+        }
+
+        .sensor-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 100px;
+        }
+
+        .sensor-name {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 2px;
+        }
+
+        .zone-id {
+            font-size: 11px;
+            color: #666;
+        }
+
+        /* Option 1: Standby-First Metric Cards */
+        .option1-chart {
+            width: 130px;
+            height: 80px;
+            background: linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 100%);
+            border: 1px solid #27ae60;
+            border-radius: 6px;
+            position: relative;
+            padding: 6px;
+            margin: 0 auto;
+        }
+
+        .option1-chart.fair {
+            background: linear-gradient(135deg, #fff3cd 0%, #fdf6d8 100%);
+            border-color: #f39c12;
+        }
+
+        .option1-standby {
+            font-size: 24px;
+            font-weight: 700;
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .option1-bars {
+            margin-bottom: 4px;
+        }
+
+        .option1-bar {
+            height: 8px;
+            border-radius: 3px;
+            margin-bottom: 2px;
+            position: relative;
+        }
+
+        .option1-sensor { background: #27ae60; }
+        .option1-bms { background: rgba(133, 208, 133, 0.7); }
+
+        .option1-status {
+            font-size: 10px;
+            text-align: center;
+            color: #666;
+            font-weight: 500;
+        }
+
+        /* Option 2: Side-by-Side Towers */
+        .option2-chart {
+            width: 120px;
+            height: 80px;
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            padding: 8px;
+            margin: 0 auto;
+        }
+
+        .option2-tower {
+            width: 35px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .option2-percentage {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: #2c3e50;
+        }
+
+        .option2-standby { color: #27ae60; }
+
+        .option2-bar {
+            width: 20px;
+            border-radius: 2px 2px 0 0;
+            min-height: 5px;
+        }
+
+        .option2-sensor { background: #27ae60; }
+        .option2-bms { background: rgba(133, 208, 133, 0.7); }
+
+        .option2-label {
+            font-size: 9px;
+            color: #666;
+            margin-top: 2px;
+            font-weight: 500;
+        }
+
+        .option2-gap {
+            position: absolute;
+            bottom: 15px;
+            font-size: 8px;
+            color: #666;
+            background: rgba(255,255,255,0.9);
+            padding: 1px 3px;
+            border-radius: 2px;
+        }
+
+        /* Option 3: Dial Gauge */
+        .option3-chart {
+            width: 100px;
+            height: 80px;
+            position: relative;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .option3-percentage {
+            font-size: 18px;
+            font-weight: 700;
+            color: #27ae60;
+            margin-bottom: 4px;
+        }
+
+        .option3-gauge {
+            width: 60px;
+            height: 30px;
+            border: 3px solid #e0e0e0;
+            border-bottom: none;
+            border-radius: 60px 60px 0 0;
+            position: relative;
+            background: linear-gradient(90deg, #e74c3c 0%, #f39c12 50%, #27ae60 100%);
+        }
+
+        .option3-needle {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 2px;
+            height: 25px;
+            background: #2c3e50;
+            transform-origin: bottom;
+            transform: translateX(-50%) rotate(45deg);
+        }
+
+        .option3-status {
+            font-size: 9px;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        /* Option 4: Split Progress Ring */
+        .option4-chart {
+            width: 90px;
+            height: 80px;
+            position: relative;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .option4-ring {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: conic-gradient(
+                #27ae60 0deg 234deg,
+                #e0e0e0 234deg 255deg,
+                rgba(133, 208, 133, 0.7) 255deg 455deg,
+                #e0e0e0 455deg 360deg
+            );
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .option4-ring::before {
+            content: '';
+            width: 30px;
+            height: 30px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+        }
+
+        .option4-center {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+        }
+
+        .option4-percentage {
+            font-size: 12px;
+            font-weight: 700;
+            color: #2c3e50;
+            line-height: 1;
+        }
+
+        .option4-label {
+            font-size: 7px;
+            color: #666;
+        }
+
+        .option4-details {
+            font-size: 8px;
+            color: #666;
+            margin-top: 4px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Correlation Chart Options in Data Table Context</h1>
+        <p>Each row shows a different design option within the actual table constraints</p>
+    </div>
+
+    <!-- Option 1: Standby-First Metric Cards -->
+    <div class="data-table">
+        <div class="table-header">Option 1: Standby-First Metric Cards</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Sensor/Zone</th>
+                    <th>Occupied Correlation</th>
+                    <th>Standby Correlation</th>
+                    <th>Commissioning</th>
+                    <th>Timeline</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <div class="sensor-info">
+                            <div class="sensor-name">115-4-01 presence</div>
+                            <div class="zone-id">BV200</div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="option1-chart">
+                            <div class="option1-standby">35%</div>
+                            <div class="option1-bars">
+                                <div class="option1-bar option1-sensor" style="width: 70%;"></div>
+                                <div class="option1-bar option1-bms" style="width: 58%;"></div>
+                            </div>
+                            <div class="option1-status">Gap: 6% | Good</div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="option1-chart">
+                            <div class="option1-standby">71%</div>
+                            <div class="option1-bars">
+                                <div class="option1-bar option1-sensor" style="width: 71%;"></div>
+                                <div class="option1-bar option1-bms" style="width: 65%;"></div>
+                            </div>
+                            <div class="option1-status">Gap: 6% | Good</div>
+                        </div>
+                    </td>
+                    <td>ES:0 LS:1<br>EO:0 LO:2</td>
+                    <td>📊 View</td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="sensor-info">
+                            <div class="sensor-name">115-4-06 presence</div>
+                            <div class="zone-id">BV201</div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="option1-chart fair">
+                            <div class="option1-standby">42%</div>
+                            <div class="option1-bars">
+                                <div class="option1-bar option1-sensor" style="width: 84%;"></div>
+                                <div class="option1-bar option1-bms" style="width: 58%;"></div>
+                            </div>
+                            <div class="option1-status">Gap: 16% | Fair</div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="option1-chart">
+                            <div class="option1-standby">68%</div>
+                            <div class="option1-bars">
+                                <div class="option1-bar option1-sensor" style="width: 68%;"></div>
+                                <div class="option1-bar option1-bms" style="width: 72%;"></div>
+                            </div>
+                            <div class="option1-status">Gap: 4% | Good</div>
+                        </div>
+                    </td>
+                    <td>ES:2 LS:0<br>EO:1 LO:1</td>
+                    <td>📊 View</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Option 2: Side-by-Side Towers -->
+    <div class="data-table">
+        <div class="table-header">Option 2: Side-by-Side Percentage Towers</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Sensor/Zone</th>
+                    <th>Occupied Correlation</th>
+                    <th>Standby Correlation</th>
+                    <th>Commissioning</th>
+                    <th>Timeline</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <div class="sensor-info">
+                            <div class="sensor-name">115-4-01 presence</div>
+                            <div class="zone-id">BV200</div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="option2-chart">
+                            <div class="option2-tower">
+                                <div class="option2-percentage">35%</div>
+                                <div class="option2-bar option2-sensor" style="height: 35px;"></div>
+                                <div class="option2-label">SENSOR</div>
+                            </div>
+                            <div class="option2-tower">
+                                <div class="option2-percentage">29%</div>
+                                <div class="option2-bar option2-bms" style="height: 29px;"></div>
+                                <div class="option2-label">BMS</div>
+                            </div>
+                            <div class="option2-gap">6%</div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="option2-chart">
+                            <div class="option2-tower">
+                                <div class="option2-percentage option2-standby">65%</div>
+                                <div class="option2-bar option2-sensor" style="height: 32px;"></div>
+                                <div class="option2-label">SENSOR</div>
+                            </div>
+                            <div class="option2-tower">
+                                <div class="option2-percentage option2-standby">71%</div>
+                                <div class="option2-bar option2-bms" style="height: 35px;"></div>
+                                <div class="option2-label">BMS</div>
+                            </div>
+                            <div class="option2-gap">6%</div>
+                        </div>
+                    </td>
+                    <td>ES:0 LS:1<br>EO:0 LO:2</td>
+                    <td>📊 View</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Option 3: Dial Gauge -->
+    <div class="data-table">
+        <div class="table-header">Option 3: Dial Gauge with Standby Emphasis</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Sensor/Zone</th>
+                    <th>Occupied Correlation</th>
+                    <th>Standby Correlation</th>
+                    <th>Commissioning</th>
+                    <th>Timeline</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <div class="sensor-info">
+                            <div class="sensor-name">115-4-01 presence</div>
+                            <div class="zone-id">BV200</div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="option3-chart">
+                            <div class="option3-percentage">35%</div>
+                            <div class="option3-gauge">
+                                <div class="option3-needle" style="transform: translateX(-50%) rotate(18deg);"></div>
+                            </div>
+                            <div class="option3-status">Correlation: ✓</div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="option3-chart">
+                            <div class="option3-percentage">71%</div>
+                            <div class="option3-gauge">
+                                <div class="option3-needle" style="transform: translateX(-50%) rotate(64deg);"></div>
+                            </div>
+                            <div class="option3-status">Correlation: ✓</div>
+                        </div>
+                    </td>
+                    <td>ES:0 LS:1<br>EO:0 LO:2</td>
+                    <td>📊 View</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Option 4: Split Progress Ring -->
+    <div class="data-table">
+        <div class="table-header">Option 4: Split Progress Ring</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Sensor/Zone</th>
+                    <th>Occupied Correlation</th>
+                    <th>Standby Correlation</th>
+                    <th>Commissioning</th>
+                    <th>Timeline</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <div class="sensor-info">
+                            <div class="sensor-name">115-4-01 presence</div>
+                            <div class="zone-id">BV200</div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="option4-chart">
+                            <div class="option4-ring">
+                                <div class="option4-center">
+                                    <div class="option4-percentage">35%</div>
+                                    <div class="option4-label">OCC</div>
+                                </div>
+                            </div>
+                            <div class="option4-details">S:35% | B:29%</div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="option4-chart">
+                            <div class="option4-ring">
+                                <div class="option4-center">
+                                    <div class="option4-percentage">71%</div>
+                                    <div class="option4-label">STBY</div>
+                                </div>
+                            </div>
+                            <div class="option4-details">S:65% | B:71%</div>
+                        </div>
+                    </td>
+                    <td>ES:0 LS:1<br>EO:0 LO:2</td>
+                    <td>📊 View</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div style="text-align: center; margin-top: 40px; padding: 20px; background: white; border-radius: 8px;">
+        <h3>Comparison Summary</h3>
+        <p><strong>Option 1:</strong> Best for standby visibility + instant health assessment<br>
+        <strong>Option 2:</strong> Most intuitive correlation comparison (height difference)<br>
+        <strong>Option 3:</strong> Clean gauge aesthetic, good for energy dashboards<br>
+        <strong>Option 4:</strong> Most compact while maintaining all information</p>
+    </div>
+</body>
+</html>

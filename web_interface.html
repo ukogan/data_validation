@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ODCV Data Pipeline Control</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 90%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 2rem;
+            font-size: 2rem;
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .form-section h3 {
+            color: #34495e;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .datetime-row {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .datetime-row .form-group {
+            flex: 1;
+        }
+
+        .execute-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .execute-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .execute-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .status {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .status.info {
+            background: #e8f4fd;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+
+        .status.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            margin: 1rem 0;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .config-section {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .config-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #dc3545;
+        }
+
+        .status-dot.connected {
+            background: #28a745;
+        }
+
+        .output-section {
+            margin-top: 2rem;
+        }
+
+        .dashboard-link {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            text-decoration: none;
+            border-radius: 8px;
+            margin-top: 1rem;
+            transition: background 0.3s ease;
+        }
+
+        .dashboard-link:hover {
+            background: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏢 ODCV Data Pipeline</h1>
+
+        <div class="config-section">
+            <h3>Database Configuration</h3>
+            <div class="config-status">
+                <div class="status-dot" id="dbStatus"></div>
+                <span id="dbStatusText">Not connected</span>
+            </div>
+            <button onclick="testConnection()" class="execute-btn" style="background: #6c757d; margin-top: 0.5rem; padding: 0.5rem 1rem; font-size: 0.9rem;">
+                Test Connection
+            </button>
+        </div>
+
+        <form id="pipelineForm">
+            <div class="form-section">
+                <h3>SCH-1 Pilot Data Analysis</h3>
+                <p style="color: #666; margin-bottom: 1rem;">
+                    📊 <strong>Data Source:</strong> r0_bacnet_dw.r0_vw_sch1_pilot_since_20250915<br>
+                    🔍 <strong>Query:</strong> All sensor data with point_id, name, time, and values
+                </p>
+
+                <div class="datetime-row">
+                    <div class="form-group">
+                        <label for="startTime">Start Time</label>
+                        <input type="datetime-local" id="startTime" name="startTime">
+                    </div>
+                    <div class="form-group">
+                        <label for="duration">Duration (hours)</label>
+                        <input type="number" id="duration" name="duration" value="24" min="1" max="168">
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="execute-btn" id="executeBtn">
+                🚀 Execute Pipeline
+            </button>
+        </form>
+
+        <div class="progress-bar" id="progressBar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="status" id="statusMessage"></div>
+
+        <div class="output-section" id="outputSection" style="display: none;">
+            <h3>Dashboard Ready</h3>
+            <a href="#" id="dashboardLink" class="dashboard-link" target="_blank">
+                📊 Open Dashboard
+            </a>
+        </div>
+    </div>
+
+    <script>
+        let isExecuting = false;
+
+        // Set default start time to 24 hours ago
+        function setDefaultStartTime() {
+            const now = new Date();
+            const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+            const isoString = yesterday.toISOString().slice(0, 16);
+            document.getElementById('startTime').value = isoString;
+        }
+
+        // Test database connection
+        async function testConnection() {
+            const statusDot = document.getElementById('dbStatus');
+            const statusText = document.getElementById('dbStatusText');
+
+            statusDot.className = 'status-dot';
+            statusText.textContent = 'Testing...';
+
+            try {
+                const response = await fetch('/api/test-db');
+                const result = await response.json();
+
+                if (result.success) {
+                    statusDot.classList.add('connected');
+                    statusText.textContent = 'Connected';
+                } else {
+                    statusText.textContent = 'Connection failed: ' + result.error;
+                }
+            } catch (error) {
+                statusText.textContent = 'Connection test failed';
+                console.error('DB test error:', error);
+            }
+        }
+
+        // Show status message
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            statusDiv.style.display = 'block';
+        }
+
+        // Update progress bar
+        function updateProgress(percent, message = '') {
+            const progressBar = document.getElementById('progressBar');
+            const progressFill = document.getElementById('progressFill');
+
+            progressBar.style.display = 'block';
+            progressFill.style.width = percent + '%';
+
+            if (message) {
+                showStatus(message);
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('pipelineForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            if (isExecuting) return;
+            isExecuting = true;
+
+            const executeBtn = document.getElementById('executeBtn');
+            const outputSection = document.getElementById('outputSection');
+
+            executeBtn.disabled = true;
+            executeBtn.textContent = '⏳ Executing...';
+            outputSection.style.display = 'none';
+
+            // Get form data - no viewName needed as it's hardcoded
+            const formData = {
+                startTime: document.getElementById('startTime').value,
+                duration: parseInt(document.getElementById('duration').value)
+            };
+
+            try {
+                // Step 1: Database connection
+                updateProgress(20, '🔗 Connecting to database...');
+
+                // Step 2: Query execution
+                updateProgress(40, '📊 Executing query and exporting data...');
+
+                // Step 3: Data processing
+                updateProgress(60, '⚡ Processing sensor data...');
+
+                // Step 4: Dashboard generation
+                updateProgress(80, '🎨 Generating interactive dashboard...');
+
+                // Execute pipeline
+                const response = await fetch('/api/execute-pipeline', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    updateProgress(100, '✅ Pipeline completed successfully!');
+                    showStatus('Dashboard generated successfully!', 'success');
+
+                    // Show dashboard link
+                    const dashboardLink = document.getElementById('dashboardLink');
+                    dashboardLink.href = '/dashboard/' + result.dashboardFile;
+                    outputSection.style.display = 'block';
+                } else {
+                    throw new Error(result.error || 'Pipeline execution failed');
+                }
+
+            } catch (error) {
+                updateProgress(0, '');
+                showStatus('❌ Pipeline failed: ' + error.message, 'error');
+                console.error('Pipeline error:', error);
+            } finally {
+                executeBtn.disabled = false;
+                executeBtn.textContent = '🚀 Execute Pipeline';
+                isExecuting = false;
+
+                // Hide progress bar after delay
+                setTimeout(() => {
+                    document.getElementById('progressBar').style.display = 'none';
+                }, 3000);
+            }
+        });
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            setDefaultStartTime();
+            testConnection();
+        });
+    </script>
+</body>
+</html>

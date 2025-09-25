@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Correlation Chart - Non-Overlapping Wireframe</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+        }
+
+        .chart-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .chart-title {
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        /* Current overlapping design */
+        .current-chart {
+            position: relative;
+            height: 40px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 30px;
+        }
+
+        .current-chart .sensor-bar {
+            position: absolute;
+            height: 20px;
+            top: 0;
+            border-radius: 4px;
+        }
+
+        .current-chart .bms-bar {
+            position: absolute;
+            height: 20px;
+            top: 20px;
+            border-radius: 4px;
+        }
+
+        /* Proposed stacked design */
+        .proposed-chart {
+            background: #e0e0e0;
+            border-radius: 4px;
+            padding: 4px;
+        }
+
+        .bar-container {
+            height: 16px;
+            margin-bottom: 4px;
+            border-radius: 3px;
+            position: relative;
+        }
+
+        .bar-container:last-child {
+            margin-bottom: 0;
+        }
+
+        .bar {
+            height: 100%;
+            border-radius: 3px;
+            position: relative;
+        }
+
+        /* Colors for occupied state - matching dashboard.html */
+        .occupied.sensor-bar { background: #2c2c2c; }
+        .occupied.bms-bar { background: rgba(102, 102, 102, 0.5); }
+
+        /* Colors for standby state - matching dashboard.html */
+        .standby.sensor-bar { background: #27ae60; }
+        .standby.bms-bar { background: rgba(133, 208, 133, 0.5); }
+
+        .percentage {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .label {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 2px;
+        }
+
+        .vs-label {
+            text-align: center;
+            margin: 20px 0;
+            font-weight: bold;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center;">Correlation Chart Redesign</h1>
+
+    <div class="container">
+        <!-- Occupied Charts -->
+        <div class="chart-section">
+            <div class="chart-title">Occupied Correlation</div>
+
+            <div class="label">Current (Overlapping):</div>
+            <div class="current-chart">
+                <div class="sensor-bar occupied" style="width: 35.24%;"></div>
+                <div class="bms-bar occupied" style="width: 29.41%;"></div>
+                <span style="position: absolute; right: 5px; top: 2px; font-size: 12px; color: white;">35%</span>
+                <span style="position: absolute; right: 5px; top: 22px; font-size: 12px; color: white;">29%</span>
+            </div>
+
+            <div class="vs-label">VS</div>
+
+            <div class="label">Proposed (Stacked):</div>
+            <div class="proposed-chart">
+                <div class="bar-container">
+                    <div class="bar occupied sensor-bar" style="width: 35.24%;">
+                        <span class="percentage">35%</span>
+                    </div>
+                </div>
+                <div class="bar-container">
+                    <div class="bar occupied bms-bar" style="width: 29.41%;">
+                        <span class="percentage">29%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 10px; font-size: 11px; color: #666;">
+                Top: Sensor (Occupancy Detection)<br>
+                Bottom: BMS (Zone Control Response)
+            </div>
+        </div>
+
+        <!-- Standby Charts -->
+        <div class="chart-section">
+            <div class="chart-title">Standby Correlation</div>
+
+            <div class="label">Current (Overlapping):</div>
+            <div class="current-chart">
+                <div class="sensor-bar standby" style="width: 64.75%;"></div>
+                <div class="bms-bar standby" style="width: 70.57%;"></div>
+                <span style="position: absolute; right: 5px; top: 2px; font-size: 12px; color: white;">65%</span>
+                <span style="position: absolute; right: 5px; top: 22px; font-size: 12px; color: white;">71%</span>
+            </div>
+
+            <div class="vs-label">VS</div>
+
+            <div class="label">Proposed (Stacked):</div>
+            <div class="proposed-chart">
+                <div class="bar-container">
+                    <div class="bar standby sensor-bar" style="width: 64.75%;">
+                        <span class="percentage">65%</span>
+                    </div>
+                </div>
+                <div class="bar-container">
+                    <div class="bar standby bms-bar" style="width: 70.57%;">
+                        <span class="percentage">71%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 10px; font-size: 11px; color: #666;">
+                Top: Sensor (Unoccupied Detection)<br>
+                Bottom: BMS (Zone Standby Mode)
+            </div>
+        </div>
+    </div>
+</body>
+</html>
