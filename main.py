@@ -23,38 +23,39 @@ from src.analysis.violation_detector import calculate_error_rates, detect_timing
 from src.analysis.validations.validation_manager import ValidationManager
 from src.presentation.html_generator import create_html_viewer
 
+# Import the regular data loading functions first
+from src.data.data_loader import load_data
+from src.analysis.timeline_processor import create_timeline_data
+
 # Database integration - deferred imports to avoid startup crashes
 # Test if database dependencies are available without importing them
 HAS_DATABASE_INTEGRATION = False
+DATABASE_IMPORT_ERROR = None
 try:
     import pandas  # Test the key dependency
     import sqlalchemy
     import psycopg2
     HAS_DATABASE_INTEGRATION = True
-except ImportError:
+except ImportError as e:
     HAS_DATABASE_INTEGRATION = False
+    DATABASE_IMPORT_ERROR = str(e)
 
-# Global placeholders - actual imports will be done on-demand
+# Global placeholders for database-specific imports
 ODCVPipeline = None
-load_data = None
-create_timeline_data = None
 
 def _import_database_modules():
     """Import database modules on-demand to avoid startup crashes"""
-    global ODCVPipeline, load_data, create_timeline_data
+    global ODCVPipeline, DATABASE_IMPORT_ERROR
 
     if ODCVPipeline is None:
         try:
             from automated_pipeline import ODCVPipeline as _ODCVPipeline
-            from src.data.data_loader import load_data as _load_data
-            from src.analysis.timeline_processor import create_timeline_data as _create_timeline_data
-
             ODCVPipeline = _ODCVPipeline
-            load_data = _load_data
-            create_timeline_data = _create_timeline_data
             return True
         except ImportError as e:
-            print(f"❌ Failed to import database modules: {e}")
+            error_msg = f"❌ Failed to import database modules: {e}"
+            print(error_msg)
+            DATABASE_IMPORT_ERROR = error_msg
             return False
     return True
 
@@ -366,6 +367,7 @@ async def debug_environment():
         },
         "system_info": {
             "has_database_integration": HAS_DATABASE_INTEGRATION,
+            "database_import_error": DATABASE_IMPORT_ERROR,
             "working_directory": os.getcwd(),
             "python_path": os.environ.get("PYTHONPATH", "NOT_SET"),
         },

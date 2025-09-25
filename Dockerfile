@@ -18,6 +18,8 @@ COPY src/ ./src/
 COPY main.py .
 COPY dashboard.html .
 COPY mockups/ ./mockups/
+COPY automated_pipeline.py .
+COPY *.csv ./
 
 # Set Python path for module imports
 ENV PYTHONPATH=/app
