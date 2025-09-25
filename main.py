@@ -322,6 +322,74 @@ async def health_check():
 
     return health_status
 
+@app.get("/api/debug/environment")
+async def debug_environment():
+    """Debug endpoint to check Railway environment and database config"""
+    print("🐛 [DEBUG] /api/debug/environment called")
+
+    return {
+        "timestamp": datetime.now().isoformat(),
+        "environment_variables": {
+            "DB_HOST": os.getenv("DB_HOST", "NOT_SET"),
+            "DB_PORT": os.getenv("DB_PORT", "NOT_SET"),
+            "DB_NAME": os.getenv("DB_NAME", "NOT_SET"),
+            "DB_USER": os.getenv("DB_USER", "NOT_SET"),
+            "DB_PASSWORD": "SET" if os.getenv("DB_PASSWORD") else "NOT_SET",
+            "DB_TYPE": os.getenv("DB_TYPE", "NOT_SET"),
+            "PORT": os.getenv("PORT", "NOT_SET"),
+        },
+        "system_info": {
+            "has_database_integration": HAS_DATABASE_INTEGRATION,
+            "working_directory": os.getcwd(),
+            "python_path": os.environ.get("PYTHONPATH", "NOT_SET"),
+        },
+        "request_info": {
+            "message": "If you see this on Railway, the server is running and reachable"
+        }
+    }
+
+@app.post("/api/debug/test-database")
+async def debug_test_database():
+    """Test database connection endpoint for Railway debugging"""
+    print("🐛 [DEBUG] /api/debug/test-database called")
+
+    if not HAS_DATABASE_INTEGRATION:
+        return {
+            "status": "error",
+            "message": "Database integration not available - missing imports"
+        }
+
+    env_vars = {
+        "DB_HOST": os.getenv("DB_HOST"),
+        "DB_PORT": os.getenv("DB_PORT"),
+        "DB_NAME": os.getenv("DB_NAME"),
+        "DB_USER": os.getenv("DB_USER"),
+        "DB_PASSWORD": "***" if os.getenv("DB_PASSWORD") else None,
+        "DB_TYPE": os.getenv("DB_TYPE"),
+    }
+
+    try:
+        print("🐛 [DEBUG] Attempting to create ODCVPipeline...")
+        pipeline = ODCVPipeline()
+        print("🐛 [DEBUG] ODCVPipeline created, attempting setup...")
+        result = pipeline.setup_database()
+        print(f"🐛 [DEBUG] Database setup result: {result}")
+
+        return {
+            "status": "success" if result else "failed",
+            "message": "Database connection test completed",
+            "environment_vars": env_vars,
+            "setup_result": result
+        }
+    except Exception as e:
+        print(f"🐛 [DEBUG] Database test failed with error: {e}")
+        return {
+            "status": "error",
+            "message": f"Database test failed: {str(e)}",
+            "environment_vars": env_vars,
+            "error_type": type(e).__name__
+        }
+
 @app.post("/api/upload")
 async def upload_csv(file: UploadFile = File(...)):
     """Upload and process CSV data file"""
