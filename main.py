@@ -23,14 +23,40 @@ from src.analysis.violation_detector import calculate_error_rates, detect_timing
 from src.analysis.validations.validation_manager import ValidationManager
 from src.presentation.html_generator import create_html_viewer
 
-# Database integration imports
+# Database integration - deferred imports to avoid startup crashes
+# Test if database dependencies are available without importing them
+HAS_DATABASE_INTEGRATION = False
 try:
-    from automated_pipeline import ODCVPipeline
-    from src.data.data_loader import load_data
-    from src.analysis.timeline_processor import create_timeline_data
+    import pandas  # Test the key dependency
+    import sqlalchemy
+    import psycopg2
     HAS_DATABASE_INTEGRATION = True
 except ImportError:
     HAS_DATABASE_INTEGRATION = False
+
+# Global placeholders - actual imports will be done on-demand
+ODCVPipeline = None
+load_data = None
+create_timeline_data = None
+
+def _import_database_modules():
+    """Import database modules on-demand to avoid startup crashes"""
+    global ODCVPipeline, load_data, create_timeline_data
+
+    if ODCVPipeline is None:
+        try:
+            from automated_pipeline import ODCVPipeline as _ODCVPipeline
+            from src.data.data_loader import load_data as _load_data
+            from src.analysis.timeline_processor import create_timeline_data as _create_timeline_data
+
+            ODCVPipeline = _ODCVPipeline
+            load_data = _load_data
+            create_timeline_data = _create_timeline_data
+            return True
+        except ImportError as e:
+            print(f"❌ Failed to import database modules: {e}")
+            return False
+    return True
 
 app = FastAPI(
     title="ODCV Analytics Dashboard API",
@@ -369,6 +395,15 @@ async def debug_test_database():
     }
 
     try:
+        print("🐛 [DEBUG] Attempting to import database modules...")
+        if not _import_database_modules():
+            return {
+                "status": "error",
+                "message": "Failed to import database modules",
+                "environment_vars": env_vars,
+                "error_type": "ImportError"
+            }
+
         print("🐛 [DEBUG] Attempting to create ODCVPipeline...")
         pipeline = ODCVPipeline()
         print("🐛 [DEBUG] ODCVPipeline created, attempting setup...")
@@ -485,6 +520,11 @@ async def load_dataset(request: DatasetRequest):
             db_name = os.environ.get('DB_NAME')
             db_user = os.environ.get('DB_USER')
             print(f"🔍 [DATABASE] Environment variables - Host: {db_host}, Port: {db_port}, DB: {db_name}, User: {db_user}")
+
+            # Import database modules on demand
+            print(f"🔍 [DATABASE] Importing database modules...")
+            if not _import_database_modules():
+                raise HTTPException(status_code=500, detail="Failed to import database modules")
 
             # Initialize pipeline if not already done
             if not hasattr(load_dataset, 'pipeline'):
