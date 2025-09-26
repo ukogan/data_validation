@@ -67,10 +67,20 @@ def calculate_occupancy_statistics(sensor_data, zone_data, start_time, end_time)
         zone_standby_ratio = (zone_standby_time.total_seconds() / sensor_unoccupied_time.total_seconds()) * 100
 
     # Calculate percentage of time each device was in occupied state
+    # Note: These percentages should add up to 100% with missing data percentages
     sensor_occupied_percent = 0
     zone_occupied_percent = 0
     sensor_unoccupied_percent = 0
     zone_standby_percent = 0
+
+    # Calculate time covered by available data
+    sensor_data_time = sensor_occupied_time + sensor_unoccupied_time
+    zone_data_time = zone_occupied_time + zone_standby_time
+
+    # Calculate missing data time
+    sensor_missing_time = total_duration - sensor_data_time
+    zone_missing_time = total_duration - zone_data_time
+
     if total_duration.total_seconds() > 0:
         sensor_occupied_percent = (sensor_occupied_time.total_seconds() / total_duration.total_seconds()) * 100
         zone_occupied_percent = (zone_occupied_time.total_seconds() / total_duration.total_seconds()) * 100
@@ -88,6 +98,8 @@ def calculate_occupancy_statistics(sensor_data, zone_data, start_time, end_time)
         'zone_occupied_percent': zone_occupied_percent,
         'sensor_unoccupied_percent': sensor_unoccupied_percent,
         'zone_standby_percent': zone_standby_percent,
+        'sensor_missing_time': sensor_missing_time,
+        'zone_missing_time': zone_missing_time,
         'total_duration': total_duration
     }
 

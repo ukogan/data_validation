@@ -397,6 +397,8 @@
         .data-table {
             width: 100%;
             border-collapse: collapse;
+            table-layout: fixed; /* Ensures fixed column widths are respected */
+            min-width: 900px; /* Minimum width to prevent excessive compression */
         }
 
         .data-table thead {
@@ -412,6 +414,7 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
             border-bottom: 2px solid #e9ecef;
+            vertical-align: middle;
         }
 
         .data-table tbody tr {
@@ -424,8 +427,9 @@
         }
 
         .data-table td {
-            padding: 24px 24px 16px 24px; /* top right bottom left */
+            padding: 16px 24px; /* Match header padding more closely */
             position: relative;
+            vertical-align: middle;
         }
 
         .sensor-cell {
@@ -814,105 +818,255 @@
             color: #555;
         }
 
-        /* Correlation Chart */
+        /* Diverging Bar Chart */
         .correlation-chart {
-            width: 120px;
-            height: 24px;
-            background: #f8f9fa;
-            border-radius: 4px;
+            width: 480px;
+            height: 50px;
             position: relative;
-            overflow: hidden;
-            border: 1px solid #e9ecef;
-            padding: 2px;
+            margin: 8px auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            background: #f8f9fa;
         }
 
-        .sensor-bar {
-            height: 10px;
+        .chart-container {
+            height: 100%;
+            display: flex;
+            position: relative;
+        }
+
+        .chart-center {
             position: absolute;
-            top: 2px;
-            left: 2px;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #dee2e6;
+            z-index: 2;
+        }
+
+        .occupied-side {
+            width: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            padding: 4px 0px 4px 4px;
+        }
+
+        .standby-side {
+            width: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            padding: 4px 4px 4px 0px;
+        }
+
+        .sensor-bar, .bms-bar {
+            height: 16px;
+            position: relative;
             border-radius: 2px;
+            margin: 2px 0;
         }
 
-        .sensor-bar.occupied {
+        /* Occupied bars grow leftward */
+        .occupied-side .sensor-bar {
             background: #2c2c2c;
+            margin-left: auto;
         }
 
-        .sensor-bar.standby {
+        .occupied-side .bms-bar {
+            background: rgba(102, 102, 102, 0.5);
+            margin-left: auto;
+        }
+
+        /* Standby bars grow rightward */
+        .standby-side .sensor-bar {
             background: #27ae60;
         }
 
-        .bms-bar {
-            height: 10px;
-            position: absolute;
-            top: 12px;
-            left: 2px;
-            border-radius: 2px;
-        }
-
-        .bms-bar.occupied {
-            background: rgba(102, 102, 102, 0.5);
-        }
-
-        .bms-bar.standby {
+        .standby-side .bms-bar {
             background: rgba(133, 208, 133, 0.5);
         }
 
-        .label-container {
+        .bar-label {
             position: absolute;
-            right: 4px;
-            top: 2px;
+            font-size: 9px;
+            font-weight: 600;
+            color: #333;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1px 3px;
+            border-radius: 2px;
+            white-space: nowrap;
+        }
+
+        .occupied-side .bar-label {
+            left: -2px;
+            transform: translate(-100%, -50%);
+        }
+
+        .standby-side .bar-label {
+            right: -2px;
+            transform: translate(100%, -50%);
+        }
+
+        .center-label {
+            position: absolute;
+            bottom: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 8px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        /* Chart Legend */
+        .chart-legend-section {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 20px 36px;
+            text-align: center;
+        }
+
+        .chart-legend-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 12px;
+        }
+
+        .chart-legend {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 10px;
+            border-radius: 2px;
+        }
+
+        .legend-direction {
+            font-size: 13px;
+            font-weight: 600;
+            color: #495057;
+            margin: 0 15px;
+        }
+
+        /* Missing Data Display */
+        .missing-data-chart {
+            width: 140px;
+            height: 50px;
+            position: relative;
+            margin: 8px auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            background: #f8f9fa;
+        }
+
+        .missing-data-bars {
+            height: 100%;
             display: flex;
             flex-direction: column;
-            gap: 0px;
-            align-items: flex-end;
+            justify-content: space-around;
+            padding: 4px;
         }
 
-        .percentage-label {
-            font-size: 8px;
+        .missing-sensor-bar,
+        .missing-zone-bar {
+            height: 18px;
+            position: relative;
+            border-radius: 2px;
+            margin: 1px 0;
+        }
+
+        .missing-sensor-bar {
+            background: linear-gradient(90deg, #dc3545, #e74c3c);
+        }
+
+        .missing-zone-bar {
+            background: linear-gradient(90deg, #fd7e14, #ff8c42);
+        }
+
+        .missing-bar-label {
+            position: absolute;
+            font-size: 10px;
             font-weight: 600;
-            padding: 0px 2px;
-            border-radius: 1px;
-            min-width: 16px;
+            color: white;
+            top: 50%;
+            transform: translateY(-50%);
+            right: 4px;
+            text-shadow: 0 1px 1px rgba(0,0,0,0.5);
+        }
+
+        /* Last Outage Display */
+        .outage-info {
             text-align: center;
-            line-height: 8px;
+            padding: 8px 4px;
         }
 
-        .percentage-label.sensor.occupied {
-            background: rgba(44, 44, 44, 0.9);
-            color: white;
+        .outage-duration {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 2px;
         }
 
-        .percentage-label.sensor.standby {
-            background: rgba(39, 174, 96, 0.9);
-            color: white;
-        }
-
-        .percentage-label.bms.occupied {
-            background: rgba(102, 102, 102, 0.9);
-            color: white;
-            margin-top: 1px;
-        }
-
-        .percentage-label.bms.standby {
-            background: rgba(133, 208, 133, 0.9);
-            color: white;
-            margin-top: 1px;
+        .outage-when {
+            font-size: 10px;
+            color: #666;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         /* Commissioning Grid */
         .commissioning-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 3px;
-            font-size: 12px;
+            grid-template-columns: auto 1fr 1fr;
+            gap: 2px;
+            font-size: 11px;
         }
 
         .commissioning-item {
-            padding: 4px 6px;
-            border-radius: 4px;
+            padding: 3px 5px;
+            border-radius: 3px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .commissioning-header {
+            padding: 3px 5px;
             text-align: center;
             font-weight: 600;
+            font-size: 10px;
+            background: #f8f9fa;
+            border-radius: 3px;
+            color: #666;
+        }
+
+        .commissioning-row-label {
+            padding: 3px 5px;
+            text-align: right;
+            font-weight: 600;
+            font-size: 10px;
+            background: #f8f9fa;
+            border-radius: 3px;
+            color: #666;
+            white-space: nowrap;
         }
 
         .commissioning-item.good { background: #d4edda; color: #155724; }
@@ -1248,6 +1402,24 @@
         <div class="loading">Loading dashboard metrics...</div>
     </div>
 
+    <!-- Chart Legend -->
+    <div class="chart-legend-section">
+        <div class="chart-legend-title">📊 Diverging Chart Guide</div>
+        <div class="chart-legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #2c2c2c;"></div>
+                <span>Sensor</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: rgba(102, 102, 102, 0.5);"></div>
+                <span>BMS</span>
+            </div>
+            <span class="legend-direction">OCCUPIED ←</span>
+            <span style="color: #dee2e6; font-weight: bold;">|</span>
+            <span class="legend-direction">→ STANDBY</span>
+        </div>
+    </div>
+
     <div class="main-content">
         <div class="controls">
             <div class="filter-grid">
@@ -1552,7 +1724,7 @@
                     </div>
 
                     <div class="dashboard-metric real-data data-quality">
-                        <div class="metric-title">Data Quality</div>
+                        <div class="metric-title">Data Completeness</div>
                         <div class="metric-value real-data" style="color: ${metrics.data_quality_percent > 95 ? '#28a745' : metrics.data_quality_percent > 80 ? '#ffc107' : '#dc3545'};" title="Percentage of valid data records (0 or 1 values) based on expected data rates: 2 points/minute for sensors, 1 point/minute for BMS. Calculated by comparing actual valid points to expected totals for the time period.">${metrics.data_quality_percent.toFixed(1)}%</div>
                         <div class="metric-subtitle">BMS: ${metrics.bms_quality_percent.toFixed(1)}% | Sensors: ${metrics.sensor_quality_percent.toFixed(1)}%</div>
                     </div>
@@ -1640,21 +1812,22 @@
                 table.innerHTML = `
                     <thead>
                         <tr>
-                            <th style="width: 25px;"></th>
-                            <th style="width: 180px;">Sensor / VAV</th>
-                            <th style="width: 120px;">Occupied</th>
-                            <th style="width: 120px;">Standby</th>
-                            <th style="width: 160px;">Commissioning</th>
-                            <th style="width: 100px;">24h Trend</th>
+                            <th style="width: 4%;"></th>
+                            <th style="width: 20%;">Sensor / VAV</th>
+                            <th style="width: 30%; text-align: center;">← Occupied | Standby →</th>
+                            <th style="width: 10%; text-align: center;">Missing Data</th>
+                            <th style="width: 10%; text-align: center;">Last Outage</th>
+                            <th style="width: 16%; text-align: center;">Commissioning</th>
+                            <th style="width: 10%; text-align: center;">24h Trend</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${groupSensors.map((sensor, index) => `
                         <tr>
-                            <td style="text-align: center;">
+                            <td style="text-align: center; width: 4%;">
                                 <span class="expand-btn" onclick="toggleDetail(${groupIndex}, ${index}, '${sensor.sensor_id}')">^</span>
                             </td>
-                            <td>
+                            <td style="width: 20%;">
                                 <div class="sensor-cell">
                                     <div>
                                         <div class="sensor-name">${sensor.sensor_id}</div>
@@ -1662,43 +1835,74 @@
                                     </div>
                                 </div>
                             </td>
-                            <td>
-                                <div class="correlation-chart" title="Percentage of time each device was in occupied/active state. Sensor (top bar) shows actual occupancy detection. BMS (bottom bar) shows zone control response.">
-                                    <div class="sensor-bar occupied" style="width: ${sensor.sensor_occupied_percent}%;"></div>
-                                    <div class="bms-bar occupied" style="width: ${sensor.zone_occupied_percent}%;"></div>
-                                    <div class="label-container">
-                                        <div class="percentage-label sensor occupied">${sensor.sensor_occupied_percent.toFixed(0)}%</div>
-                                        <div class="percentage-label bms occupied">${sensor.zone_occupied_percent.toFixed(0)}%</div>
+                            <td style="width: 35%; text-align: center;">
+                                <div class="correlation-chart" title="Diverging bar chart showing occupancy correlation. Left side shows occupied percentages (sensor vs BMS). Right side shows standby percentages. Well-balanced systems show symmetrical patterns.">
+                                    <div class="chart-container">
+                                        <div class="occupied-side">
+                                            <div class="sensor-bar" style="width: ${sensor.sensor_occupied_percent}%;">
+                                                <span class="bar-label">${sensor.sensor_occupied_percent.toFixed(0)}%</span>
+                                            </div>
+                                            <div class="bms-bar" style="width: ${sensor.zone_occupied_percent}%;">
+                                                <span class="bar-label">${sensor.zone_occupied_percent.toFixed(0)}%</span>
+                                            </div>
+                                        </div>
+                                        <div class="chart-center"></div>
+                                        <div class="standby-side">
+                                            <div class="sensor-bar" style="width: ${sensor.sensor_unoccupied_percent}%;">
+                                                <span class="bar-label">${sensor.sensor_unoccupied_percent.toFixed(0)}%</span>
+                                            </div>
+                                            <div class="bms-bar" style="width: ${sensor.zone_standby_percent}%;">
+                                                <span class="bar-label">${sensor.zone_standby_percent.toFixed(0)}%</span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </td>
-                            <td>
-                                <div class="correlation-chart" title="Percentage of time each device was in unoccupied/standby state. Sensor (top bar) shows unoccupied detection. BMS (bottom bar) shows zone standby mode.">
-                                    <div class="sensor-bar standby" style="width: ${sensor.sensor_unoccupied_percent}%;"></div>
-                                    <div class="bms-bar standby" style="width: ${sensor.zone_standby_percent}%;"></div>
-                                    <div class="label-container">
-                                        <div class="percentage-label sensor standby">${sensor.sensor_unoccupied_percent.toFixed(0)}%</div>
-                                        <div class="percentage-label bms standby">${sensor.zone_standby_percent.toFixed(0)}%</div>
+                            <td style="width: 10%; text-align: center;">
+                                <div class="missing-data-chart" title="Missing data percentages shown as horizontal bars. Top: sensor missing data, Bottom: VAV missing data. Lower percentages indicate better data quality.">
+                                    <div class="missing-data-bars">
+                                        <div class="missing-sensor-bar" style="width: ${Math.min(sensor.sensor_missing_percent, 100)}%;">
+                                            <span class="missing-bar-label">${sensor.sensor_missing_percent.toFixed(0)}%</span>
+                                        </div>
+                                        <div class="missing-zone-bar" style="width: ${Math.min(sensor.zone_missing_percent, 100)}%;">
+                                            <span class="missing-bar-label">${sensor.zone_missing_percent.toFixed(0)}%</span>
+                                        </div>
                                     </div>
                                 </div>
                             </td>
-                            <td>
-                                <div class="commissioning-grid" title="Commissioning deviation counts. ES: Early Standby (zone switches to standby before 15min unoccupied). LS: Late Standby (zone delays standby beyond 17min). EO: Early Occupied (zone activates before 5min occupied). LO: Late Occupied (zone delays activation beyond 7min).">
+                            <td style="width: 10%; text-align: center;">
+                                <div class="outage-info" title="Most recent data outage lasting more than 5 minutes. Shows duration in HH:MM format.">
+                                    <div class="outage-duration">${sensor.last_outage_duration || '--:--'}</div>
+                                    <div class="outage-when">${sensor.last_outage_when || 'None'}</div>
+                                </div>
+                            </td>
+                            <td style="width: 16%; text-align: center;">
+                                <div class="commissioning-grid" title="Commissioning deviation counts. Early: zone responds before minimum time. Late: zone delays response beyond maximum time. Standby: transitions to/from standby mode. Occupied: transitions to/from occupied mode.">
+                                    <!-- Headers -->
+                                    <div class="commissioning-header"></div>
+                                    <div class="commissioning-header">Early</div>
+                                    <div class="commissioning-header">Late</div>
+
+                                    <!-- Standby row -->
+                                    <div class="commissioning-row-label">Standby</div>
                                     <div class="commissioning-item ${sensor.es_count === 0 ? 'good' : sensor.es_count <= 1 ? 'fair' : 'poor'}">
-                                        ES: ${sensor.es_count}
+                                        ${sensor.es_count}
                                     </div>
                                     <div class="commissioning-item ${sensor.ls_count === 0 ? 'good' : sensor.ls_count <= 1 ? 'fair' : 'poor'}">
-                                        LS: ${sensor.ls_count}
+                                        ${sensor.ls_count}
                                     </div>
+
+                                    <!-- Occupied row -->
+                                    <div class="commissioning-row-label">Occupied</div>
                                     <div class="commissioning-item ${sensor.eo_count === 0 ? 'good' : sensor.eo_count <= 1 ? 'fair' : 'poor'}">
-                                        EO: ${sensor.eo_count}
+                                        ${sensor.eo_count}
                                     </div>
                                     <div class="commissioning-item ${sensor.lo_count === 0 ? 'good' : sensor.lo_count <= 1 ? 'fair' : 'poor'}">
-                                        LO: ${sensor.lo_count}
+                                        ${sensor.lo_count}
                                     </div>
                                 </div>
                             </td>
-                            <td>
+                            <td style="width: 10%; text-align: center;">
                                 <div class="mini-chart" title="Hourly zone standby percentage over the last 24 hours. Shows daily patterns of building usage and BMS control behavior.">
                                     ${generateMiniChart(sensor.trend_data || Array.from({length: 24}, () => Math.random() * 100))}
                                 </div>
@@ -1954,7 +2158,7 @@
                 const minutesFromRowStart = (eventTime - rowStartTime) / (1000 * 60);
                 const xPos = (minutesFromRowStart / (8 * 60)) * 100; // Position within 8-hour row
 
-                eventElement.className = `event ${event.type} ${event.value === 1 ? (event.type === 'sensor' ? 'occupied' : 'occupied') : (event.type === 'sensor' ? 'unoccupied' : 'standby')}`;
+                eventElement.className = `event ${event.type} ${event.value === 1 ? (event.type === 'sensor' ? 'occupied' : 'standby') : (event.type === 'sensor' ? 'unoccupied' : 'occupied')}`;
                 eventElement.style.left = `${Math.max(0, Math.min(100, xPos))}%`;
                 eventElement.title = `${event.timestamp}: ${event.description || event.type}`;
 
@@ -2275,7 +2479,7 @@
                 const minutesFromStart = (eventTime - windowStart) / (1000 * 60);
                 const xPos = (minutesFromStart / 120) * 100; // 2-hour window
 
-                eventElement.className = `zoom-event ${event.type} ${event.value === 1 ? (event.type === 'sensor' ? 'occupied' : 'occupied') : (event.type === 'sensor' ? 'unoccupied' : 'standby')}`;
+                eventElement.className = `zoom-event ${event.type} ${event.value === 1 ? (event.type === 'sensor' ? 'occupied' : 'standby') : (event.type === 'sensor' ? 'unoccupied' : 'occupied')}`;
                 eventElement.style.left = `${Math.max(0, Math.min(100, xPos))}%`;
                 eventElement.title = `${event.timestamp}: ${event.description || event.type}`;
 

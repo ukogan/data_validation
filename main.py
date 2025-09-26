@@ -13,7 +13,7 @@ from typing import List, Dict, Any, Optional
 import json
 import tempfile
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 # Import our existing modules
 from src.data.data_loader import load_data, parse_timestamp
@@ -111,6 +111,10 @@ class SensorMetrics(BaseModel):
     zone_occupied_percent: float = 0.0
     sensor_unoccupied_percent: float = 0.0
     zone_standby_percent: float = 0.0
+    sensor_missing_percent: float = 0.0  # Missing sensor data percentage
+    zone_missing_percent: float = 0.0    # Missing zone data percentage
+    last_outage_duration: str = "--:--"   # Duration of last outage >5min in HH:MM format
+    last_outage_when: str = "None"        # When the last outage occurred (relative time)
     total_mode_changes: int = 0
 
 # Global data storage (in production, use a database)
@@ -148,10 +152,41 @@ def calculate_data_quality(filtered_data, period: str):
             'bms_quality': 0.0
         }
 
-    # Get actual time range from the data
+    # Get actual time range from the data, but don't include future time periods
     timestamps = [record['time'] for record in filtered_data]
-    start_time = min(timestamps)
-    end_time = max(timestamps)
+    raw_start_time = min(timestamps)
+    raw_end_time = max(timestamps)
+
+    # Don't analyze beyond current time to avoid future periods
+    current_time = datetime.now()
+
+    # Make sure all timestamps are timezone-naive for comparison
+    if raw_start_time.tzinfo is not None:
+        start_time = raw_start_time.replace(tzinfo=None)
+    else:
+        start_time = raw_start_time
+
+    if raw_end_time.tzinfo is not None:
+        raw_end_time = raw_end_time.replace(tzinfo=None)
+
+    end_time = min(raw_end_time, current_time)
+
+    # Filter out any future data points - handle timezone-aware timestamps
+    filtered_timestamps = []
+    for t in timestamps:
+        if t.tzinfo is not None:
+            t_naive = t.replace(tzinfo=None)
+        else:
+            t_naive = t
+        if t_naive <= current_time:
+            filtered_timestamps.append(t_naive)
+    if not filtered_timestamps:
+        return {
+            'overall_quality': 0.0,
+            'sensor_quality': 0.0,
+            'bms_quality': 0.0
+        }
+
     actual_duration = end_time - start_time
 
     # Separate sensor and BMS data by device
@@ -165,9 +200,18 @@ def calculate_data_quality(filtered_data, period: str):
 
         timestamp = record['time']
 
+        # Skip future data points - make sure both are timezone-naive
+        if timestamp.tzinfo is not None:
+            timestamp_naive = timestamp.replace(tzinfo=None)
+        else:
+            timestamp_naive = timestamp
+
+        if timestamp_naive > current_time:
+            continue
+
         if 'presence' in record['name']:  # Sensor data (30s intervals)
             # Calculate which 30-second slot this timestamp falls into
-            seconds_from_start = (timestamp - start_time).total_seconds()
+            seconds_from_start = (timestamp_naive - start_time).total_seconds()
             interval_slot = int(seconds_from_start // 30)
 
             if record['name'] not in sensor_intervals:
@@ -176,7 +220,7 @@ def calculate_data_quality(filtered_data, period: str):
 
         elif record['name'].startswith('BV'):  # BMS data (60s intervals)
             # Calculate which 60-second slot this timestamp falls into
-            seconds_from_start = (timestamp - start_time).total_seconds()
+            seconds_from_start = (timestamp_naive - start_time).total_seconds()
             interval_slot = int(seconds_from_start // 60)
 
             if record['name'] not in bms_intervals:
@@ -231,6 +275,85 @@ def calculate_data_quality(filtered_data, period: str):
         'sensor_coverage_rates': sensor_coverage_rates,
         'bms_coverage_rates': bms_coverage_rates
     }
+
+def calculate_last_outage(data, sensor_name, zone_name, start_time, end_time, current_time):
+    """Calculate the most recent data outage lasting more than 5 minutes"""
+    from datetime import timedelta
+
+    # Combine sensor and zone data for comprehensive outage detection
+    sensor_data = [r for r in data if r['name'] == sensor_name and r['value'] in [0, 1]]
+    zone_data = [r for r in data if r['name'] == zone_name and r['value'] in [0, 1]]
+
+    # Filter data to current time to avoid future timestamps
+    sensor_data = [r for r in sensor_data if r['time'] <= current_time]
+    zone_data = [r for r in zone_data if r['time'] <= current_time]
+
+    if not sensor_data and not zone_data:
+        return "--:--", "None"
+
+    # Combine and sort all data points by time
+    all_data = []
+    for record in sensor_data:
+        all_data.append({'time': record['time'], 'source': 'sensor'})
+    for record in zone_data:
+        all_data.append({'time': record['time'], 'source': 'zone'})
+
+    all_data.sort(key=lambda x: x['time'])
+
+    # Find gaps longer than 5 minutes
+    outages = []
+    min_outage_duration = timedelta(minutes=5)
+
+    # Check for gaps between consecutive data points
+    for i in range(1, len(all_data)):
+        prev_time = all_data[i-1]['time']
+        curr_time = all_data[i]['time']
+        gap_duration = curr_time - prev_time
+
+        if gap_duration > min_outage_duration:
+            outages.append({
+                'start': prev_time,
+                'end': curr_time,
+                'duration': gap_duration
+            })
+
+    # Check for gap at the end (if last data point is far from end_time)
+    if all_data:
+        analysis_end_time = min(end_time.replace(tzinfo=None) if end_time.tzinfo else end_time, current_time)
+        last_data_time = all_data[-1]['time']
+        final_gap = analysis_end_time - last_data_time
+
+        if final_gap > min_outage_duration:
+            outages.append({
+                'start': last_data_time,
+                'end': analysis_end_time,
+                'duration': final_gap
+            })
+
+    if not outages:
+        return "--:--", "None"
+
+    # Find the most recent outage
+    most_recent_outage = max(outages, key=lambda x: x['start'])
+
+    # Format duration as HH:MM
+    total_minutes = int(most_recent_outage['duration'].total_seconds() // 60)
+    hours = total_minutes // 60
+    minutes = total_minutes % 60
+    duration_str = f"{hours:02d}:{minutes:02d}"
+
+    # Calculate relative time (how long ago the outage started)
+    time_since_outage = current_time - most_recent_outage['start']
+    if time_since_outage.days > 0:
+        when_str = f"{time_since_outage.days}d ago"
+    elif time_since_outage.seconds > 3600:
+        hours_ago = time_since_outage.seconds // 3600
+        when_str = f"{hours_ago}h ago"
+    else:
+        minutes_ago = time_since_outage.seconds // 60
+        when_str = f"{minutes_ago}m ago" if minutes_ago > 0 else "Just now"
+
+    return duration_str, when_str
 
 @app.get("/", response_class=HTMLResponse)
 async def dashboard():
@@ -843,8 +966,14 @@ async def get_sensor_metrics(period: str = Query("24h", description="Time period
         if not (sensor_data and zone_data):
             continue
 
-        start_time = min(r['time'] for r in sensor_data + zone_data)
-        end_time = max(r['time'] for r in sensor_data + zone_data)
+        # Use the global time range to ensure consistency with global data quality calculation
+        # This ensures missing data percentages account for the full analysis period
+        global_timestamps = [r['time'] for r in uploaded_data]
+        global_start_time = min(global_timestamps)
+        global_end_time = max(global_timestamps)
+
+        start_time = global_start_time
+        end_time = global_end_time
 
         # Calculate statistics
         stats = calculate_occupancy_statistics(sensor_data, zone_data, start_time, end_time)
@@ -872,6 +1001,53 @@ async def get_sensor_metrics(period: str = Query("24h", description="Time period
         else:
             trend_data = [0.0] * 24
 
+        # Calculate missing data percentages using same logic as global data quality
+        actual_duration = end_time - start_time
+
+        # Don't analyze beyond current time to avoid future periods
+        current_time = datetime.now()
+
+        # Make sure end_time is timezone-naive for comparison
+        if end_time.tzinfo is not None:
+            end_time_naive = end_time.replace(tzinfo=None)
+        else:
+            end_time_naive = end_time
+
+        analysis_end_time = min(end_time_naive, current_time)
+        actual_analysis_duration = analysis_end_time - start_time
+
+        # Calculate missing percentages using time-based approach (consistent with occupied/standby percentages)
+        sensor_missing_percent = 0
+        zone_missing_percent = 0
+
+        if actual_analysis_duration.total_seconds() > 0:
+            sensor_missing_percent = (stats['sensor_missing_time'].total_seconds() / actual_analysis_duration.total_seconds()) * 100
+            zone_missing_percent = (stats['zone_missing_time'].total_seconds() / actual_analysis_duration.total_seconds()) * 100
+
+        # Ensure missing percentages are not negative
+        sensor_missing_percent = max(0, sensor_missing_percent)
+        zone_missing_percent = max(0, zone_missing_percent)
+
+        # Debug logging for missing data calculation
+        print(f"🔍 [MISSING DATA DEBUG] Sensor: {sensor_name}")
+        print(f"   Total Duration: {actual_analysis_duration} ({actual_analysis_duration.total_seconds():.0f}s)")
+        print(f"   Sensor Data Time: {stats['sensor_occupied_time'] + stats['sensor_unoccupied_time']} ({(stats['sensor_occupied_time'] + stats['sensor_unoccupied_time']).total_seconds():.0f}s)")
+        print(f"   Sensor Missing Time: {stats['sensor_missing_time']} ({stats['sensor_missing_time'].total_seconds():.0f}s)")
+        print(f"   Sensor missing: {sensor_missing_percent:.1f}%")
+        print(f"   Zone Data Time: {stats['zone_occupied_time'] + stats['zone_standby_time']} ({(stats['zone_occupied_time'] + stats['zone_standby_time']).total_seconds():.0f}s)")
+        print(f"   Zone Missing Time: {stats['zone_missing_time']} ({stats['zone_missing_time'].total_seconds():.0f}s)")
+        print(f"   Zone missing: {zone_missing_percent:.1f}%")
+        print(f"   Verification - Sensor Total: {stats['sensor_occupied_percent']:.1f}% + {stats['sensor_unoccupied_percent']:.1f}% + {sensor_missing_percent:.1f}% = {stats['sensor_occupied_percent'] + stats['sensor_unoccupied_percent'] + sensor_missing_percent:.1f}%")
+        print(f"   Verification - Zone Total: {stats['zone_occupied_percent']:.1f}% + {stats['zone_standby_percent']:.1f}% + {zone_missing_percent:.1f}% = {stats['zone_occupied_percent'] + stats['zone_standby_percent'] + zone_missing_percent:.1f}%")
+
+        # Calculate last outage information
+        outage_duration, outage_when = calculate_last_outage(
+            uploaded_data, sensor_name, zone_name, start_time, end_time, current_time
+        )
+
+        print(f"🔍 [OUTAGE DEBUG] Sensor: {sensor_name}")
+        print(f"   Last outage: {outage_duration} ({outage_when})")
+
         metrics.append(SensorMetrics(
             sensor_id=sensor_name.replace(' presence', ''),
             zone_id=zone_name,
@@ -888,6 +1064,10 @@ async def get_sensor_metrics(period: str = Query("24h", description="Time period
             zone_occupied_percent=stats['zone_occupied_percent'],
             sensor_unoccupied_percent=stats['sensor_unoccupied_percent'],
             zone_standby_percent=stats['zone_standby_percent'],
+            sensor_missing_percent=sensor_missing_percent,
+            zone_missing_percent=zone_missing_percent,
+            last_outage_duration=outage_duration,
+            last_outage_when=outage_when,
             total_mode_changes=error_rates['total_mode_changes']
         ))
 
