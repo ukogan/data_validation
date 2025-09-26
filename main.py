@@ -183,7 +183,13 @@ def calculate_data_quality(filtered_data, period: str):
     if raw_end_time.tzinfo is not None:
         raw_end_time = raw_end_time.replace(tzinfo=None)
 
-    end_time = min(raw_end_time, current_time)
+    # Ensure current_time is also timezone-naive for comparison
+    if current_time.tzinfo is not None:
+        current_time_naive = current_time.replace(tzinfo=None)
+    else:
+        current_time_naive = current_time
+
+    end_time = min(raw_end_time, current_time_naive)
 
     # Filter out any future data points - handle timezone-aware timestamps
     filtered_timestamps = []
@@ -295,19 +301,55 @@ def calculate_last_outage(data, sensor_name, zone_name, start_time, end_time, cu
     try:
         from datetime import timedelta
 
+        print(f"🔍 [OUTAGE] Calculating outage for sensor: {sensor_name}, zone: {zone_name}")
+        print(f"🔍 [OUTAGE] Data records total: {len(data)}")
+        print(f"🔍 [OUTAGE] Time range: {start_time} to {end_time}, current: {current_time}")
+
+        # Normalize timezone-aware datetimes to timezone-naive for consistent comparison
+        if start_time.tzinfo is not None:
+            start_time_naive = start_time.replace(tzinfo=None)
+        else:
+            start_time_naive = start_time
+
+        if end_time.tzinfo is not None:
+            end_time_naive = end_time.replace(tzinfo=None)
+        else:
+            end_time_naive = end_time
+
+        if current_time.tzinfo is not None:
+            current_time_naive = current_time.replace(tzinfo=None)
+        else:
+            current_time_naive = current_time
+
         # Optimize data filtering for Railway performance
         sensor_data = []
         zone_data = []
 
         # Single pass through data to avoid multiple iterations
         for r in data:
-            if r['time'] <= current_time and r['value'] in [0, 1]:
+            # Normalize record time to timezone-naive for comparison
+            record_time = r['time']
+            if record_time.tzinfo is not None:
+                record_time_naive = record_time.replace(tzinfo=None)
+            else:
+                record_time_naive = record_time
+
+            if record_time_naive <= current_time_naive and r['value'] in [0, 1]:
                 if r['name'] == sensor_name:
-                    sensor_data.append(r)
+                    # Store the normalized time back in the record for consistency
+                    sensor_record = r.copy()
+                    sensor_record['time'] = record_time_naive
+                    sensor_data.append(sensor_record)
                 elif r['name'] == zone_name:
-                    zone_data.append(r)
+                    zone_record = r.copy()
+                    zone_record['time'] = record_time_naive
+                    zone_data.append(zone_record)
+
+        print(f"🔍 [OUTAGE] Filtered sensor data: {len(sensor_data)} records")
+        print(f"🔍 [OUTAGE] Filtered zone data: {len(zone_data)} records")
 
         if not sensor_data and not zone_data:
+            print(f"❌ [OUTAGE] No data found for sensor/zone combination")
             return "--:--", "None"
 
         # Combine and sort data points - limit to recent data for performance
@@ -344,7 +386,7 @@ def calculate_last_outage(data, sensor_name, zone_name, start_time, end_time, cu
         # Check for gap at the end (if last data point is far from end_time)
         if all_data:
             try:
-                analysis_end_time = min(end_time.replace(tzinfo=None) if end_time.tzinfo else end_time, current_time)
+                analysis_end_time = min(end_time_naive, current_time_naive)
                 last_data_time = all_data[-1]['time']
                 final_gap = analysis_end_time - last_data_time
 
@@ -370,7 +412,7 @@ def calculate_last_outage(data, sensor_name, zone_name, start_time, end_time, cu
         duration_str = f"{hours:02d}:{minutes:02d}"
 
         # Calculate relative time (how long ago the outage started)
-        time_since_outage = current_time - most_recent_outage['start']
+        time_since_outage = current_time_naive - most_recent_outage['start']
         if time_since_outage.days > 0:
             when_str = f"{time_since_outage.days}d ago"
         elif time_since_outage.seconds > 3600:
@@ -1038,14 +1080,19 @@ async def get_sensor_metrics(period: str = Query("24h", description="Time period
         # Don't analyze beyond current time to avoid future periods
         current_time = datetime.now()
 
-        # Make sure end_time is timezone-naive for comparison
+        # Make sure both start_time and end_time are timezone-naive for comparison
+        if start_time.tzinfo is not None:
+            start_time_naive = start_time.replace(tzinfo=None)
+        else:
+            start_time_naive = start_time
+
         if end_time.tzinfo is not None:
             end_time_naive = end_time.replace(tzinfo=None)
         else:
             end_time_naive = end_time
 
         analysis_end_time = min(end_time_naive, current_time)
-        actual_analysis_duration = analysis_end_time - start_time
+        actual_analysis_duration = analysis_end_time - start_time_naive
 
         # Calculate missing percentages using time-based approach (consistent with occupied/standby percentages)
         sensor_missing_percent = 0
