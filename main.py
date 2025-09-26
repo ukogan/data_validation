@@ -278,82 +278,99 @@ def calculate_data_quality(filtered_data, period: str):
 
 def calculate_last_outage(data, sensor_name, zone_name, start_time, end_time, current_time):
     """Calculate the most recent data outage lasting more than 5 minutes"""
-    from datetime import timedelta
+    try:
+        from datetime import timedelta
 
-    # Combine sensor and zone data for comprehensive outage detection
-    sensor_data = [r for r in data if r['name'] == sensor_name and r['value'] in [0, 1]]
-    zone_data = [r for r in data if r['name'] == zone_name and r['value'] in [0, 1]]
+        # Optimize data filtering for Railway performance
+        sensor_data = []
+        zone_data = []
 
-    # Filter data to current time to avoid future timestamps
-    sensor_data = [r for r in sensor_data if r['time'] <= current_time]
-    zone_data = [r for r in zone_data if r['time'] <= current_time]
+        # Single pass through data to avoid multiple iterations
+        for r in data:
+            if r['time'] <= current_time and r['value'] in [0, 1]:
+                if r['name'] == sensor_name:
+                    sensor_data.append(r)
+                elif r['name'] == zone_name:
+                    zone_data.append(r)
 
-    if not sensor_data and not zone_data:
-        return "--:--", "None"
+        if not sensor_data and not zone_data:
+            return "--:--", "None"
 
-    # Combine and sort all data points by time
-    all_data = []
-    for record in sensor_data:
-        all_data.append({'time': record['time'], 'source': 'sensor'})
-    for record in zone_data:
-        all_data.append({'time': record['time'], 'source': 'zone'})
+        # Combine and sort data points - limit to recent data for performance
+        all_data = []
+        for record in sensor_data[-1000:]:  # Limit to last 1000 sensor points
+            all_data.append({'time': record['time'], 'source': 'sensor'})
+        for record in zone_data[-1000:]:   # Limit to last 1000 zone points
+            all_data.append({'time': record['time'], 'source': 'zone'})
 
-    all_data.sort(key=lambda x: x['time'])
+        all_data.sort(key=lambda x: x['time'])
 
-    # Find gaps longer than 5 minutes
-    outages = []
-    min_outage_duration = timedelta(minutes=5)
+        # Find gaps longer than 5 minutes - limit search for performance
+        outages = []
+        min_outage_duration = timedelta(minutes=5)
+        max_outages_to_check = 10  # Only keep track of the 10 most recent outages
 
-    # Check for gaps between consecutive data points
-    for i in range(1, len(all_data)):
-        prev_time = all_data[i-1]['time']
-        curr_time = all_data[i]['time']
-        gap_duration = curr_time - prev_time
+        # Check for gaps between consecutive data points
+        for i in range(1, min(len(all_data), 1000)):  # Limit iterations for performance
+            prev_time = all_data[i-1]['time']
+            curr_time = all_data[i]['time']
+            gap_duration = curr_time - prev_time
 
-        if gap_duration > min_outage_duration:
-            outages.append({
-                'start': prev_time,
-                'end': curr_time,
-                'duration': gap_duration
-            })
+            if gap_duration > min_outage_duration:
+                outages.append({
+                    'start': prev_time,
+                    'end': curr_time,
+                    'duration': gap_duration
+                })
 
-    # Check for gap at the end (if last data point is far from end_time)
-    if all_data:
-        analysis_end_time = min(end_time.replace(tzinfo=None) if end_time.tzinfo else end_time, current_time)
-        last_data_time = all_data[-1]['time']
-        final_gap = analysis_end_time - last_data_time
+                # Keep only the most recent outages for memory efficiency
+                if len(outages) > max_outages_to_check:
+                    outages = sorted(outages, key=lambda x: x['start'])[-max_outages_to_check:]
 
-        if final_gap > min_outage_duration:
-            outages.append({
-                'start': last_data_time,
-                'end': analysis_end_time,
-                'duration': final_gap
-            })
+        # Check for gap at the end (if last data point is far from end_time)
+        if all_data:
+            try:
+                analysis_end_time = min(end_time.replace(tzinfo=None) if end_time.tzinfo else end_time, current_time)
+                last_data_time = all_data[-1]['time']
+                final_gap = analysis_end_time - last_data_time
 
-    if not outages:
-        return "--:--", "None"
+                if final_gap > min_outage_duration:
+                    outages.append({
+                        'start': last_data_time,
+                        'end': analysis_end_time,
+                        'duration': final_gap
+                    })
+            except Exception as e:
+                print(f"❌ [OUTAGE] Error calculating final gap: {e}")
 
-    # Find the most recent outage
-    most_recent_outage = max(outages, key=lambda x: x['start'])
+        if not outages:
+            return "--:--", "None"
 
-    # Format duration as HH:MM
-    total_minutes = int(most_recent_outage['duration'].total_seconds() // 60)
-    hours = total_minutes // 60
-    minutes = total_minutes % 60
-    duration_str = f"{hours:02d}:{minutes:02d}"
+        # Find the most recent outage
+        most_recent_outage = max(outages, key=lambda x: x['start'])
 
-    # Calculate relative time (how long ago the outage started)
-    time_since_outage = current_time - most_recent_outage['start']
-    if time_since_outage.days > 0:
-        when_str = f"{time_since_outage.days}d ago"
-    elif time_since_outage.seconds > 3600:
-        hours_ago = time_since_outage.seconds // 3600
-        when_str = f"{hours_ago}h ago"
-    else:
-        minutes_ago = time_since_outage.seconds // 60
-        when_str = f"{minutes_ago}m ago" if minutes_ago > 0 else "Just now"
+        # Format duration as HH:MM
+        total_minutes = int(most_recent_outage['duration'].total_seconds() // 60)
+        hours = total_minutes // 60
+        minutes = total_minutes % 60
+        duration_str = f"{hours:02d}:{minutes:02d}"
 
-    return duration_str, when_str
+        # Calculate relative time (how long ago the outage started)
+        time_since_outage = current_time - most_recent_outage['start']
+        if time_since_outage.days > 0:
+            when_str = f"{time_since_outage.days}d ago"
+        elif time_since_outage.seconds > 3600:
+            hours_ago = time_since_outage.seconds // 3600
+            when_str = f"{hours_ago}h ago"
+        else:
+            minutes_ago = time_since_outage.seconds // 60
+            when_str = f"{minutes_ago}m ago" if minutes_ago > 0 else "Just now"
+
+        return duration_str, when_str
+
+    except Exception as e:
+        print(f"❌ [OUTAGE] Error in calculate_last_outage: {e}")
+        return "--:--", "Error"
 
 @app.get("/", response_class=HTMLResponse)
 async def dashboard():
@@ -1040,13 +1057,16 @@ async def get_sensor_metrics(period: str = Query("24h", description="Time period
         print(f"   Verification - Sensor Total: {stats['sensor_occupied_percent']:.1f}% + {stats['sensor_unoccupied_percent']:.1f}% + {sensor_missing_percent:.1f}% = {stats['sensor_occupied_percent'] + stats['sensor_unoccupied_percent'] + sensor_missing_percent:.1f}%")
         print(f"   Verification - Zone Total: {stats['zone_occupied_percent']:.1f}% + {stats['zone_standby_percent']:.1f}% + {zone_missing_percent:.1f}% = {stats['zone_occupied_percent'] + stats['zone_standby_percent'] + zone_missing_percent:.1f}%")
 
-        # Calculate last outage information
-        outage_duration, outage_when = calculate_last_outage(
-            uploaded_data, sensor_name, zone_name, start_time, end_time, current_time
-        )
-
-        print(f"🔍 [OUTAGE DEBUG] Sensor: {sensor_name}")
-        print(f"   Last outage: {outage_duration} ({outage_when})")
+        # Calculate last outage information with fallback for Railway performance
+        try:
+            outage_duration, outage_when = calculate_last_outage(
+                uploaded_data, sensor_name, zone_name, start_time, end_time, current_time
+            )
+            print(f"🔍 [OUTAGE DEBUG] Sensor: {sensor_name}")
+            print(f"   Last outage: {outage_duration} ({outage_when})")
+        except Exception as e:
+            print(f"❌ [OUTAGE] Failed to calculate outage for {sensor_name}: {e}")
+            outage_duration, outage_when = "--:--", "Error"
 
         metrics.append(SensorMetrics(
             sensor_id=sensor_name.replace(' presence', ''),
