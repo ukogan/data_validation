@@ -27,6 +27,30 @@ python3 filter_sensor_data.py  # Filter large sensor dumps to specific time rang
 
 **Use Python 3** - The environment has `python3` not `python` installed.
 
+## CRITICAL DEPLOYMENT FLOW
+
+**🚨 NEVER merge development to main without explicit user instruction! 🚨**
+
+**Correct Deployment Flow:**
+1. **Local Development** → `development` branch
+2. **Sync to GitHub** → `git push origin development` (triggers Railway staging)
+3. **Railway Staging** → Test on staging environment
+4. **Only after approval** → Merge to `main` for production
+
+**Commands for GitHub Sync (staging deployment):**
+```bash
+git add [files]
+git commit -m "description"
+git push origin development  # This triggers Railway staging deployment
+```
+
+**NEVER run these without explicit instruction:**
+- `gh pr create` to main branch
+- `gh pr merge` to main branch
+- `git push origin main`
+
+**The user controls when development is ready for production deployment to main.**
+
 ## Architecture Overview
 
 ### Current Monolithic Structure (Being Refactored)
