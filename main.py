@@ -15,6 +15,20 @@ import tempfile
 import os
 from datetime import datetime, timedelta, timezone
 
+# Load environment variables from .env file manually
+def load_env_file():
+    env_path = os.path.join(os.path.dirname(__file__), '.env')
+    if os.path.exists(env_path):
+        with open(env_path, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, value = line.split('=', 1)
+                    os.environ[key.strip()] = value.strip()
+
+# Load environment variables
+load_env_file()
+
 # Import our existing modules
 from src.data.data_loader import load_data, parse_timestamp
 from src.data.config import SENSOR_ZONE_MAP, DEFAULT_OCCUPIED_DURATION, DEFAULT_UNOCCUPIED_DURATION
