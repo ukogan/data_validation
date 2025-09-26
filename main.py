@@ -136,26 +136,36 @@ uploaded_data = []
 processed_results = {}
 
 def filter_data_by_period(data, period: str):
-    """Filter data to specified time period from the most recent timestamp"""
+    """Filter data to specified time period from current time"""
     if not data:
         return []
 
-    # Find the most recent timestamp in the dataset
-    latest_time = max(record['time'] for record in data)
+    # Use current time as the end point for filtering
+    # Check if data contains timezone-aware timestamps
+    sample_time = data[0]['time'] if data else datetime.now()
+    if sample_time.tzinfo is not None:
+        current_time = datetime.now(timezone.utc)
+    else:
+        current_time = datetime.now()
 
-    # Calculate the start time based on period
+    # Calculate the start time based on period from current time
     if period == "24h":
-        start_time = latest_time - timedelta(hours=24)
+        start_time = current_time - timedelta(hours=24)
     elif period == "5d":
-        start_time = latest_time - timedelta(days=5)
+        start_time = current_time - timedelta(days=5)
     elif period == "30d":
-        start_time = latest_time - timedelta(days=30)
+        start_time = current_time - timedelta(days=30)
     else:
         # Default to 24h if invalid period
-        start_time = latest_time - timedelta(hours=24)
+        start_time = current_time - timedelta(hours=24)
+
+    print(f"🔍 [FILTER] Period: {period}, filtering from {start_time} to {current_time}")
 
     # Filter data to the specified time window
-    return [record for record in data if record['time'] >= start_time]
+    filtered_data = [record for record in data if record['time'] >= start_time]
+    print(f"🔍 [FILTER] Filtered {len(data)} records down to {len(filtered_data)} records")
+
+    return filtered_data
 
 def calculate_data_quality(filtered_data, period: str):
     """Calculate data quality based on missing intervals (not duplicate points)"""
@@ -301,9 +311,23 @@ def calculate_last_outage(data, sensor_name, zone_name, start_time, end_time, cu
     try:
         from datetime import timedelta
 
+        # Dataset validation and logging
+        if data:
+            earliest_data = min(record['time'] for record in data)
+            latest_data = max(record['time'] for record in data)
+            dataset_span = latest_data - earliest_data
+            dataset_span_hours = dataset_span.total_seconds() / 3600
+        else:
+            earliest_data = None
+            latest_data = None
+            dataset_span_hours = 0
+
+        print(f"🔍 [OUTAGE] === DATASET INFO ===")
+        print(f"🔍 [OUTAGE] Using dataset: {len(data)} records")
+        print(f"🔍 [OUTAGE] Dataset timespan: {earliest_data} to {latest_data} ({dataset_span_hours:.1f}h)")
         print(f"🔍 [OUTAGE] Calculating outage for sensor: {sensor_name}, zone: {zone_name}")
-        print(f"🔍 [OUTAGE] Data records total: {len(data)}")
-        print(f"🔍 [OUTAGE] Time range: {start_time} to {end_time}, current: {current_time}")
+        print(f"🔍 [OUTAGE] Analysis window: {start_time} to {end_time}, current: {current_time}")
+        print(f"🔍 [OUTAGE] === END DATASET INFO ===")
 
         # Normalize timezone-aware datetimes to timezone-naive for consistent comparison
         if start_time.tzinfo is not None:
@@ -352,11 +376,11 @@ def calculate_last_outage(data, sensor_name, zone_name, start_time, end_time, cu
             print(f"❌ [OUTAGE] No data found for sensor/zone combination")
             return "--:--", "None"
 
-        # Combine and sort data points - limit to recent data for performance
+        # Combine and sort data points - analyze ALL data in time window for accuracy
         all_data = []
-        for record in sensor_data[-1000:]:  # Limit to last 1000 sensor points
+        for record in sensor_data:  # Use ALL sensor data within time window
             all_data.append({'time': record['time'], 'source': 'sensor'})
-        for record in zone_data[-1000:]:   # Limit to last 1000 zone points
+        for record in zone_data:    # Use ALL zone data within time window
             all_data.append({'time': record['time'], 'source': 'zone'})
 
         all_data.sort(key=lambda x: x['time'])
@@ -367,12 +391,23 @@ def calculate_last_outage(data, sensor_name, zone_name, start_time, end_time, cu
         max_outages_to_check = 10  # Only keep track of the 10 most recent outages
 
         # Check for gaps between consecutive data points
-        for i in range(1, min(len(all_data), 1000)):  # Limit iterations for performance
+        gaps_found = 0
+        large_gaps_found = 0
+        print(f"🔍 [OUTAGE] Analyzing ALL {len(all_data)} data points for gaps > 5 minutes...")
+
+        for i in range(1, len(all_data)):  # Analyze ALL data points in time window
             prev_time = all_data[i-1]['time']
             curr_time = all_data[i]['time']
             gap_duration = curr_time - prev_time
 
+            if gap_duration > timedelta(seconds=30):  # Log all gaps > 30 seconds
+                gaps_found += 1
+                if gaps_found <= 5:  # Only log first 5 gaps to avoid spam
+                    print(f"🔍 [OUTAGE] Gap {gaps_found}: {gap_duration} between {prev_time} and {curr_time}")
+
             if gap_duration > min_outage_duration:
+                large_gaps_found += 1
+                print(f"🔍 [OUTAGE] OUTAGE FOUND #{large_gaps_found}: {gap_duration} from {prev_time} to {curr_time}")
                 outages.append({
                     'start': prev_time,
                     'end': curr_time,
@@ -382,6 +417,8 @@ def calculate_last_outage(data, sensor_name, zone_name, start_time, end_time, cu
                 # Keep only the most recent outages for memory efficiency
                 if len(outages) > max_outages_to_check:
                     outages = sorted(outages, key=lambda x: x['start'])[-max_outages_to_check:]
+
+        print(f"🔍 [OUTAGE] Gap analysis complete: {gaps_found} gaps > 30s, {large_gaps_found} outages > 5min")
 
         # Check for gap at the end (if last data point is far from end_time)
         if all_data:
@@ -887,6 +924,46 @@ async def get_sensor_zone_map() -> Dict[str, str]:
     """Get sensor to zone mapping configuration"""
     return SENSOR_ZONE_MAP
 
+@app.get("/api/dataset-info")
+async def get_dataset_info():
+    """Get information about the currently loaded dataset"""
+    global uploaded_data
+
+    if not uploaded_data:
+        return {
+            "record_count": 0,
+            "earliest_timestamp": None,
+            "latest_timestamp": None,
+            "data_source": "none",
+            "timespan_hours": 0,
+            "load_timestamp": None
+        }
+
+    print(f"🔍 [DATASET INFO] Analyzing dataset with {len(uploaded_data)} records")
+
+    # Get earliest and latest timestamps
+    earliest = min(record['time'] for record in uploaded_data)
+    latest = max(record['time'] for record in uploaded_data)
+
+    # Calculate timespan
+    timespan = latest - earliest
+    timespan_hours = timespan.total_seconds() / 3600
+
+    # Determine data source (check if we're using database or CSV)
+    data_source = "database" if os.getenv('DB_HOST') else "csv"
+
+    result = {
+        "record_count": len(uploaded_data),
+        "earliest_timestamp": earliest.isoformat() if earliest else None,
+        "latest_timestamp": latest.isoformat() if latest else None,
+        "data_source": data_source,
+        "timespan_hours": round(timespan_hours, 1),
+        "load_timestamp": datetime.now().isoformat()
+    }
+
+    print(f"📊 [DATASET INFO] Dataset spans {timespan_hours:.1f} hours from {earliest} to {latest}")
+    return result
+
 @app.get("/api/dashboard/metrics")
 async def get_dashboard_metrics(period: str = Query("24h", description="Time period: 24h, 5d, or 30d")) -> DashboardMetrics:
     """Get system-wide dashboard metrics"""
@@ -1014,6 +1091,19 @@ async def get_dashboard_metrics(period: str = Query("24h", description="Time per
 @app.get("/api/sensors/metrics")
 async def get_sensor_metrics(period: str = Query("24h", description="Time period: 24h, 5d, or 30d")) -> List[SensorMetrics]:
     """Get detailed metrics for all sensors"""
+
+    # Dataset logging for transparency and multiple dataset detection
+    if uploaded_data:
+        earliest = min(record['time'] for record in uploaded_data)
+        latest = max(record['time'] for record in uploaded_data)
+        timespan_hours = (latest - earliest).total_seconds() / 3600
+        data_source = "database" if os.getenv('DB_HOST') else "csv"
+        print(f"📊 [SENSOR_METRICS] Dataset analysis starting - Period: {period}")
+        print(f"📊 [SENSOR_METRICS] Dataset info: {len(uploaded_data)} records, {timespan_hours:.1f}h span, source: {data_source}")
+        print(f"📊 [SENSOR_METRICS] Timespan: {earliest.isoformat()} to {latest.isoformat()}")
+    else:
+        print(f"❌ [SENSOR_METRICS] No dataset loaded for analysis")
+
     if not uploaded_data:
         raise HTTPException(
             status_code=400,
@@ -1039,14 +1129,19 @@ async def get_sensor_metrics(period: str = Query("24h", description="Time period
         if not (sensor_data and zone_data):
             continue
 
-        # Use the global time range to ensure consistency with global data quality calculation
-        # This ensures missing data percentages account for the full analysis period
-        global_timestamps = [r['time'] for r in uploaded_data]
-        global_start_time = min(global_timestamps)
-        global_end_time = max(global_timestamps)
+        # Use the filtered time range to ensure missing data percentages are calculated
+        # for the selected period only (not the entire dataset timespan)
+        filtered_timestamps = [r['time'] for r in filtered_data if r['name'] in [sensor_name, zone_name]]
+        if filtered_timestamps:
+            filtered_start_time = min(filtered_timestamps)
+            filtered_end_time = max(filtered_timestamps)
+        else:
+            # Fallback if no data in filtered period
+            filtered_start_time = datetime.now(timezone.utc) - timedelta(hours=24)
+            filtered_end_time = datetime.now(timezone.utc)
 
-        start_time = global_start_time
-        end_time = global_end_time
+        start_time = filtered_start_time
+        end_time = filtered_end_time
 
         # Calculate statistics
         stats = calculate_occupancy_statistics(sensor_data, zone_data, start_time, end_time)
@@ -1078,7 +1173,12 @@ async def get_sensor_metrics(period: str = Query("24h", description="Time period
         actual_duration = end_time - start_time
 
         # Don't analyze beyond current time to avoid future periods
-        current_time = datetime.now()
+        # Use timezone-aware current time if data is timezone-aware (from database)
+        if start_time.tzinfo is not None:
+            from datetime import timezone
+            current_time = datetime.now(timezone.utc)
+        else:
+            current_time = datetime.now()
 
         # Make sure both start_time and end_time are timezone-naive for comparison
         if start_time.tzinfo is not None:
@@ -1091,7 +1191,13 @@ async def get_sensor_metrics(period: str = Query("24h", description="Time period
         else:
             end_time_naive = end_time
 
-        analysis_end_time = min(end_time_naive, current_time)
+        # Make current_time timezone-naive for comparison with end_time_naive
+        if current_time.tzinfo is not None:
+            current_time_naive = current_time.replace(tzinfo=None)
+        else:
+            current_time_naive = current_time
+
+        analysis_end_time = min(end_time_naive, current_time_naive)
         actual_analysis_duration = analysis_end_time - start_time_naive
 
         # Calculate missing percentages using time-based approach (consistent with occupied/standby percentages)
