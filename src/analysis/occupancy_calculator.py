@@ -73,13 +73,13 @@ def calculate_occupancy_statistics(sensor_data, zone_data, start_time, end_time)
     sensor_unoccupied_percent = 0
     zone_standby_percent = 0
 
-    # Calculate time covered by available data
+    # Calculate time covered by available data (considering gaps)
     sensor_data_time = sensor_occupied_time + sensor_unoccupied_time
     zone_data_time = zone_occupied_time + zone_standby_time
 
-    # Calculate missing data time
-    sensor_missing_time = total_duration - sensor_data_time
-    zone_missing_time = total_duration - zone_data_time
+    # Calculate missing data time by detecting gaps
+    sensor_missing_time = calculate_missing_time_with_gaps(sensor_data, start_time, end_time)
+    zone_missing_time = calculate_missing_time_with_gaps(zone_data, start_time, end_time)
 
     if total_duration.total_seconds() > 0:
         sensor_occupied_percent = (sensor_occupied_time.total_seconds() / total_duration.total_seconds()) * 100
@@ -164,3 +164,40 @@ def calculate_hourly_zone_standby(zone_data, end_time):
         hourly_standby[hour] = min(100.0, max(0.0, standby_percentage))
 
     return hourly_standby
+
+
+def calculate_missing_time_with_gaps(data, start_time, end_time, gap_threshold_minutes=5):
+    """
+    Calculate missing time by detecting gaps between data points.
+    A gap larger than gap_threshold_minutes is considered missing data.
+    """
+    if not data:
+        return end_time - start_time
+
+    missing_time = timedelta(0)
+
+    # Sort data by timestamp
+    sorted_data = sorted(data, key=lambda x: x['time'])
+
+    # Check gap from start_time to first data point
+    if sorted_data[0]['time'] > start_time:
+        gap_duration = sorted_data[0]['time'] - start_time
+        if gap_duration > timedelta(minutes=gap_threshold_minutes):
+            missing_time += gap_duration
+
+    # Check gaps between consecutive data points
+    for i in range(len(sorted_data) - 1):
+        current_time = sorted_data[i]['time']
+        next_time = sorted_data[i + 1]['time']
+        gap_duration = next_time - current_time
+
+        if gap_duration > timedelta(minutes=gap_threshold_minutes):
+            missing_time += gap_duration
+
+    # Check gap from last data point to end_time
+    if sorted_data[-1]['time'] < end_time:
+        gap_duration = end_time - sorted_data[-1]['time']
+        if gap_duration > timedelta(minutes=gap_threshold_minutes):
+            missing_time += gap_duration
+
+    return missing_time

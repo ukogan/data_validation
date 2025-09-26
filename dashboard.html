@@ -888,6 +888,15 @@
             background: rgba(133, 208, 133, 0.5);
         }
 
+        /* Divergence border styling */
+        .divergence-warning {
+            border: 2px solid #ffc107 !important;
+        }
+
+        .divergence-poor {
+            border: 2px solid #dc3545 !important;
+        }
+
         .bar-label {
             position: absolute;
             font-size: 9px;
@@ -1364,6 +1373,25 @@
     <div class="header">
         <h1>Controls Validation & Continuous Commissioning</h1>
         <div class="header-subtitle" id="headerSubtitle">API Powered Dashboard</div>
+        <div class="dataset-info" id="datasetInfo" style="margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 6px; font-size: 14px; display: none;">
+            <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <span style="font-weight: 600;">Dataset:</span>
+                    <span id="datasetRecords">Loading...</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <span style="font-weight: 600;">Timespan:</span>
+                    <span id="datasetTimespan">Loading...</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <span style="font-weight: 600;">Source:</span>
+                    <span id="datasetSource" style="padding: 2px 6px; border-radius: 3px; font-size: 12px; font-weight: 600;">Loading...</span>
+                </div>
+                <div style="margin-left: auto;">
+                    <span id="datasetLastUpdated" style="font-size: 12px; opacity: 0.8;">Last updated: Loading...</span>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Dataset Selection Section -->
@@ -1580,6 +1608,117 @@
             }
         }
 
+        // Dataset info tracking
+        let lastDatasetInfo = null;
+        let datasetInfoInterval = null;
+
+        async function fetchDatasetInfo() {
+            try {
+                const response = await fetch('/api/dataset-info');
+                const data = await response.json();
+                updateDatasetInfoDisplay(data);
+                checkForDatasetChanges(data);
+                return data;
+            } catch (error) {
+                console.error('Failed to fetch dataset info:', error);
+                return null;
+            }
+        }
+
+        function updateDatasetInfoDisplay(data) {
+            const datasetInfo = document.getElementById('datasetInfo');
+            const recordsElement = document.getElementById('datasetRecords');
+            const timespanElement = document.getElementById('datasetTimespan');
+            const sourceElement = document.getElementById('datasetSource');
+            const lastUpdatedElement = document.getElementById('datasetLastUpdated');
+
+            if (data && data.record_count > 0) {
+                datasetInfo.style.display = 'block';
+
+                // Format record count with commas
+                recordsElement.textContent = data.record_count.toLocaleString() + ' records';
+
+                // Format timespan
+                if (data.earliest_timestamp && data.latest_timestamp) {
+                    const earliest = new Date(data.earliest_timestamp);
+                    const latest = new Date(data.latest_timestamp);
+                    const timespanStr = `${earliest.toLocaleDateString()} - ${latest.toLocaleDateString()} (${data.timespan_hours}h)`;
+                    timespanElement.textContent = timespanStr;
+                } else {
+                    timespanElement.textContent = 'Unknown timespan';
+                }
+
+                // Format data source with color coding
+                sourceElement.textContent = data.data_source.toUpperCase();
+                sourceElement.style.backgroundColor = data.data_source === 'database' ? '#28a745' : '#007bff';
+                sourceElement.style.color = 'white';
+
+                // Format last updated
+                const loadTime = new Date(data.load_timestamp);
+                lastUpdatedElement.textContent = `Last updated: ${loadTime.toLocaleTimeString()}`;
+            } else {
+                datasetInfo.style.display = 'none';
+            }
+        }
+
+        function checkForDatasetChanges(newData) {
+            if (lastDatasetInfo && newData) {
+                // Check if dataset has changed (different record count or timespan)
+                if (lastDatasetInfo.record_count !== newData.record_count ||
+                    lastDatasetInfo.timespan_hours !== newData.timespan_hours) {
+
+                    console.warn('🚨 DATASET CHANGE DETECTED!');
+                    console.warn('Previous:', lastDatasetInfo);
+                    console.warn('Current:', newData);
+
+                    // Show warning in UI
+                    showDatasetChangeWarning(lastDatasetInfo, newData);
+                }
+            }
+            lastDatasetInfo = newData;
+        }
+
+        function showDatasetChangeWarning(oldData, newData) {
+            const warningDiv = document.createElement('div');
+            warningDiv.style.cssText = `
+                position: fixed; top: 20px; right: 20px; z-index: 10000;
+                background: #dc3545; color: white; padding: 15px; border-radius: 8px;
+                max-width: 400px; font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            `;
+            warningDiv.innerHTML = `
+                <div style="font-weight: bold; margin-bottom: 8px;">📊 Dataset Updated</div>
+                <div>Previous: ${oldData.record_count.toLocaleString()} records</div>
+                <div>Current: ${newData.record_count.toLocaleString()} records</div>
+                <button onclick="this.parentElement.remove()" style="margin-top: 10px; background: white; color: #dc3545; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Close</button>
+            `;
+            document.body.appendChild(warningDiv);
+
+            // Auto-remove after 10 seconds
+            setTimeout(() => {
+                if (warningDiv.parentElement) {
+                    warningDiv.remove();
+                }
+            }, 10000);
+        }
+
+        function startDatasetInfoUpdates() {
+            // Initial fetch
+            fetchDatasetInfo();
+
+            // Update every 30 seconds
+            if (datasetInfoInterval) {
+                clearInterval(datasetInfoInterval);
+            }
+            datasetInfoInterval = setInterval(fetchDatasetInfo, 30000);
+        }
+
+        function stopDatasetInfoUpdates() {
+            if (datasetInfoInterval) {
+                clearInterval(datasetInfoInterval);
+                datasetInfoInterval = null;
+            }
+        }
+
         async function generateTestData() {
             const statusDiv = document.getElementById('uploadStatus');
             statusDiv.innerHTML = '<div class="loading">Generating test data...</div>';
@@ -1742,6 +1881,14 @@
             renderSensorTable(sensors);
         }
 
+        // Calculate divergence border class based on sensor vs BMS percentages
+        function getDivergenceBorderClass(sensorPercent, bmsPercent) {
+            const divergence = Math.abs(sensorPercent - bmsPercent);
+            if (divergence < 10) return ''; // No border for good sync
+            if (divergence < 20) return 'divergence-warning';
+            return 'divergence-poor';
+        }
+
         function renderSensorTable(sensors) {
             const container = document.getElementById('groupedContainer');
 
@@ -1839,19 +1986,20 @@
                                 <div class="correlation-chart" title="Diverging bar chart showing occupancy correlation. Left side shows occupied percentages (sensor vs BMS). Right side shows standby percentages. Well-balanced systems show symmetrical patterns.">
                                     <div class="chart-container">
                                         <div class="occupied-side">
-                                            <div class="sensor-bar" style="width: ${sensor.sensor_occupied_percent}%;">
+                                            <div class="sensor-bar ${getDivergenceBorderClass(sensor.sensor_occupied_percent, sensor.zone_occupied_percent)}" style="width: ${sensor.sensor_occupied_percent}%;" title="Sensor Occupied: ${sensor.sensor_occupied_percent.toFixed(0)}% - ${Math.abs(sensor.sensor_occupied_percent - sensor.zone_occupied_percent) < 10 ? 'Good sync' : Math.abs(sensor.sensor_occupied_percent - sensor.zone_occupied_percent) < 20 ? 'Minor drift (' + Math.abs(sensor.sensor_occupied_percent - sensor.zone_occupied_percent).toFixed(0) + '% divergence)' : 'Poor sync (' + Math.abs(sensor.sensor_occupied_percent - sensor.zone_occupied_percent).toFixed(0) + '% divergence)'}">
                                                 <span class="bar-label">${sensor.sensor_occupied_percent.toFixed(0)}%</span>
                                             </div>
-                                            <div class="bms-bar" style="width: ${sensor.zone_occupied_percent}%;">
+                                            <div class="bms-bar ${getDivergenceBorderClass(sensor.sensor_occupied_percent, sensor.zone_occupied_percent)}" style="width: ${sensor.zone_occupied_percent}%;" title="BMS Occupied: ${sensor.zone_occupied_percent.toFixed(0)}% - ${Math.abs(sensor.sensor_occupied_percent - sensor.zone_occupied_percent) < 10 ? 'Good sync' : Math.abs(sensor.sensor_occupied_percent - sensor.zone_occupied_percent) < 20 ? 'Minor drift (' + Math.abs(sensor.sensor_occupied_percent - sensor.zone_occupied_percent).toFixed(0) + '% divergence)' : 'Poor sync (' + Math.abs(sensor.sensor_occupied_percent - sensor.zone_occupied_percent).toFixed(0) + '% divergence)'}">
                                                 <span class="bar-label">${sensor.zone_occupied_percent.toFixed(0)}%</span>
                                             </div>
                                         </div>
-                                        <div class="chart-center"></div>
+                                        <div class="chart-center">
+                                        </div>
                                         <div class="standby-side">
-                                            <div class="sensor-bar" style="width: ${sensor.sensor_unoccupied_percent}%;">
+                                            <div class="sensor-bar ${getDivergenceBorderClass(sensor.sensor_unoccupied_percent, sensor.zone_standby_percent)}" style="width: ${sensor.sensor_unoccupied_percent}%;" title="Sensor Unoccupied: ${sensor.sensor_unoccupied_percent.toFixed(0)}% - ${Math.abs(sensor.sensor_unoccupied_percent - sensor.zone_standby_percent) < 10 ? 'Good sync' : Math.abs(sensor.sensor_unoccupied_percent - sensor.zone_standby_percent) < 20 ? 'Minor drift (' + Math.abs(sensor.sensor_unoccupied_percent - sensor.zone_standby_percent).toFixed(0) + '% divergence)' : 'Poor sync (' + Math.abs(sensor.sensor_unoccupied_percent - sensor.zone_standby_percent).toFixed(0) + '% divergence)'}">
                                                 <span class="bar-label">${sensor.sensor_unoccupied_percent.toFixed(0)}%</span>
                                             </div>
-                                            <div class="bms-bar" style="width: ${sensor.zone_standby_percent}%;">
+                                            <div class="bms-bar ${getDivergenceBorderClass(sensor.sensor_unoccupied_percent, sensor.zone_standby_percent)}" style="width: ${sensor.zone_standby_percent}%;" title="BMS Standby: ${sensor.zone_standby_percent.toFixed(0)}% - ${Math.abs(sensor.sensor_unoccupied_percent - sensor.zone_standby_percent) < 10 ? 'Good sync' : Math.abs(sensor.sensor_unoccupied_percent - sensor.zone_standby_percent) < 20 ? 'Minor drift (' + Math.abs(sensor.sensor_unoccupied_percent - sensor.zone_standby_percent).toFixed(0) + '% divergence)' : 'Poor sync (' + Math.abs(sensor.sensor_unoccupied_percent - sensor.zone_standby_percent).toFixed(0) + '% divergence)'}">
                                                 <span class="bar-label">${sensor.zone_standby_percent.toFixed(0)}%</span>
                                             </div>
                                         </div>
@@ -2045,25 +2193,73 @@
             const dataStartTime = new Date(Math.min(...timestamps));
             const dataEndTime = new Date(Math.max(...timestamps));
 
-            // Calculate from most recent data backwards
-            // Find the end day (midnight after the last data point)
-            const endDayMidnight = new Date(dataEndTime.getFullYear(), dataEndTime.getMonth(), dataEndTime.getDate() + 1, 0, 0, 0);
+            // Hybrid approach: 24h uses current-time-based rolling window, 5d/30d use calendar alignment
+            if (maxHours === 24) {
+                // For 24h: Use current time minus 24 hours (rolling window)
+                const now = new Date();
+                const windowStartTime = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+                const windowEndTime = now;
 
-            // Calculate start time by going back maxHours from end
-            const calculatedStartTime = new Date(endDayMidnight.getTime() - maxHours * 60 * 60 * 1000);
+                // Find the standard 8-hour blocks that intersect with the 24h window
+                // Start from the day containing windowStartTime
+                const startDay = new Date(windowStartTime.getFullYear(), windowStartTime.getMonth(), windowStartTime.getDate());
+                const endDay = new Date(windowEndTime.getFullYear(), windowEndTime.getMonth(), windowEndTime.getDate() + 1);
 
-            // Align start time to midnight
-            const gridStartTime = new Date(calculatedStartTime.getFullYear(), calculatedStartTime.getMonth(), calculatedStartTime.getDate(), 0, 0, 0);
+                // Calculate which 8-hour blocks intersect with our window
+                const blocks = [];
+                for (let day = new Date(startDay); day < endDay; day.setDate(day.getDate() + 1)) {
+                    for (let slot = 0; slot < 3; slot++) {
+                        const blockStart = new Date(day.getTime() + slot * 8 * 60 * 60 * 1000);
+                        const blockEnd = new Date(blockStart.getTime() + 8 * 60 * 60 * 1000);
 
-            // Grid end time is the end day midnight (or data end if earlier)
-            const gridEndTime = endDayMidnight;
+                        // Check if this block intersects with our 24h window
+                        if (blockEnd > windowStartTime && blockStart < windowEndTime) {
+                            blocks.push({
+                                blockStart,
+                                blockEnd,
+                                dayDate: new Date(day),
+                                slot
+                            });
+                        }
+                    }
+                }
 
-            // Calculate number of days and rows
-            const totalDays = Math.ceil((gridEndTime - gridStartTime) / (1000 * 60 * 60 * 24));
-            const numRows = totalDays * 3; // 3 rows per day (00:00, 08:00, 16:00)
-            const totalHours = (gridEndTime - gridStartTime) / (1000 * 60 * 60);
+                const totalHours = 24;
+                const numRows = blocks.length;
 
-            return { numRows, totalHours, gridStartTime, dataStartTime, dataEndTime };
+                return {
+                    numRows,
+                    totalHours,
+                    gridStartTime: windowStartTime,
+                    dataStartTime,
+                    dataEndTime,
+                    gridEndTime: windowEndTime,
+                    isRollingWindow: true,
+                    windowStartTime,
+                    windowEndTime,
+                    blocks
+                };
+            } else {
+                // For 5d/30d: Keep calendar day alignment
+                // Find the end day (midnight after the last data point)
+                const endDayMidnight = new Date(dataEndTime.getFullYear(), dataEndTime.getMonth(), dataEndTime.getDate() + 1, 0, 0, 0);
+
+                // Calculate start time by going back maxHours from end
+                const calculatedStartTime = new Date(endDayMidnight.getTime() - maxHours * 60 * 60 * 1000);
+
+                // Align start time to midnight
+                const gridStartTime = new Date(calculatedStartTime.getFullYear(), calculatedStartTime.getMonth(), calculatedStartTime.getDate(), 0, 0, 0);
+
+                // Grid end time is the end day midnight
+                const gridEndTime = endDayMidnight;
+
+                // Calculate number of days and rows
+                const totalDays = Math.ceil((gridEndTime - gridStartTime) / (1000 * 60 * 60 * 24));
+                const numRows = totalDays * 3; // 3 rows per day (00:00, 08:00, 16:00)
+                const totalHours = (gridEndTime - gridStartTime) / (1000 * 60 * 60);
+
+                return { numRows, totalHours, gridStartTime, dataStartTime, dataEndTime, gridEndTime, isRollingWindow: false };
+            }
         }
 
         function generateTimelineVisualization(timelineGrid, timelineData, groupIndex, sensorIndex) {
@@ -2081,55 +2277,99 @@
                 maxHours = 24; // Default to 24h
             }
 
-            const { numRows, totalHours, gridStartTime, dataStartTime, dataEndTime } = calculateTimelineRows(events, maxHours);
+            const { numRows, totalHours, gridStartTime, dataStartTime, dataEndTime, gridEndTime, isRollingWindow, windowStartTime, windowEndTime, blocks } = calculateTimelineRows(events, maxHours);
 
             console.log(`🔍 [DEBUG] Generating ${numRows} timeline rows for ${totalHours.toFixed(1)} hours (grid starts at ${gridStartTime.toISOString()})`);
 
             // Clear loading message
             timelineGrid.innerHTML = '';
 
-            // Generate timeline rows (3 per day: 00:00, 08:00, 16:00)
-            let currentDayIndex = -1;
-            for (let row = 0; row < numRows; row++) {
-                // Calculate row time based on fixed 8-hour schedule
-                const dayIndex = Math.floor(row / 3);
-                const timeSlot = row % 3;
-                const rowStartHour = timeSlot * 8; // 0, 8, or 16
-                const rowDate = new Date(gridStartTime.getTime() + dayIndex * 24 * 60 * 60 * 1000 + rowStartHour * 60 * 60 * 1000);
+            // Generate timeline rows
+            if (isRollingWindow) {
+                // For 24h rolling window: Use standard 8-hour blocks that intersect with the window
+                let currentDay = null;
 
-                // Add day header when starting a new day
-                if (dayIndex !== currentDayIndex) {
-                    currentDayIndex = dayIndex;
-                    const dayHeader = document.createElement('div');
-                    dayHeader.className = 'timeline-day-header';
+                for (let row = 0; row < numRows; row++) {
+                    const block = blocks[row];
 
-                    const dayDate = new Date(gridStartTime.getTime() + dayIndex * 24 * 60 * 60 * 1000);
-                    const dayName = dayDate.toLocaleDateString('en-US', { weekday: 'long' });
-                    const dateStr = dayDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                    // Add day header when starting a new day
+                    const dayKey = block.dayDate.toDateString();
+                    if (dayKey !== currentDay) {
+                        currentDay = dayKey;
+                        const dayHeader = document.createElement('div');
+                        dayHeader.className = 'timeline-day-header';
 
-                    dayHeader.textContent = `${dayName}, ${dateStr}`;
-                    timelineGrid.appendChild(dayHeader);
+                        const dayName = block.dayDate.toLocaleDateString('en-US', { weekday: 'long' });
+                        const dateStr = block.dayDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+                        dayHeader.textContent = `${dayName}, ${dateStr}`;
+                        timelineGrid.appendChild(dayHeader);
+                    }
+
+                    const timelineRow = document.createElement('div');
+                    timelineRow.className = 'timeline-row';
+
+                    // Add row label (standard 8-hour period)
+                    const label = document.createElement('div');
+                    label.className = 'timeline-row-label';
+                    label.textContent = String(block.blockStart.getHours()).padStart(2, '0') + ':00';
+                    timelineRow.appendChild(label);
+
+                    // Create timeline container for this row
+                    const timeline = document.createElement('div');
+                    timeline.className = 'timeline';
+                    timeline.dataset.row = row;
+
+                    // Add events for this 8-hour period, filtered to the 24h window
+                    addEventsToGridTimelineRowWithWindow(timeline, events, violations, block.blockStart, windowStartTime, windowEndTime);
+
+                    timelineRow.appendChild(timeline);
+                    timelineGrid.appendChild(timelineRow);
                 }
+            } else {
+                // For 5d/30d: Use calendar day alignment (original logic)
+                let currentDayIndex = -1;
+                for (let row = 0; row < numRows; row++) {
+                    // Calculate row time based on fixed 8-hour schedule
+                    const dayIndex = Math.floor(row / 3);
+                    const timeSlot = row % 3;
+                    const rowStartHour = timeSlot * 8; // 0, 8, or 16
+                    const rowDate = new Date(gridStartTime.getTime() + dayIndex * 24 * 60 * 60 * 1000 + rowStartHour * 60 * 60 * 1000);
 
-                const timelineRow = document.createElement('div');
-                timelineRow.className = 'timeline-row';
+                    // Add day header when starting a new day
+                    if (dayIndex !== currentDayIndex) {
+                        currentDayIndex = dayIndex;
+                        const dayHeader = document.createElement('div');
+                        dayHeader.className = 'timeline-day-header';
 
-                // Add row label (time only, since day is in header)
-                const label = document.createElement('div');
-                label.className = 'timeline-row-label';
-                label.textContent = String(rowDate.getHours()).padStart(2, '0') + ':00';
-                timelineRow.appendChild(label);
+                        const dayDate = new Date(gridStartTime.getTime() + dayIndex * 24 * 60 * 60 * 1000);
+                        const dayName = dayDate.toLocaleDateString('en-US', { weekday: 'long' });
+                        const dateStr = dayDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
-                // Create timeline container for this row
-                const timeline = document.createElement('div');
-                timeline.className = 'timeline';
-                timeline.dataset.row = row;
+                        dayHeader.textContent = `${dayName}, ${dateStr}`;
+                        timelineGrid.appendChild(dayHeader);
+                    }
 
-                // Add events for this 8-hour period
-                addEventsToGridTimelineRow(timeline, events, violations, rowDate);
+                    const timelineRow = document.createElement('div');
+                    timelineRow.className = 'timeline-row';
 
-                timelineRow.appendChild(timeline);
-                timelineGrid.appendChild(timelineRow);
+                    // Add row label (time only, since day is in header)
+                    const label = document.createElement('div');
+                    label.className = 'timeline-row-label';
+                    label.textContent = String(rowDate.getHours()).padStart(2, '0') + ':00';
+                    timelineRow.appendChild(label);
+
+                    // Create timeline container for this row
+                    const timeline = document.createElement('div');
+                    timeline.className = 'timeline';
+                    timeline.dataset.row = row;
+
+                    // Add events for this 8-hour period
+                    addEventsToGridTimelineRow(timeline, events, violations, rowDate);
+
+                    timelineRow.appendChild(timeline);
+                    timelineGrid.appendChild(timelineRow);
+                }
             }
 
             // Add hover functionality
@@ -2149,6 +2389,52 @@
             const rowViolations = violations.filter(violation => {
                 const violationTime = new Date(violation.timestamp);
                 return violationTime >= rowStartTime && violationTime < rowEndTime;
+            });
+
+            // Add sensor and zone events
+            rowEvents.forEach(event => {
+                const eventElement = document.createElement('div');
+                const eventTime = new Date(event.timestamp);
+                const minutesFromRowStart = (eventTime - rowStartTime) / (1000 * 60);
+                const xPos = (minutesFromRowStart / (8 * 60)) * 100; // Position within 8-hour row
+
+                eventElement.className = `event ${event.type} ${event.value === 1 ? (event.type === 'sensor' ? 'occupied' : 'standby') : (event.type === 'sensor' ? 'unoccupied' : 'occupied')}`;
+                eventElement.style.left = `${Math.max(0, Math.min(100, xPos))}%`;
+                eventElement.title = `${event.timestamp}: ${event.description || event.type}`;
+
+                timeline.appendChild(eventElement);
+            });
+
+            // Add violations
+            rowViolations.forEach(violation => {
+                const violationElement = document.createElement('div');
+                const violationTime = new Date(violation.timestamp);
+                const minutesFromRowStart = (violationTime - rowStartTime) / (1000 * 60);
+                const xPos = (minutesFromRowStart / (8 * 60)) * 100;
+
+                violationElement.className = 'violation';
+                violationElement.style.left = `${Math.max(0, Math.min(100, xPos))}%`;
+                violationElement.title = `Violation: ${violation.description || violation.type}`;
+
+                timeline.appendChild(violationElement);
+            });
+        }
+
+        function addEventsToGridTimelineRowWithWindow(timeline, events, violations, rowDate, windowStartTime, windowEndTime) {
+            const rowStartTime = new Date(rowDate);
+            const rowEndTime = new Date(rowStartTime.getTime() + 8 * 60 * 60 * 1000); // 8 hours later
+
+            // Filter events for this row's time period AND within the 24h window
+            const rowEvents = events.filter(event => {
+                const eventTime = new Date(event.timestamp);
+                return eventTime >= rowStartTime && eventTime < rowEndTime &&
+                       eventTime >= windowStartTime && eventTime < windowEndTime;
+            });
+
+            const rowViolations = violations.filter(violation => {
+                const violationTime = new Date(violation.timestamp);
+                return violationTime >= rowStartTime && violationTime < rowEndTime &&
+                       violationTime >= windowStartTime && violationTime < windowEndTime;
             });
 
             // Add sensor and zone events
@@ -2526,6 +2812,9 @@
 
         // Initialize the page
         document.addEventListener('DOMContentLoaded', () => {
+            // Start dataset info monitoring
+            startDatasetInfoUpdates();
+
             // Check if we have any data on startup
             fetch(`${API_BASE}/api/sensors`)
                 .then(response => response.json())
