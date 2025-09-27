@@ -17,11 +17,15 @@
   "author": "R-Zero",
   "license": "ISC",
   "dependencies": {
-    "express": "4.21.2",
     "cors": "2.8.5",
-    "dotenv": "16.6.1"
+    "dotenv": "16.6.1",
+    "express": "4.21.2"
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.1",
+    "playwright": "^1.55.1"
   }
 }

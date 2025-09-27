@@ -492,6 +492,19 @@ async def dashboard_html():
             status_code=404
         )
 
+@app.get("/tour-demo.html", response_class=HTMLResponse)
+async def tour_demo_html():
+    """Serve the tour demo HTML file"""
+    try:
+        with open('tour-demo.html', 'r') as f:
+            html_content = f.read()
+        return HTMLResponse(content=html_content)
+    except FileNotFoundError:
+        return HTMLResponse(
+            content="<h1>Tour demo not found</h1><p>Please ensure tour-demo.html exists</p>",
+            status_code=404
+        )
+
 @app.get("/api/health")
 async def health_check():
     """Comprehensive health check endpoint with data state validation"""

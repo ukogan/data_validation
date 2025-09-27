@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ODCV Analytics Dashboard - API Powered</title>
+    <title>ODCV Analytics Dashboard - Interactive Tour</title>
     <style>
         * {
             margin: 0;
@@ -1243,6 +1243,12 @@
             100% { transform: translateX(100%); }
         }
 
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.02); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
         .status-message {
             padding: 1rem;
             border-radius: 8px;
@@ -1512,12 +1518,286 @@
                 padding: 15px;
             }
         }
+
+        /* Guided Tour System with Right Sidebar */
+        .tour-active body {
+            margin-right: 400px;
+        }
+
+        .tour-sidebar {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            z-index: 10000;
+            transition: right 0.3s ease;
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tour-sidebar.active {
+            right: 0;
+        }
+
+        .tour-sidebar-header {
+            padding: 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .tour-sidebar-header h2 {
+            margin: 0 0 8px 0;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .tour-sidebar-content {
+            flex: 1;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tour-step-counter {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .tour-step-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            line-height: 1.3;
+        }
+
+        .tour-step-content {
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 24px;
+            flex: 1;
+        }
+
+        .tour-navigation {
+            display: flex;
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .tour-nav-btn {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .tour-nav-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .tour-nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .tour-exit-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s ease;
+        }
+
+        .tour-exit-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .tour-highlight {
+            position: absolute;
+            background: rgba(102, 126, 234, 0.1);
+            border: 3px solid #667eea;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+            pointer-events: none;
+            z-index: 9998;
+            animation: pulse-highlight 2s infinite;
+        }
+
+        @keyframes pulse-highlight {
+            0% { box-shadow: 0 0 20px rgba(102, 126, 234, 0.4); }
+            50% { box-shadow: 0 0 30px rgba(102, 126, 234, 0.8); }
+            100% { box-shadow: 0 0 20px rgba(102, 126, 234, 0.4); }
+        }
+
+        .tour-tooltip h3 {
+            margin: 0 0 12px 0;
+            color: #1e3a5f;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .tour-tooltip p {
+            margin: 0 0 20px 0;
+            color: #4a5568;
+            line-height: 1.5;
+            font-size: 14px;
+        }
+
+        .tour-tooltip .tour-step-counter {
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .tour-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .tour-nav-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .tour-nav-btn:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+        }
+
+        .tour-nav-btn:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .tour-nav-btn.secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .tour-nav-btn.secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .tour-progress {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .tour-progress-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            transition: all 0.2s ease;
+        }
+
+        .tour-progress-dot.active {
+            background: #667eea;
+        }
+
+        .tour-progress-dot.completed {
+            background: #48bb78;
+        }
+
+        /* Tour Start Button */
+        .tour-start-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .tour-start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+        }
+
+        .tour-start-btn .tour-icon {
+            font-size: 16px;
+        }
+
+        /* Responsive adjustments for tour */
+        @media (max-width: 768px) {
+            .tour-tooltip {
+                max-width: 300px;
+                min-width: 280px;
+                padding: 20px;
+            }
+
+            .tour-start-btn {
+                top: 10px;
+                right: 10px;
+                padding: 10px 16px;
+                font-size: 13px;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>Controls Validation & Continuous Commissioning</h1>
-        <div class="header-subtitle" id="headerSubtitle">API Powered Dashboard</div>
+        <div class="header-subtitle" id="headerSubtitle">Interactive Tour with Sample Data | <span style="background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 4px; font-weight: 600;">DEMO MODE</span></div>
+
+        <!-- Start Guided Tour Button - Hidden since tour auto-starts -->
+        <button class="tour-start-btn" onclick="startGuidedTour()" style="display: none;">
+            <span class="tour-icon">🎓</span>
+            Start Guided Tour
+        </button>
         <div class="dataset-info" id="datasetInfo" style="margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 6px; font-size: 14px; display: none;">
             <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
                 <div style="display: flex; align-items: center; gap: 5px;">
@@ -1539,16 +1819,26 @@
         </div>
     </div>
 
-    <!-- Tour Launch Button -->
-    <button class="tour-launch-btn" onclick="launchTour()" style="position: fixed; top: 20px; right: 20px; z-index: 1000; width: auto; display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
-        <span class="info-indicator">🎓</span>
-        <span>Take Interactive Tour</span>
-    </button>
 
 
     <!-- Dataset Selection Section -->
     <div class="upload-section">
         <h3>Dataset Selection</h3>
+
+        <!-- Tour Scenario Selector -->
+        <div style="margin-bottom: 20px; padding: 15px; background: #e3f2fd; border-radius: 8px; border-left: 4px solid #2196f3;">
+            <label for="tourScenario" style="display: block; margin-bottom: 8px; font-weight: 600; color: #1e3a5f;">Tour Scenario:</label>
+            <select id="tourScenario" onchange="loadTourScenario()"
+                   style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                <option value="data-gaps">Data Gaps - Missing Sensor Periods</option>
+                <option value="severe-divergence">Severe Sensor/VAV Divergence - Poor Sync</option>
+                <option value="mild-divergence">Mild Sensor/VAV Divergence - Good Sync</option>
+                <option value="mixed-issues">Mixed Validation Issues - Various BMS Problems</option>
+            </select>
+            <div style="font-size: 0.8em; color: #666; margin-top: 5px;">
+                Select different scenarios to explore how the dashboard identifies various BMS validation issues
+            </div>
+        </div>
 
         <!-- Customer Name Input -->
         <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #28a745;">
@@ -1600,8 +1890,10 @@
     </div>
 
     <script>
-        // API base URL
-        // Dynamic API base URL - detects if running locally or on Railway
+        // Tour mode flag
+        const TOUR_MODE = true;
+
+        // API base URL (not used in tour mode)
         const API_BASE = window.location.hostname === 'localhost'
             ? 'http://localhost:8000'
             : window.location.origin;
@@ -1611,6 +1903,570 @@
         let currentGrouping = 'building';
         let currentTimePeriod = '24h';
         let violationsData = {}; // Store violations by sensor ID for CSV export
+        let currentTourScenario = 'data-gaps'; // Default scenario
+
+        // Mock data for tour scenarios
+        const TOUR_SCENARIOS = {
+            'data-gaps': {
+                name: 'FAKE Building with Data Gaps',
+                dashboard: {
+                    standby_mode_percent: 45.2,
+                    airflow_reduction_percent: 35.1,
+                    correlation_health: { good: 6, poor: 6 },
+                    data_quality_percent: 78.3,
+                    bms_quality_percent: 82.1,
+                    sensor_quality_percent: 74.5
+                },
+                sensors: [
+                    {
+                        sensor_id: '115-4-01 presence',
+                        zone_id: 'BV200',
+                        sensor: '115-4-01 presence',
+                        zone: 'BV200',
+                        occupancy_ratio: 0.18,
+                        zone_standby_percent: 78.2,
+                        airflow_reduction_percent: 58.7,
+                        correlation_score: 0.95,
+                        total_deviations_count: 2,
+                        total_mode_changes: 47,
+                        es_count: 1,
+                        ls_count: 1,
+                        eo_count: 0,
+                        lo_count: 0,
+                        sensor_occupied_percent: 18.0,
+                        zone_occupied_percent: 21.8,
+                        sensor_unoccupied_percent: 80.5,
+                        zone_missing_percent: 18.7,
+                        sensor_missing_percent: 22.3
+                    },
+                    {
+                        sensor_id: '115-4-06 presence',
+                        zone_id: 'BV201',
+                        sensor: '115-4-06 presence',
+                        zone: 'BV201',
+                        occupancy_ratio: 0.22,
+                        zone_standby_percent: 68.9,
+                        airflow_reduction_percent: 51.7,
+                        correlation_score: 0.89,
+                        total_deviations_count: 3,
+                        total_mode_changes: 52,
+                        es_count: 2,
+                        ls_count: 1,
+                        eo_count: 0,
+                        lo_count: 0,
+                        sensor_occupied_percent: 22.0,
+                        zone_occupied_percent: 31.1,
+                        sensor_unoccupied_percent: 76.8,
+                        zone_missing_percent: 15.4,
+                        sensor_missing_percent: 19.8
+                    },
+                    {
+                        sensor_id: '115-4-09 presence',
+                        zone_id: 'BV202',
+                        sensor: '115-4-09 presence',
+                        zone: 'BV202',
+                        occupancy_ratio: 0.15,
+                        zone_standby_percent: 82.5,
+                        airflow_reduction_percent: 61.9,
+                        correlation_score: 0.98,
+                        total_deviations_count: 1,
+                        total_mode_changes: 38,
+                        es_count: 0,
+                        ls_count: 1,
+                        eo_count: 0,
+                        lo_count: 0,
+                        sensor_occupied_percent: 15.0,
+                        zone_occupied_percent: 17.5,
+                        sensor_unoccupied_percent: 84.2,
+                        zone_missing_percent: 12.1,
+                        sensor_missing_percent: 14.6
+                    }
+                ]
+            },
+            'severe-divergence': {
+                name: 'FAKE Building with Severe Sensor/VAV Divergence',
+                dashboard: {
+                    standby_mode_percent: 22.4,
+                    airflow_reduction_percent: 16.8,
+                    correlation_health: { good: 2, poor: 10 },
+                    data_quality_percent: 89.1,
+                    bms_quality_percent: 91.3,
+                    sensor_quality_percent: 86.9
+                },
+                sensors: [
+                    {
+                        sensor_id: '115-4-01 presence',
+                        zone_id: 'BV200',
+                        sensor: '115-4-01 presence',
+                        zone: 'BV200',
+                        occupancy_ratio: 0.25,
+                        zone_standby_percent: 45.8,
+                        airflow_reduction_percent: 34.4,
+                        correlation_score: 0.28,
+                        total_deviations_count: 12,
+                        total_mode_changes: 68,
+                        es_count: 6,
+                        ls_count: 6,
+                        eo_count: 2,
+                        lo_count: 1,
+                        sensor_occupied_percent: 25.0,
+                        zone_occupied_percent: 54.2,
+                        sensor_unoccupied_percent: 72.1,
+                        zone_missing_percent: 2.3,
+                        sensor_missing_percent: 2.9
+                    },
+                    {
+                        sensor_id: '115-4-06 presence',
+                        zone_id: 'BV201',
+                        sensor: '115-4-06 presence',
+                        zone: 'BV201',
+                        occupancy_ratio: 0.28,
+                        zone_standby_percent: 38.9,
+                        airflow_reduction_percent: 29.2,
+                        correlation_score: 0.19,
+                        total_deviations_count: 18,
+                        total_mode_changes: 74,
+                        es_count: 9,
+                        ls_count: 9,
+                        eo_count: 3,
+                        lo_count: 2,
+                        sensor_occupied_percent: 28.0,
+                        zone_occupied_percent: 61.1,
+                        sensor_unoccupied_percent: 68.2,
+                        zone_missing_percent: 3.1,
+                        sensor_missing_percent: 3.8
+                    },
+                    {
+                        sensor_id: '115-4-09 presence',
+                        zone_id: 'BV202',
+                        sensor: '115-4-09 presence',
+                        zone: 'BV202',
+                        occupancy_ratio: 0.21,
+                        zone_standby_percent: 42.1,
+                        airflow_reduction_percent: 31.6,
+                        correlation_score: 0.34,
+                        total_deviations_count: 8,
+                        total_mode_changes: 56,
+                        es_count: 4,
+                        ls_count: 4,
+                        eo_count: 1,
+                        lo_count: 1,
+                        sensor_occupied_percent: 21.0,
+                        zone_occupied_percent: 57.9,
+                        sensor_unoccupied_percent: 76.5,
+                        zone_missing_percent: 2.1,
+                        sensor_missing_percent: 2.5
+                    }
+                ]
+            },
+            'mild-divergence': {
+                name: 'FAKE Building with Mild Sensor/VAV Divergence',
+                dashboard: {
+                    standby_mode_percent: 67.8,
+                    airflow_reduction_percent: 51.2,
+                    correlation_health: { good: 10, poor: 2 },
+                    data_quality_percent: 96.4,
+                    bms_quality_percent: 97.1,
+                    sensor_quality_percent: 95.7
+                },
+                sensors: [
+                    {
+                        sensor_id: '115-4-01 presence',
+                        zone_id: 'BV200',
+                        sensor: '115-4-01 presence',
+                        zone: 'BV200',
+                        occupancy_ratio: 0.35,
+                        zone_standby_percent: 18.4,
+                        airflow_reduction_percent: 13.8,
+                        correlation_score: 0.89,
+                        total_deviations_count: 28,
+                        total_mode_changes: 45,
+                        es_count: 15,
+                        ls_count: 13,
+                        eo_count: 8,
+                        lo_count: 6,
+                        sensor_occupied_percent: 35.0,
+                        zone_occupied_percent: 81.6,
+                        sensor_unoccupied_percent: 61.2,
+                        zone_missing_percent: 4.8,
+                        sensor_missing_percent: 3.8
+                    },
+                    {
+                        sensor_id: '115-4-06 presence',
+                        zone_id: 'BV201',
+                        sensor: '115-4-06 presence',
+                        zone: 'BV201',
+                        occupancy_ratio: 0.42,
+                        zone_standby_percent: 12.8,
+                        airflow_reduction_percent: 9.6,
+                        correlation_score: 0.92,
+                        total_deviations_count: 34,
+                        total_mode_changes: 52,
+                        es_count: 18,
+                        ls_count: 16,
+                        eo_count: 12,
+                        lo_count: 8,
+                        sensor_occupied_percent: 42.0,
+                        zone_occupied_percent: 87.2,
+                        sensor_unoccupied_percent: 52.1,
+                        zone_missing_percent: 5.9,
+                        sensor_missing_percent: 5.9
+                    },
+                    {
+                        sensor_id: '115-4-09 presence',
+                        zone_id: 'BV202',
+                        sensor: '115-4-09 presence',
+                        zone: 'BV202',
+                        occupancy_ratio: 0.31,
+                        zone_standby_percent: 14.6,
+                        airflow_reduction_percent: 11.0,
+                        correlation_score: 0.86,
+                        total_deviations_count: 22,
+                        total_mode_changes: 38,
+                        es_count: 12,
+                        ls_count: 10,
+                        eo_count: 6,
+                        lo_count: 4,
+                        sensor_occupied_percent: 31.0,
+                        zone_occupied_percent: 85.4,
+                        sensor_unoccupied_percent: 64.8,
+                        zone_missing_percent: 4.2,
+                        sensor_missing_percent: 4.2
+                    }
+                ]
+            },
+            'mixed-issues': {
+                name: 'FAKE Building with Mixed Validation Issues',
+                dashboard: {
+                    standby_mode_percent: 38.7,
+                    airflow_reduction_percent: 29.0,
+                    correlation_health: { good: 7, poor: 5 },
+                    data_quality_percent: 91.5,
+                    bms_quality_percent: 93.2,
+                    sensor_quality_percent: 89.8
+                },
+                sensors: [
+                    {
+                        sensor_id: '115-4-01 presence',
+                        zone_id: 'BV200',
+                        sensor: '115-4-01 presence',
+                        zone: 'BV200',
+                        occupancy_ratio: 0.19,
+                        zone_standby_percent: 72.1,
+                        airflow_reduction_percent: 54.1,
+                        correlation_score: 0.91,
+                        total_deviations_count: 4,
+                        total_mode_changes: 48,
+                        es_count: 2,
+                        ls_count: 2,
+                        eo_count: 0,
+                        lo_count: 0,
+                        sensor_occupied_percent: 19.0,
+                        zone_occupied_percent: 27.9,
+                        sensor_unoccupied_percent: 79.5,
+                        zone_missing_percent: 1.5,
+                        sensor_missing_percent: 1.5
+                    },
+                    {
+                        sensor_id: '115-4-06 presence',
+                        zone_id: 'BV201',
+                        sensor: '115-4-06 presence',
+                        zone: 'BV201',
+                        occupancy_ratio: 0.32,
+                        zone_standby_percent: 25.8,
+                        airflow_reduction_percent: 19.4,
+                        correlation_score: 0.58,
+                        total_deviations_count: 19,
+                        total_mode_changes: 63,
+                        es_count: 10,
+                        ls_count: 9,
+                        eo_count: 4,
+                        lo_count: 3,
+                        sensor_occupied_percent: 32.0,
+                        zone_occupied_percent: 74.2,
+                        sensor_unoccupied_percent: 64.8,
+                        zone_missing_percent: 3.2,
+                        sensor_missing_percent: 3.2
+                    },
+                    {
+                        sensor_id: '115-4-09 presence',
+                        zone_id: 'BV202',
+                        sensor: '115-4-09 presence',
+                        zone: 'BV202',
+                        occupancy_ratio: 0.24,
+                        zone_standby_percent: 38.2,
+                        airflow_reduction_percent: 28.7,
+                        correlation_score: 0.75,
+                        total_deviations_count: 9,
+                        total_mode_changes: 51,
+                        es_count: 5,
+                        ls_count: 4,
+                        eo_count: 2,
+                        lo_count: 1,
+                        sensor_occupied_percent: 24.0,
+                        zone_occupied_percent: 61.8,
+                        sensor_unoccupied_percent: 73.5,
+                        zone_missing_percent: 2.5,
+                        sensor_missing_percent: 2.5
+                    }
+                ]
+            }
+        };
+
+        // Generate mock timeline data for a sensor
+        function generateMockTimelineData(sensorId, scenario) {
+            const now = new Date();
+            const startTime = new Date(now.getTime() - (24 * 60 * 60 * 1000)); // 24 hours ago
+            const events = [];
+            const violations = [];
+
+            // Get scenario-specific parameters
+            const sensorData = scenario.sensors.find(s => s.sensor_id === sensorId) || scenario.sensors[0];
+            const scenarioKey = Object.keys(TOUR_SCENARIOS).find(key => TOUR_SCENARIOS[key] === scenario);
+
+            let currentTime = new Date(startTime);
+            let currentOccupancy = 0;
+            let currentZoneMode = 0;
+
+            // Generate data according to scenario story
+            if (scenarioKey === 'data-gaps') {
+                generateDataGapsScenario(events, violations, currentTime, now, sensorData);
+            } else if (scenarioKey === 'severe-divergence') {
+                generateSevereDivergenceScenario(events, violations, currentTime, now, sensorData);
+            } else if (scenarioKey === 'mild-divergence') {
+                generateMildDivergenceScenario(events, violations, currentTime, now, sensorData);
+            } else {
+                generateHighPerformanceScenario(events, violations, currentTime, now, sensorData);
+            }
+
+            return {
+                sensor: sensorId,
+                zone: sensorData.zone_id,
+                events: events,
+                violations: violations
+            };
+        }
+
+        function generateDataGapsScenario(events, violations, startTime, endTime, sensorData) {
+            let currentTime = new Date(startTime);
+            let currentOccupancy = 0;
+            let currentZoneMode = 0;
+
+            while (currentTime < endTime) {
+                const hour = currentTime.getHours();
+                const minute = currentTime.getMinutes();
+
+                // Create obvious data gaps (sensor missing periods)
+                const isDataGapPeriod = (hour >= 10 && hour <= 11) || (hour >= 14 && hour <= 15);
+
+                if (!isDataGapPeriod) {
+                    // Generate sensor data every 30 seconds when not in gap
+                    if (minute % 1 === 0 && currentTime.getSeconds() % 30 === 0) {
+                        const isWorkHours = hour >= 8 && hour <= 17;
+                        const occupancyProb = isWorkHours ? 0.4 : 0.05;
+                        const newOccupancy = Math.random() < occupancyProb ? 1 : 0;
+
+                        if (newOccupancy !== currentOccupancy) {
+                            events.push({
+                                timestamp: new Date(currentTime).toISOString(),
+                                type: 'sensor',
+                                value: newOccupancy,
+                                sensor: sensorData.sensor_id
+                            });
+                            currentOccupancy = newOccupancy;
+                        }
+                    }
+
+                    // Generate BMS zone data every minute (with good correlation)
+                    if (currentTime.getSeconds() === 0) {
+                        const expectedZoneMode = currentOccupancy;
+                        const actualZoneMode = Math.random() < 0.95 ? expectedZoneMode : 1 - expectedZoneMode;
+
+                        if (actualZoneMode !== currentZoneMode) {
+                            events.push({
+                                timestamp: new Date(currentTime).toISOString(),
+                                type: 'zone',
+                                value: actualZoneMode,
+                                zone: sensorData.zone_id
+                            });
+                            currentZoneMode = actualZoneMode;
+                        }
+                    }
+                }
+
+                currentTime = new Date(currentTime.getTime() + 30 * 1000); // Advance 30 seconds
+            }
+        }
+
+        function generateSevereDivergenceScenario(events, violations, startTime, endTime, sensorData) {
+            let currentTime = new Date(startTime);
+            let currentOccupancy = 0;
+            let currentZoneMode = 0;
+
+            while (currentTime < endTime) {
+                const hour = currentTime.getHours();
+                const minute = currentTime.getMinutes();
+
+                // Generate sensor data every 30 seconds
+                if (minute % 1 === 0 && currentTime.getSeconds() % 30 === 0) {
+                    const isWorkHours = hour >= 8 && hour <= 17;
+                    const occupancyProb = isWorkHours ? 0.6 : 0.1;
+                    const newOccupancy = Math.random() < occupancyProb ? 1 : 0;
+
+                    if (newOccupancy !== currentOccupancy) {
+                        events.push({
+                            timestamp: new Date(currentTime).toISOString(),
+                            type: 'sensor',
+                            value: newOccupancy,
+                            sensor: sensorData.sensor_id
+                        });
+                        currentOccupancy = newOccupancy;
+                    }
+                }
+
+                // Generate BMS zone data every minute (with POOR correlation - the story!)
+                if (currentTime.getSeconds() === 0) {
+                    // Zone often disagrees with sensor (severe divergence)
+                    const shouldMatchSensor = Math.random() < 0.3; // Only 30% correlation
+                    const newZoneMode = shouldMatchSensor ? currentOccupancy : (Math.random() < 0.7 ? 1 : 0);
+
+                    if (newZoneMode !== currentZoneMode) {
+                        events.push({
+                            timestamp: new Date(currentTime).toISOString(),
+                            type: 'zone',
+                            value: newZoneMode,
+                            zone: sensorData.zone_id
+                        });
+
+                        // Generate violations for severe mismatches
+                        if (currentOccupancy === 0 && newZoneMode === 1) {
+                            violations.push({
+                                timestamp: new Date(currentTime).toISOString(),
+                                type: 'late_standby',
+                                message: `Zone stayed occupied despite no sensor activity`
+                            });
+                        } else if (currentOccupancy === 1 && newZoneMode === 0) {
+                            violations.push({
+                                timestamp: new Date(currentTime).toISOString(),
+                                type: 'missed_occupied',
+                                message: `Zone remained in standby despite sensor occupancy`
+                            });
+                        }
+
+                        currentZoneMode = newZoneMode;
+                    }
+                }
+
+                currentTime = new Date(currentTime.getTime() + 30 * 1000);
+            }
+        }
+
+        function generateMildDivergenceScenario(events, violations, startTime, endTime, sensorData) {
+            let currentTime = new Date(startTime);
+            let currentOccupancy = 0;
+            let currentZoneMode = 0;
+
+            while (currentTime < endTime) {
+                const hour = currentTime.getHours();
+                const minute = currentTime.getMinutes();
+
+                // Generate sensor data every 30 seconds
+                if (minute % 1 === 0 && currentTime.getSeconds() % 30 === 0) {
+                    const isWorkHours = hour >= 8 && hour <= 17;
+                    const occupancyProb = isWorkHours ? 0.7 : 0.05;
+                    const newOccupancy = Math.random() < occupancyProb ? 1 : 0;
+
+                    if (newOccupancy !== currentOccupancy) {
+                        events.push({
+                            timestamp: new Date(currentTime).toISOString(),
+                            type: 'sensor',
+                            value: newOccupancy,
+                            sensor: sensorData.sensor_id
+                        });
+                        currentOccupancy = newOccupancy;
+                    }
+                }
+
+                // Generate BMS zone data every minute (with GOOD correlation - mild issues)
+                if (currentTime.getSeconds() === 0) {
+                    const shouldMatchSensor = Math.random() < 0.85; // 85% correlation (good but not perfect)
+                    let newZoneMode = shouldMatchSensor ? currentOccupancy : currentZoneMode;
+
+                    // Occasionally add timing delays (mild divergence)
+                    if (!shouldMatchSensor && Math.random() < 0.3) {
+                        newZoneMode = Math.random() < 0.5 ? 1 : 0;
+                    }
+
+                    if (newZoneMode !== currentZoneMode) {
+                        events.push({
+                            timestamp: new Date(currentTime).toISOString(),
+                            type: 'zone',
+                            value: newZoneMode,
+                            zone: sensorData.zone_id
+                        });
+
+                        // Generate fewer violations (mild issues)
+                        if (Math.random() < 0.2) { // Only 20% of changes create violations
+                            violations.push({
+                                timestamp: new Date(currentTime).toISOString(),
+                                type: 'timing_delay',
+                                message: `Minor timing delay in zone response`
+                            });
+                        }
+
+                        currentZoneMode = newZoneMode;
+                    }
+                }
+
+                currentTime = new Date(currentTime.getTime() + 30 * 1000);
+            }
+        }
+
+        function generateHighPerformanceScenario(events, violations, startTime, endTime, sensorData) {
+            let currentTime = new Date(startTime);
+            let currentOccupancy = 0;
+            let currentZoneMode = 0;
+
+            while (currentTime < endTime) {
+                const hour = currentTime.getHours();
+                const minute = currentTime.getMinutes();
+
+                // Generate sensor data every 30 seconds
+                if (minute % 1 === 0 && currentTime.getSeconds() % 30 === 0) {
+                    const isWorkHours = hour >= 8 && hour <= 17;
+                    const occupancyProb = isWorkHours ? 0.6 : 0.02;
+                    const newOccupancy = Math.random() < occupancyProb ? 1 : 0;
+
+                    if (newOccupancy !== currentOccupancy) {
+                        events.push({
+                            timestamp: new Date(currentTime).toISOString(),
+                            type: 'sensor',
+                            value: newOccupancy,
+                            sensor: sensorData.sensor_id
+                        });
+                        currentOccupancy = newOccupancy;
+                    }
+                }
+
+                // Generate BMS zone data every minute (with EXCELLENT correlation)
+                if (currentTime.getSeconds() === 0) {
+                    const shouldMatchSensor = Math.random() < 0.98; // 98% correlation (excellent)
+                    const newZoneMode = shouldMatchSensor ? currentOccupancy : currentZoneMode;
+
+                    if (newZoneMode !== currentZoneMode) {
+                        events.push({
+                            timestamp: new Date(currentTime).toISOString(),
+                            type: 'zone',
+                            value: newZoneMode,
+                            zone: sensorData.zone_id
+                        });
+                        currentZoneMode = newZoneMode;
+                    }
+                }
+
+                currentTime = new Date(currentTime.getTime() + 30 * 1000);
+            }
+        }
 
         // Enhanced Legend System Functions
         function toggleLegend() {
@@ -1627,15 +2483,27 @@
         }
 
         function launchTour() {
-            // Open tour demo in new window
-            const tourWindow = window.open('./tour-demo.html', 'odcv-tour',
-                'width=1200,height=800,scrollbars=yes,resizable=yes');
+            // This function is not used in tour mode
+            alert('You are already in the interactive tour!');
+        }
 
-            if (tourWindow) {
-                tourWindow.focus();
-            } else {
-                alert('Please allow popups to launch the interactive tour');
-            }
+        // Load selected tour scenario
+        async function loadTourScenario() {
+            if (!TOUR_MODE) return;
+
+            const selector = document.getElementById('tourScenario');
+            currentTourScenario = selector.value;
+            const scenario = TOUR_SCENARIOS[currentTourScenario];
+
+            // Update customer name to scenario name
+            document.getElementById('customerName').value = scenario.name;
+            updateCustomerName();
+
+            // Update current dataset info
+            updateCurrentDatasetInfo(scenario.name, `Tour scenario - 3 sensors, 24 hours`);
+
+            // Load dashboard data with mock data
+            await loadDashboardData();
         }
 
 
@@ -1669,6 +2537,20 @@
         }
 
         async function uploadFile(file) {
+            if (TOUR_MODE) {
+                // In tour mode, simulate upload and show high-performance scenario
+                const statusDiv = document.getElementById('uploadStatus');
+                statusDiv.innerHTML = '<div class="loading">Processing mock file...</div>';
+
+                setTimeout(async () => {
+                    statusDiv.innerHTML = `<div class="success">Mock file processed! Showing tour data for ${file.name}.</div>`;
+                    const selector = document.getElementById('tourScenario');
+                    selector.value = 'high-performance';
+                    await loadTourScenario();
+                }, 1000);
+                return;
+            }
+
             const statusDiv = document.getElementById('uploadStatus');
             statusDiv.innerHTML = '<div class="loading">Uploading and processing file...</div>';
 
@@ -1700,6 +2582,14 @@
         }
 
         async function loadPresetDataset(datasetKey) {
+            if (TOUR_MODE) {
+                // In tour mode, just select the first scenario
+                const selector = document.getElementById('tourScenario');
+                selector.value = 'high-performance';
+                await loadTourScenario();
+                return;
+            }
+
             const statusDiv = document.getElementById('uploadStatus');
             statusDiv.innerHTML = '<div class="loading">Loading preset dataset...</div>';
 
@@ -1775,6 +2665,21 @@
         let datasetInfoInterval = null;
 
         async function fetchDatasetInfo() {
+            if (TOUR_MODE) {
+                // In tour mode, return mock dataset info
+                const scenario = TOUR_SCENARIOS[currentTourScenario] || TOUR_SCENARIOS['high-performance'];
+                const mockData = {
+                    name: scenario.name,
+                    details: `Tour scenario - 3 sensors, 24 hours`,
+                    sensors_count: 3,
+                    records_count: 1440, // 24 hours * 60 minutes
+                    time_range: "2025-09-16 00:00 to 2025-09-17 00:00"
+                };
+                updateDatasetInfoDisplay(mockData);
+                checkForDatasetChanges(mockData);
+                return mockData;
+            }
+
             try {
                 const response = await fetch('/api/dataset-info');
                 const data = await response.json();
@@ -1864,6 +2769,12 @@
         }
 
         function startDatasetInfoUpdates() {
+            if (TOUR_MODE) {
+                // In tour mode, skip periodic updates and just do initial fetch
+                fetchDatasetInfo();
+                return;
+            }
+
             // Initial fetch
             fetchDatasetInfo();
 
@@ -1938,21 +2849,30 @@
 
         async function loadDashboardMetrics() {
             console.log(`🔍 [DEBUG] Loading dashboard metrics for period: ${currentTimePeriod}`);
-            console.log(`🔍 [DEBUG] Fetching URL: ${API_BASE}/api/dashboard/metrics?period=${currentTimePeriod}`);
 
-            const startTime = performance.now();
-            const response = await fetch(`${API_BASE}/api/dashboard/metrics?period=${currentTimePeriod}`);
-            const responseTime = performance.now() - startTime;
+            let metrics;
+            if (TOUR_MODE) {
+                // Use mock data in tour mode
+                const scenario = TOUR_SCENARIOS[currentTourScenario];
+                metrics = scenario.dashboard;
+                console.log(`🔍 [DEBUG] Using mock data for scenario: ${currentTourScenario}`);
+            } else {
+                console.log(`🔍 [DEBUG] Fetching URL: ${API_BASE}/api/dashboard/metrics?period=${currentTimePeriod}`);
 
-            console.log(`🔍 [DEBUG] API Response received in ${responseTime.toFixed(2)}ms`);
-            console.log(`🔍 [DEBUG] Response status: ${response.status} ${response.statusText}`);
+                const startTime = performance.now();
+                const response = await fetch(`${API_BASE}/api/dashboard/metrics?period=${currentTimePeriod}`);
+                const responseTime = performance.now() - startTime;
 
-            if (!response.ok) {
-                console.error(`❌ [ERROR] API failed: ${response.status} ${response.statusText}`);
-                throw new Error('Failed to load dashboard metrics');
+                console.log(`🔍 [DEBUG] API Response received in ${responseTime.toFixed(2)}ms`);
+                console.log(`🔍 [DEBUG] Response status: ${response.status} ${response.statusText}`);
+
+                if (!response.ok) {
+                    console.error(`❌ [ERROR] API failed: ${response.status} ${response.statusText}`);
+                    throw new Error('Failed to load dashboard metrics');
+                }
+
+                metrics = await response.json();
             }
-
-            const metrics = await response.json();
             console.log(`🔍 [DEBUG] Raw metrics data received:`, metrics);
             console.log(`🔍 [DEBUG] Standby mode: ${metrics.standby_mode_percent}%`);
             console.log(`🔍 [DEBUG] Airflow reduction: ${metrics.airflow_reduction_percent}%`);
@@ -2034,12 +2954,19 @@
         }
 
         async function loadSensorMetrics() {
-            const response = await fetch(`${API_BASE}/api/sensors/metrics?period=${currentTimePeriod}`);
-            if (!response.ok) {
-                throw new Error('Failed to load sensor metrics');
+            let sensors;
+            if (TOUR_MODE) {
+                // Use mock data in tour mode
+                const scenario = TOUR_SCENARIOS[currentTourScenario];
+                sensors = scenario.sensors;
+                console.log(`🔍 [DEBUG] Using mock sensor data for scenario: ${currentTourScenario}`);
+            } else {
+                const response = await fetch(`${API_BASE}/api/sensors/metrics?period=${currentTimePeriod}`);
+                if (!response.ok) {
+                    throw new Error('Failed to load sensor metrics');
+                }
+                sensors = await response.json();
             }
-
-            const sensors = await response.json();
             renderSensorTable(sensors);
         }
 
@@ -2312,14 +3239,22 @@
 
                 console.log(`🔍 [DEBUG] Loading timeline for sensor: ${sensorName}, period: ${currentTimePeriod}, duration: ${durationHours}h`);
 
-                // Fetch timeline data from API
-                const response = await fetch(`${API_BASE}/api/sensors/${encodeURIComponent(sensorName)}/timeline?duration_hours=${durationHours}`);
+                let timelineData;
+                if (TOUR_MODE) {
+                    // Generate mock timeline data
+                    const scenario = TOUR_SCENARIOS[currentTourScenario];
+                    timelineData = generateMockTimelineData(sensorName, scenario);
+                    console.log(`🔍 [DEBUG] Using mock timeline data for scenario: ${currentTourScenario}`);
+                } else {
+                    // Fetch timeline data from API
+                    const response = await fetch(`${API_BASE}/api/sensors/${encodeURIComponent(sensorName)}/timeline?duration_hours=${durationHours}`);
 
-                if (!response.ok) {
-                    throw new Error(`Failed to load timeline: ${response.statusText}`);
+                    if (!response.ok) {
+                        throw new Error(`Failed to load timeline: ${response.statusText}`);
+                    }
+
+                    timelineData = await response.json();
                 }
-
-                const timelineData = await response.json();
                 console.log(`🔍 [DEBUG] Timeline data received:`, timelineData);
 
                 // Generate timeline visualization
@@ -2973,22 +3908,629 @@
         }
 
         // Initialize the page
-        document.addEventListener('DOMContentLoaded', () => {
-            // Start dataset info monitoring
-            startDatasetInfoUpdates();
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (TOUR_MODE) {
+                // In tour mode, automatically load the default scenario
+                await loadTourScenario();
+                // Also initialize dataset info display in tour mode
+                startDatasetInfoUpdates();
+                // Auto-start the guided tour
+                setTimeout(() => {
+                    startGuidedTour();
+                }, 1000); // Small delay to ensure page is fully loaded
+            } else {
+                // Start dataset info monitoring
+                startDatasetInfoUpdates();
 
-            // Check if we have any data on startup
-            fetch(`${API_BASE}/api/sensors`)
-                .then(response => response.json())
-                .then(sensors => {
-                    if (sensors.length > 0) {
-                        loadDashboardData();
-                    }
-                })
-                .catch(error => {
-                    console.log('No initial data available');
-                });
+                // Check if we have any data on startup
+                fetch(`${API_BASE}/api/sensors`)
+                    .then(response => response.json())
+                    .then(sensors => {
+                        if (sensors.length > 0) {
+                            loadDashboardData();
+                        }
+                    })
+                    .catch(error => {
+                        console.log('No initial data available');
+                    });
+            }
         });
+
+        // ===== GUIDED TOUR SYSTEM =====
+
+        // Tour configuration
+        let currentTourStep = 0;
+        let tourActive = false;
+
+        const tourSteps = [
+            {
+                target: '.header',
+                title: 'Welcome to Live ODCV Analytics',
+                content: 'You\'re now viewing a live demonstration of the ODCV Analytics Dashboard. This system analyzes occupancy sensor data and zone control logic to validate Building Management System timing compliance. Watch as we demonstrate real validation scenarios with interactive features.'
+            },
+            {
+                target: '#tourScenario',
+                title: 'Automatic Scenario Switching',
+                content: 'The tour is now switching to the "Data Gaps" scenario to demonstrate missing sensor data detection. Notice how the scenario selector highlights and the metrics update automatically.',
+                action: 'autoSwitchToDataGaps'
+            },
+            {
+                target: '.dashboard-grid',
+                title: 'Live Metrics Dashboard',
+                content: 'The metrics are updating in real-time! You\'re seeing Data Quality % drop (indicating missing data), Correlation Health scores change, and Standby Mode % reflecting actual energy performance. The red indicators highlight validation problems.',
+                action: 'highlightMetrics'
+            },
+            {
+                target: '#tourScenario',
+                title: 'Switching to Severe Divergence',
+                content: 'Now demonstrating severe sensor/VAV divergence scenario. Watch the correlation scores drop and validation metrics change as we switch to show poor BMS synchronization.',
+                action: 'autoSwitchToSevereDivergence'
+            },
+            {
+                target: '.grouped-container',
+                title: 'Room Validation Results',
+                content: 'Each row shows live validation results: sensor quality, correlation scores, missing data percentages, and timing violations. Red indicators pinpoint rooms with BMS issues. You can see the data refreshing based on the current scenario.',
+                action: 'autoExpandFirstRoom'
+            },
+            {
+                target: '.sensor-detail-row',
+                title: 'Live Timeline View',
+                content: 'The tour has expanded a room to show you the detailed validation timeline. You can see sensor occupancy (green), VAV control states (blue), and timing violations (red markers). This reveals exactly when and how BMS validation issues occur.',
+                action: 'openAndHighlightTimeline'
+            },
+            {
+                target: 'body',
+                title: 'Interactive Dashboard Ready!',
+                content: 'You\'ve experienced live automated demonstrations of BMS validation. The dashboard is fully interactive - try switching scenarios manually, expanding other rooms, or exit the tour to explore all features freely. Each scenario tells a different validation story.'
+            }
+        ];
+
+        function startGuidedTour() {
+            if (tourActive) return;
+
+            tourActive = true;
+            currentTourStep = 0;
+
+            // Open tour in a popup window
+            const tourWindow = window.open('', 'tourWindow', 'width=450,height=600,scrollbars=no,resizable=yes,menubar=no,toolbar=no,location=no,status=no');
+            window.tourWindow = tourWindow;
+
+            // Create the tour interface in the popup
+            tourWindow.document.write(createTourWindowContent());
+            tourWindow.document.close();
+
+            // Start first step
+            showTourStep(0);
+
+            // Add keyboard listeners to main window
+            document.addEventListener('keydown', handleTourKeyboard);
+
+            // Handle popup close
+            tourWindow.onbeforeunload = function() {
+                exitTour();
+            };
+        }
+
+        function createTourWindowContent() {
+            return `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Interactive Tour - ODCV Analytics</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tour-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .tour-header h2 {
+            margin: 0 0 8px 0;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .tour-header p {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .tour-content {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .tour-step-counter {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 20px;
+            width: fit-content;
+            align-self: center;
+        }
+
+        .tour-step-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .tour-step-content {
+            font-size: 14px;
+            line-height: 1.6;
+            opacity: 0.95;
+            flex: 1;
+            margin-bottom: 20px;
+        }
+
+        .tour-navigation {
+            display: flex;
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .tour-nav-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .tour-nav-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .tour-nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .tour-exit-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 5px 10px;
+            opacity: 0.7;
+            transition: opacity 0.2s ease;
+        }
+
+        .tour-exit-btn:hover {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <button class="tour-exit-btn" onclick="window.close()">×</button>
+
+    <div class="tour-header">
+        <h2>Interactive Tour</h2>
+        <p>ODCV Analytics Dashboard</p>
+    </div>
+
+    <div class="tour-content">
+        <div class="tour-step-counter" id="tourStepCounter">Step 1 of 7</div>
+        <div class="tour-step-title" id="tourTitle">Welcome to the Dashboard</div>
+        <div class="tour-step-content" id="tourContent">This is the content of the tour step.</div>
+
+        <div class="tour-navigation">
+            <button class="tour-nav-btn" id="tourPrevBtn" onclick="window.opener.previousTourStep()">Previous</button>
+            <button class="tour-nav-btn" id="tourNextBtn" onclick="window.opener.nextTourStep()">Next</button>
+        </div>
+    </div>
+</body>
+</html>`;
+        }
+
+        function exitTour() {
+            tourActive = false;
+
+            // Close popup window if it exists
+            if (window.tourWindow && !window.tourWindow.closed) {
+                window.tourWindow.close();
+            }
+            window.tourWindow = null;
+
+            // Remove keyboard listeners
+            document.removeEventListener('keydown', handleTourKeyboard);
+
+            // Reset any expanded elements
+            resetTourState();
+        }
+
+        function nextTourStep() {
+            if (currentTourStep < tourSteps.length - 1) {
+                currentTourStep++;
+                showTourStep(currentTourStep);
+            } else {
+                exitTour();
+            }
+        }
+
+        function previousTourStep() {
+            if (currentTourStep > 0) {
+                currentTourStep--;
+                showTourStep(currentTourStep);
+            }
+        }
+
+        function showTourStep(stepIndex) {
+            const step = tourSteps[stepIndex];
+            if (!step) return;
+
+            // Execute step action if any
+            if (step.action) {
+                executeStepAction(step.action);
+            }
+
+            // Update popup window content if it exists
+            if (window.tourWindow && !window.tourWindow.closed) {
+                const tourDoc = window.tourWindow.document;
+
+                // Update step counter
+                const stepCounter = tourDoc.getElementById('tourStepCounter');
+                if (stepCounter) {
+                    stepCounter.textContent = `Step ${stepIndex + 1} of ${tourSteps.length}`;
+                }
+
+                // Update content
+                const titleElement = tourDoc.getElementById('tourTitle');
+                const contentElement = tourDoc.getElementById('tourContent');
+                if (titleElement) titleElement.textContent = step.title;
+                if (contentElement) contentElement.textContent = step.content;
+
+                // Update navigation buttons
+                const prevBtn = tourDoc.getElementById('tourPrevBtn');
+                const nextBtn = tourDoc.getElementById('tourNextBtn');
+
+                if (prevBtn) prevBtn.disabled = stepIndex === 0;
+                if (nextBtn) nextBtn.textContent = stepIndex === tourSteps.length - 1 ? 'Finish' : 'Next';
+            }
+
+            // Highlight target element in main window
+            setTimeout(() => {
+                highlightTourTarget(step);
+            }, 100);
+        }
+
+        function positionTourElements(step) {
+            const highlight = document.getElementById('tourHighlight');
+            const tooltip = document.getElementById('tourTooltip');
+
+            // Find target element
+            let targetElement;
+            if (step.target === 'body') {
+                // Center position for body target
+                highlight.style.display = 'none';
+                tooltip.style.left = '50%';
+                tooltip.style.top = '50%';
+                tooltip.style.transform = 'translate(-50%, -50%)';
+                tooltip.classList.add('active');
+                return;
+            } else {
+                targetElement = document.querySelector(step.target);
+            }
+
+            if (!targetElement) {
+                console.warn('Tour target not found:', step.target);
+                return;
+            }
+
+            // Get element position
+            const rect = targetElement.getBoundingClientRect();
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+
+            // Position highlight
+            highlight.style.display = 'block';
+            highlight.style.left = (rect.left + scrollLeft - 8) + 'px';
+            highlight.style.top = (rect.top + scrollTop - 8) + 'px';
+            highlight.style.width = (rect.width + 16) + 'px';
+            highlight.style.height = (rect.height + 16) + 'px';
+
+            // Position tooltip
+            let tooltipLeft, tooltipTop;
+
+            switch (step.position) {
+                case 'top':
+                    tooltipLeft = rect.left + scrollLeft + (rect.width / 2) - 200;
+                    tooltipTop = rect.top + scrollTop - 200;
+                    break;
+                case 'bottom':
+                    tooltipLeft = rect.left + scrollLeft + (rect.width / 2) - 200;
+                    tooltipTop = rect.bottom + scrollTop + 20;
+                    break;
+                case 'left':
+                    tooltipLeft = rect.left + scrollLeft - 420;
+                    tooltipTop = rect.top + scrollTop + (rect.height / 2) - 100;
+                    break;
+                case 'right':
+                    tooltipLeft = rect.right + scrollLeft + 20;
+                    tooltipTop = rect.top + scrollTop + (rect.height / 2) - 100;
+                    break;
+                default:
+                    tooltipLeft = rect.left + scrollLeft + (rect.width / 2) - 200;
+                    tooltipTop = rect.bottom + scrollTop + 20;
+            }
+
+            // Ensure tooltip stays within viewport
+            tooltipLeft = Math.max(20, Math.min(tooltipLeft, window.innerWidth - 420));
+            tooltipTop = Math.max(20, tooltipTop);
+
+            tooltip.style.left = tooltipLeft + 'px';
+            tooltip.style.top = tooltipTop + 'px';
+            tooltip.style.transform = 'none';
+
+            // Scroll element into view
+            targetElement.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
+
+            // Show tooltip
+            setTimeout(() => {
+                tooltip.classList.add('active');
+            }, 200);
+        }
+
+        function generateTourProgress() {
+            const progressContainer = document.getElementById('tourProgress');
+            progressContainer.innerHTML = '';
+
+            for (let i = 0; i < tourSteps.length; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'tour-progress-dot';
+                if (i === 0) dot.classList.add('active');
+                progressContainer.appendChild(dot);
+            }
+        }
+
+        function updateTourProgress(currentStep) {
+            const dots = document.querySelectorAll('.tour-progress-dot');
+            dots.forEach((dot, index) => {
+                dot.classList.remove('active', 'completed');
+                if (index < currentStep) {
+                    dot.classList.add('completed');
+                } else if (index === currentStep) {
+                    dot.classList.add('active');
+                }
+            });
+        }
+
+        function executeStepAction(action) {
+            switch (action) {
+                case 'expandFirstSensor':
+                    // Find and click the first sensor row to expand timeline
+                    setTimeout(() => {
+                        const firstSensorRow = document.querySelector('.sensor-row');
+                        if (firstSensorRow) {
+                            firstSensorRow.click();
+                        }
+                    }, 500);
+                    break;
+                case 'autoSwitchToDataGaps':
+                    autoSwitchScenario('data_gaps');
+                    break;
+                case 'autoSwitchToSevereDivergence':
+                    autoSwitchScenario('severe_divergence');
+                    break;
+                case 'autoSwitchToMildDivergence':
+                    autoSwitchScenario('mild_divergence');
+                    break;
+                case 'autoExpandFirstRoom':
+                    autoExpandFirstRoom();
+                    break;
+                case 'highlightMetrics':
+                    highlightElement('.dashboard-grid');
+                    break;
+                case 'highlightTimeline':
+                    highlightElement('.timeline-container');
+                    break;
+                case 'openAndHighlightTimeline':
+                    openAndHighlightTimeline();
+                    break;
+            }
+        }
+
+        function resetTourState() {
+            // Close any expanded sensor rows
+            const expandedRows = document.querySelectorAll('.sensor-detail-row.active');
+            expandedRows.forEach(row => {
+                row.classList.remove('active');
+                row.style.display = 'none';
+            });
+
+            // Remove any tour highlights
+            const existingHighlights = document.querySelectorAll('.tour-auto-highlight');
+            existingHighlights.forEach(highlight => highlight.remove());
+        }
+
+        // ===== AUTOMATED TOUR FUNCTIONS =====
+
+        function autoSwitchScenario(scenarioKey) {
+            const scenarioSelect = document.getElementById('tourScenario');
+            if (scenarioSelect) {
+                // Add visual feedback
+                highlightElement('#tourScenario', 'Switching to ' + scenarioKey.replace('_', ' ') + ' scenario...');
+
+                setTimeout(() => {
+                    scenarioSelect.value = scenarioKey;
+                    scenarioSelect.dispatchEvent(new Event('change'));
+
+                    // Brief highlight after change
+                    setTimeout(() => {
+                        addAutoHighlight('#executive-dashboard', 2000);
+                    }, 500);
+                }, 1000);
+            }
+        }
+
+        function autoExpandFirstRoom() {
+            // Find the first room row and expand it
+            setTimeout(() => {
+                const firstSensorRow = document.querySelector('.sensor-row');
+                if (firstSensorRow) {
+                    highlightElement('.sensor-row', 'Expanding room details...');
+
+                    setTimeout(() => {
+                        firstSensorRow.click();
+
+                        // Highlight the timeline after expansion
+                        setTimeout(() => {
+                            addAutoHighlight('.timeline-container', 3000);
+                        }, 500);
+                    }, 1000);
+                }
+            }, 500);
+        }
+
+        function openAndHighlightTimeline() {
+            // Ensure timeline is visible and highlighted for step 6
+            setTimeout(() => {
+                // First ensure the sensor detail row is active (should be from step 5)
+                const sensorDetailRow = document.querySelector('.sensor-detail-row.active');
+                if (sensorDetailRow) {
+                    // Scroll the timeline into view
+                    const timelineContainer = sensorDetailRow.querySelector('.timeline-container');
+                    if (timelineContainer) {
+                        timelineContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                        // Add enhanced highlighting for the timeline
+                        setTimeout(() => {
+                            addAutoHighlight('.timeline-container', 4000);
+
+                            // Additional highlight for specific timeline elements
+                            setTimeout(() => {
+                                addAutoHighlight('.timeline-chart svg', 2000);
+                            }, 1000);
+                        }, 500);
+                    }
+                } else {
+                    // Fallback: just highlight any timeline container
+                    highlightElement('.timeline-container', 'Timeline view');
+                }
+            }, 300);
+        }
+
+        function highlightElement(selector, message = '') {
+            // Add a temporary highlight to an element
+            const element = document.querySelector(selector);
+            if (element) {
+                const highlight = document.createElement('div');
+                highlight.className = 'tour-auto-highlight';
+                highlight.style.cssText = `
+                    position: absolute;
+                    pointer-events: none;
+                    border: 3px solid #667eea;
+                    border-radius: 8px;
+                    background: rgba(102, 126, 234, 0.1);
+                    z-index: 10000;
+                    transition: all 0.3s ease;
+                    animation: pulse 2s infinite;
+                `;
+
+                // Position the highlight
+                const rect = element.getBoundingClientRect();
+                highlight.style.left = (rect.left - 5) + 'px';
+                highlight.style.top = (rect.top - 5) + 'px';
+                highlight.style.width = (rect.width + 10) + 'px';
+                highlight.style.height = (rect.height + 10) + 'px';
+
+                document.body.appendChild(highlight);
+
+                // Add message if provided
+                if (message) {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.style.cssText = `
+                        position: absolute;
+                        top: ${rect.top - 40}px;
+                        left: ${rect.left}px;
+                        background: #667eea;
+                        color: white;
+                        padding: 5px 10px;
+                        border-radius: 4px;
+                        font-size: 12px;
+                        z-index: 10001;
+                        white-space: nowrap;
+                    `;
+                    messageDiv.textContent = message;
+                    messageDiv.className = 'tour-auto-highlight';
+                    document.body.appendChild(messageDiv);
+                }
+
+                // Remove after 3 seconds
+                setTimeout(() => {
+                    const highlights = document.querySelectorAll('.tour-auto-highlight');
+                    highlights.forEach(h => {
+                        if (h === highlight || (message && h.textContent === message)) {
+                            h.remove();
+                        }
+                    });
+                }, 3000);
+            }
+        }
+
+        function addAutoHighlight(selector, duration = 2000) {
+            const element = document.querySelector(selector);
+            if (element) {
+                element.style.boxShadow = '0 0 20px rgba(102, 126, 234, 0.8)';
+                element.style.transition = 'box-shadow 0.3s ease';
+
+                setTimeout(() => {
+                    element.style.boxShadow = '';
+                }, duration);
+            }
+        }
+
+        function handleTourKeyboard(event) {
+            if (!tourActive) return;
+
+            switch (event.key) {
+                case 'ArrowRight':
+                case ' ':
+                    event.preventDefault();
+                    nextTourStep();
+                    break;
+                case 'ArrowLeft':
+                    event.preventDefault();
+                    previousTourStep();
+                    break;
+                case 'Escape':
+                    event.preventDefault();
+                    exitTour();
+                    break;
+            }
+        }
     </script>
 
     <!-- Zoom Loupe -->
@@ -3036,6 +4578,9 @@
         </div>
     </div>
 
+
+    <!-- Tour highlight overlay -->
+    <div id="tourHighlight" class="tour-highlight"></div>
 
 </body>
 </html>
