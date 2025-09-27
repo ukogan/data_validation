@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ODCV Timeline - Layered Zoom Interface</title>
+    <style>
+        :root {
+            --occupied-color: #4CAF50;
+            --unoccupied-color: #f44336;
+            --active-color: #2196F3;
+            --standby-color: #FF9800;
+            --violation-color: #9C27B0;
+            --missing-data: #e0e0e0;
+            --grid-line: #ddd;
+            --hover-highlight: rgba(33, 150, 243, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .header {
+            background: white;
+            padding: 15px 20px;
+            border-bottom: 2px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 20px;
+            color: #333;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .breadcrumb-item {
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .breadcrumb-item:hover {
+            background: var(--hover-highlight);
+            color: var(--active-color);
+        }
+
+        .breadcrumb-separator {
+            color: #999;
+        }
+
+        .breadcrumb-current {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .zoom-controls {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            z-index: 100;
+        }
+
+        .zoom-level-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .zoom-btn {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        .zoom-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .zoom-btn.active {
+            background: var(--active-color);
+            color: white;
+            border-color: var(--active-color);
+        }
+
+        .main-content {
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .view-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            min-height: 600px;
+        }
+
+        /* Month View */
+        .month-view {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+        }
+
+        .month-day {
+            aspect-ratio: 1;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            background: white;
+        }
+
+        .month-day:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            z-index: 10;
+        }
+
+        .month-day-number {
+            font-weight: 600;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .month-day-heatmap {
+            position: absolute;
+            bottom: 5px;
+            left: 5px;
+            right: 5px;
+            height: 40%;
+            border-radius: 3px;
+            background: linear-gradient(to top,
+                var(--unoccupied-color) 0%,
+                var(--occupied-color) 50%,
+                var(--active-color) 50%,
+                var(--standby-color) 100%);
+            opacity: 0.6;
+        }
+
+        .month-day-violations {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: var(--violation-color);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        /* Week View */
+        .week-view {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 15px;
+        }
+
+        .week-day {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .week-day-header {
+            background: #f8f8f8;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .week-day-header:hover {
+            background: #f0f0f0;
+        }
+
+        .week-hourly-grid {
+            display: grid;
+            grid-template-rows: repeat(24, 20px);
+            padding: 5px;
+        }
+
+        .week-hour {
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .week-hour:hover {
+            background: var(--hover-highlight);
+        }
+
+        .week-hour-label {
+            font-size: 9px;
+            color: #999;
+            width: 25px;
+        }
+
+        .week-hour-data {
+            flex: 1;
+            height: 16px;
+            display: flex;
+            gap: 1px;
+        }
+
+        .week-data-bar {
+            flex: 1;
+            border-radius: 2px;
+        }
+
+        /* Day View */
+        .day-view {
+            display: grid;
+            gap: 20px;
+        }
+
+        .day-zone {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .day-zone-header {
+            background: #f8f8f8;
+            padding: 10px 15px;
+            border-bottom: 1px solid #ddd;
+            font-weight: 600;
+        }
+
+        .day-hourly-timeline {
+            padding: 15px;
+            display: grid;
+            grid-template-columns: repeat(24, 1fr);
+            gap: 2px;
+            height: 120px;
+        }
+
+        .day-hour-column {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            cursor: pointer;
+            padding: 2px;
+            border-radius: 3px;
+            transition: all 0.2s;
+        }
+
+        .day-hour-column:hover {
+            background: var(--hover-highlight);
+            transform: scaleX(1.2);
+        }
+
+        .day-hour-signal {
+            flex: 1;
+            border-radius: 2px;
+        }
+
+        .day-hour-response {
+            flex: 1;
+            border-radius: 2px;
+        }
+
+        .day-hour-label {
+            font-size: 9px;
+            color: #666;
+            text-align: center;
+            margin-top: 5px;
+        }
+
+        /* Hour View (Detailed) */
+        .hour-view {
+            display: grid;
+            gap: 30px;
+        }
+
+        .hour-zone {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .hour-zone-header {
+            background: #f8f8f8;
+            padding: 10px 15px;
+            border-bottom: 1px solid #ddd;
+            font-weight: 600;
+        }
+
+        .hour-detail-grid {
+            padding: 20px;
+        }
+
+        .signal-response-detail {
+            display: grid;
+            gap: 10px;
+        }
+
+        .signal-timeline, .response-timeline {
+            position: relative;
+            height: 50px;
+            background: #fafafa;
+            border-radius: 4px;
+            padding: 5px;
+        }
+
+        .timeline-label {
+            position: absolute;
+            left: 10px;
+            top: 5px;
+            font-size: 11px;
+            color: #666;
+            background: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        .timeline-data {
+            position: absolute;
+            left: 100px;
+            right: 10px;
+            top: 10px;
+            bottom: 10px;
+            display: flex;
+            gap: 0;
+        }
+
+        .data-point {
+            flex: 1;
+            min-width: 1px;
+            cursor: pointer;
+            transition: transform 0.1s;
+            position: relative;
+        }
+
+        .data-point:hover {
+            transform: scaleY(1.3);
+            z-index: 10;
+        }
+
+        .data-point:hover::after {
+            content: attr(data-time);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            white-space: nowrap;
+        }
+
+        .data-point.occupied { background: var(--occupied-color); }
+        .data-point.unoccupied { background: var(--unoccupied-color); }
+        .data-point.active { background: var(--active-color); }
+        .data-point.standby { background: var(--standby-color); }
+        .data-point.missing {
+            background: var(--missing-data);
+            background-image: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 2px,
+                rgba(0,0,0,0.1) 2px,
+                rgba(0,0,0,0.1) 4px
+            );
+        }
+
+        .violation-marker {
+            position: absolute;
+            top: 0;
+            width: 3px;
+            height: 100%;
+            background: var(--violation-color);
+            z-index: 5;
+        }
+
+        .minute-grid {
+            display: grid;
+            grid-template-columns: repeat(60, 1fr);
+            height: 20px;
+            margin-top: 10px;
+            border-top: 1px solid #ddd;
+            padding-top: 5px;
+        }
+
+        .minute-marker {
+            font-size: 8px;
+            color: #999;
+            text-align: center;
+        }
+
+        .legend {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+
+        .legend-box {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+        }
+
+        .stats-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            font-size: 12px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+        }
+
+        .stat-label {
+            color: #666;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ODCV Timeline - September 2025 - Layered Zoom Interface</h1>
+        <div class="breadcrumb" id="breadcrumb">
+            <span class="breadcrumb-item" onclick="setZoomLevel('month')">September 2025</span>
+            <span class="breadcrumb-separator">›</span>
+            <span class="breadcrumb-current">Month View</span>
+        </div>
+    </div>
+
+    <div class="zoom-controls">
+        <div class="zoom-level-selector">
+            <button class="zoom-btn active" id="zoom-month" onclick="setZoomLevel('month')">
+                📅 Month View
+            </button>
+            <button class="zoom-btn" id="zoom-week" onclick="setZoomLevel('week')">
+                📊 Week View
+            </button>
+            <button class="zoom-btn" id="zoom-day" onclick="setZoomLevel('day')">
+                📈 Day View
+            </button>
+            <button class="zoom-btn" id="zoom-hour" onclick="setZoomLevel('hour')">
+                🔍 Hour Detail
+            </button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="view-container" id="view-container">
+            <!-- Dynamic content based on zoom level -->
+        </div>
+    </div>
+
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-box" style="background: var(--occupied-color)"></div>
+            <span>Occupied</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box" style="background: var(--unoccupied-color)"></div>
+            <span>Unoccupied</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box" style="background: var(--active-color)"></div>
+            <span>Active</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box" style="background: var(--standby-color)"></div>
+            <span>Standby</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box" style="background: var(--violation-color)"></div>
+            <span>Violation</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box" style="background: var(--missing-data)"></div>
+            <span>Missing</span>
+        </div>
+    </div>
+
+    <div class="stats-panel" id="stats-panel">
+        <div class="stat-row">
+            <span class="stat-label">Current View:</span>
+            <span class="stat-value" id="current-view">Month</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Violations:</span>
+            <span class="stat-value" id="violation-count">0</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Data Quality:</span>
+            <span class="stat-value" id="data-quality">98%</span>
+        </div>
+    </div>
+
+    <script>
+        let currentZoomLevel = 'month';
+        let currentSelection = {
+            week: null,
+            day: null,
+            hour: null
+        };
+        let monthData = {};
+
+        // Generate month data with zones
+        function generateMonthData() {
+            const zones = ['BV200', 'BV201', 'BV202'];
+
+            zones.forEach(zone => {
+                monthData[zone] = [];
+
+                for (let day = 1; day <= 30; day++) {
+                    const dayData = {
+                        occupancy: [],
+                        control: [],
+                        violations: []
+                    };
+
+                    for (let hour = 0; hour < 24; hour++) {
+                        // Occupancy data (30-second intervals)
+                        const hourOccupancy = [];
+                        for (let i = 0; i < 120; i++) {
+                            let occupied = false;
+
+                            // Weekday vs weekend patterns
+                            const dayOfWeek = (day - 1) % 7;
+                            if (dayOfWeek < 5) { // Weekday
+                                if (hour >= 8 && hour <= 18) {
+                                    occupied = Math.random() > 0.3;
+                                } else {
+                                    occupied = Math.random() > 0.95;
+                                }
+                            } else { // Weekend
+                                occupied = Math.random() > 0.9;
+                            }
+
+                            if (Math.random() < 0.02) {
+                                hourOccupancy.push(null); // Missing data
+                            } else {
+                                hourOccupancy.push(occupied);
+                            }
+                        }
+                        dayData.occupancy.push(hourOccupancy);
+
+                        // Control data (1-minute intervals)
+                        const hourControl = [];
+                        for (let i = 0; i < 60; i++) {
+                            const recentOccupancy = hourOccupancy.slice(Math.max(0, i * 2 - 30), i * 2);
+                            const hasOccupancy = recentOccupancy.some(o => o === true);
+                            let control = hasOccupancy ? 'active' : 'standby';
+
+                            // Simulate violations
+                            if (Math.random() < 0.03) {
+                                control = hasOccupancy ? 'standby' : 'active';
+                                dayData.violations.push({ hour, minute: i });
+                            }
+
+                            if (Math.random() < 0.01) {
+                                hourControl.push(null); // Missing data
+                            } else {
+                                hourControl.push(control);
+                            }
+                        }
+                        dayData.control.push(hourControl);
+                    }
+
+                    monthData[zone].push(dayData);
+                }
+            });
+        }
+
+        function setZoomLevel(level) {
+            currentZoomLevel = level;
+
+            // Update buttons
+            document.querySelectorAll('.zoom-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(`zoom-${level}`).classList.add('active');
+
+            // Update view
+            renderView();
+            updateBreadcrumb();
+            updateStats();
+        }
+
+        function renderView() {
+            const container = document.getElementById('view-container');
+
+            switch (currentZoomLevel) {
+                case 'month':
+                    renderMonthView(container);
+                    break;
+                case 'week':
+                    renderWeekView(container);
+                    break;
+                case 'day':
+                    renderDayView(container);
+                    break;
+                case 'hour':
+                    renderHourView(container);
+                    break;
+            }
+        }
+
+        function renderMonthView(container) {
+            let html = '<div class="month-view">';
+
+            // Add day headers
+            const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            dayHeaders.forEach(day => {
+                html += `<div style="font-size: 12px; color: #666; text-align: center; padding: 5px;">${day}</div>`;
+            });
+
+            // Add padding for first day (September 2025 starts on Monday)
+            html += '<div></div>'; // Empty cell for Sunday
+
+            for (let day = 1; day <= 30; day++) {
+                let totalViolations = 0;
+                let avgOccupancy = 0;
+
+                Object.keys(monthData).forEach(zone => {
+                    totalViolations += monthData[zone][day - 1].violations.length;
+
+                    const dayOccupancy = monthData[zone][day - 1].occupancy.flat();
+                    const occupied = dayOccupancy.filter(o => o === true).length;
+                    avgOccupancy += occupied / dayOccupancy.length;
+                });
+
+                avgOccupancy = avgOccupancy / 3;
+
+                html += `
+                    <div class="month-day" onclick="drillToDay(${day})">
+                        <div class="month-day-number">${day}</div>
+                        ${totalViolations > 0 ? `<div class="month-day-violations">${totalViolations}</div>` : ''}
+                        <div class="month-day-heatmap" style="opacity: ${0.3 + avgOccupancy * 0.7}"></div>
+                    </div>
+                `;
+            }
+
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function renderWeekView(container) {
+            const week = currentSelection.week || 1;
+            const startDay = (week - 1) * 7 + 1;
+            const endDay = Math.min(startDay + 6, 30);
+
+            let html = '<div class="week-view">';
+
+            for (let day = startDay; day <= endDay; day++) {
+                html += `
+                    <div class="week-day">
+                        <div class="week-day-header" onclick="drillToDay(${day})">
+                            Sept ${day}
+                        </div>
+                        <div class="week-hourly-grid">
+                `;
+
+                for (let hour = 0; hour < 24; hour++) {
+                    let avgOccupancy = 0;
+                    let avgActive = 0;
+                    let hasViolation = false;
+
+                    Object.keys(monthData).forEach(zone => {
+                        const hourOccupancy = monthData[zone][day - 1].occupancy[hour];
+                        const occupied = hourOccupancy.filter(o => o === true).length;
+                        avgOccupancy += occupied / hourOccupancy.length;
+
+                        const hourControl = monthData[zone][day - 1].control[hour];
+                        const active = hourControl.filter(c => c === 'active').length;
+                        avgActive += active / hourControl.length;
+
+                        if (monthData[zone][day - 1].violations.some(v => v.hour === hour)) {
+                            hasViolation = true;
+                        }
+                    });
+
+                    avgOccupancy = avgOccupancy / 3;
+                    avgActive = avgActive / 3;
+
+                    html += `
+                        <div class="week-hour" onclick="drillToHour(${day}, ${hour})">
+                            <div class="week-hour-label">${hour}:00</div>
+                            <div class="week-hour-data">
+                                <div class="week-data-bar" style="background: ${avgOccupancy > 0.5 ? 'var(--occupied-color)' : 'var(--unoccupied-color)'}; opacity: ${0.3 + avgOccupancy * 0.7}"></div>
+                                <div class="week-data-bar" style="background: ${avgActive > 0.5 ? 'var(--active-color)' : 'var(--standby-color)'}; opacity: ${0.3 + avgActive * 0.7}"></div>
+                                ${hasViolation ? '<div style="width: 3px; background: var(--violation-color)"></div>' : ''}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                html += `
+                        </div>
+                    </div>
+                `;
+            }
+
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function renderDayView(container) {
+            const day = currentSelection.day || 1;
+            let html = '<div class="day-view">';
+
+            Object.keys(monthData).forEach(zone => {
+                html += `
+                    <div class="day-zone">
+                        <div class="day-zone-header">${zone} - September ${day}, 2025</div>
+                        <div class="day-hourly-timeline">
+                `;
+
+                for (let hour = 0; hour < 24; hour++) {
+                    const hourOccupancy = monthData[zone][day - 1].occupancy[hour];
+                    const hourControl = monthData[zone][day - 1].control[hour];
+
+                    const occupiedCount = hourOccupancy.filter(o => o === true).length;
+                    const activeCount = hourControl.filter(c => c === 'active').length;
+
+                    const signalColor = occupiedCount > 60 ? 'var(--occupied-color)' : 'var(--unoccupied-color)';
+                    const responseColor = activeCount > 30 ? 'var(--active-color)' : 'var(--standby-color)';
+
+                    html += `
+                        <div class="day-hour-column" onclick="drillToHour(${day}, ${hour})">
+                            <div class="day-hour-signal" style="background: ${signalColor}; opacity: ${0.3 + (occupiedCount / 120) * 0.7}"></div>
+                            <div class="day-hour-response" style="background: ${responseColor}; opacity: ${0.3 + (activeCount / 60) * 0.7}"></div>
+                            <div class="day-hour-label">${hour}</div>
+                        </div>
+                    `;
+                }
+
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function renderHourView(container) {
+            const day = currentSelection.day || 1;
+            const hour = currentSelection.hour || 0;
+
+            let html = '<div class="hour-view">';
+
+            Object.keys(monthData).forEach(zone => {
+                const hourOccupancy = monthData[zone][day - 1].occupancy[hour];
+                const hourControl = monthData[zone][day - 1].control[hour];
+                const violations = monthData[zone][day - 1].violations.filter(v => v.hour === hour);
+
+                html += `
+                    <div class="hour-zone">
+                        <div class="hour-zone-header">${zone} - Sept ${day}, ${hour}:00-${hour + 1}:00</div>
+                        <div class="hour-detail-grid">
+                            <div class="signal-response-detail">
+                                <div class="signal-timeline">
+                                    <div class="timeline-label">Occupancy (30s)</div>
+                                    <div class="timeline-data">
+                `;
+
+                // Render individual 30-second readings
+                hourOccupancy.forEach((reading, idx) => {
+                    const minute = Math.floor(idx / 2);
+                    const second = (idx % 2) * 30;
+                    const time = `${hour}:${minute.toString().padStart(2, '0')}:${second.toString().padStart(2, '0')}`;
+
+                    if (reading === null) {
+                        html += `<div class="data-point missing" data-time="${time}"></div>`;
+                    } else {
+                        html += `<div class="data-point ${reading ? 'occupied' : 'unoccupied'}" data-time="${time}"></div>`;
+                    }
+                });
+
+                html += `
+                                    </div>
+                                </div>
+                                <div class="response-timeline">
+                                    <div class="timeline-label">Control (1m)</div>
+                                    <div class="timeline-data">
+                `;
+
+                // Render individual 1-minute readings
+                hourControl.forEach((reading, idx) => {
+                    const time = `${hour}:${idx.toString().padStart(2, '0')}`;
+
+                    if (reading === null) {
+                        html += `<div class="data-point missing" data-time="${time}"></div>`;
+                    } else {
+                        html += `<div class="data-point ${reading}" data-time="${time}"></div>`;
+                    }
+                });
+
+                // Add violation markers
+                violations.forEach(v => {
+                    const position = (v.minute / 60) * 100;
+                    html += `<div class="violation-marker" style="left: ${position}%"></div>`;
+                });
+
+                html += `
+                                    </div>
+                                </div>
+                                <div class="minute-grid">
+                `;
+
+                // Add minute markers
+                for (let m = 0; m < 60; m += 5) {
+                    html += `<div class="minute-marker" style="grid-column: span 5">${m}'</div>`;
+                }
+
+                html += `
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function drillToDay(day) {
+            currentSelection.day = day;
+            currentSelection.week = Math.ceil(day / 7);
+            setZoomLevel('day');
+        }
+
+        function drillToHour(day, hour) {
+            currentSelection.day = day;
+            currentSelection.hour = hour;
+            currentSelection.week = Math.ceil(day / 7);
+            setZoomLevel('hour');
+        }
+
+        function updateBreadcrumb() {
+            const breadcrumb = document.getElementById('breadcrumb');
+            let html = '<span class="breadcrumb-item" onclick="setZoomLevel(\'month\')">September 2025</span>';
+
+            if (currentZoomLevel !== 'month') {
+                html += '<span class="breadcrumb-separator">›</span>';
+
+                if (currentSelection.week) {
+                    html += `<span class="breadcrumb-item" onclick="currentSelection.week=${currentSelection.week}; setZoomLevel('week')">Week ${currentSelection.week}</span>`;
+                }
+
+                if (currentSelection.day && (currentZoomLevel === 'day' || currentZoomLevel === 'hour')) {
+                    html += '<span class="breadcrumb-separator">›</span>';
+                    html += `<span class="breadcrumb-item" onclick="drillToDay(${currentSelection.day})">Sept ${currentSelection.day}</span>`;
+                }
+
+                if (currentSelection.hour !== null && currentZoomLevel === 'hour') {
+                    html += '<span class="breadcrumb-separator">›</span>';
+                    html += `<span class="breadcrumb-current">${currentSelection.hour}:00</span>`;
+                }
+            }
+
+            breadcrumb.innerHTML = html;
+        }
+
+        function updateStats() {
+            document.getElementById('current-view').textContent =
+                currentZoomLevel.charAt(0).toUpperCase() + currentZoomLevel.slice(1);
+
+            // Calculate violations for current view
+            let violations = 0;
+            let dataPoints = 0;
+            let missingPoints = 0;
+
+            if (currentZoomLevel === 'month') {
+                Object.keys(monthData).forEach(zone => {
+                    monthData[zone].forEach(day => {
+                        violations += day.violations.length;
+                        const allData = day.occupancy.flat().concat(day.control.flat());
+                        dataPoints += allData.length;
+                        missingPoints += allData.filter(d => d === null).length;
+                    });
+                });
+            }
+
+            document.getElementById('violation-count').textContent = violations;
+            document.getElementById('data-quality').textContent =
+                Math.round((1 - missingPoints / dataPoints) * 100) + '%';
+        }
+
+        // Initialize
+        generateMonthData();
+        renderView();
+        updateStats();
+    </script>
+</body>
+</html>

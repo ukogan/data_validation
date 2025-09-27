@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tour Demo Test</title>
+</head>
+<body>
+    <h1>Tour Demo Test</h1>
+    <div id="output"></div>
+
+    <script>
+        // Test the tour demo mock data structure
+        const TOUR_MODE = true;
+        const currentTourScenario = 'high-performance';
+
+        // Mock data for tour scenarios (simplified version for testing)
+        const TOUR_SCENARIOS = {
+            'high-performance': {
+                name: 'FAKE High Performance Building',
+                dashboard: {
+                    standby_mode_percent: 65.4,
+                    airflow_reduction_percent: 49.0,
+                    correlation_health: { good: 11, poor: 1 },
+                    data_quality_percent: 98.7,
+                    bms_quality_percent: 99.2,
+                    sensor_quality_percent: 98.1
+                },
+                sensors: [
+                    {
+                        sensor_id: '115-4-01 presence',
+                        zone_id: 'BV200',
+                        sensor: '115-4-01 presence',
+                        zone: 'BV200',
+                        occupancy_ratio: 0.18,
+                        zone_standby_percent: 78.2,
+                        airflow_reduction_percent: 58.7,
+                        correlation_score: 0.95,
+                        total_deviations_count: 2,
+                        total_mode_changes: 47,
+                        es_count: 1,
+                        ls_count: 1,
+                        eo_count: 0,
+                        lo_count: 0
+                    }
+                ]
+            }
+        };
+
+        function runTests() {
+            const output = document.getElementById('output');
+            let results = '<h2>Test Results:</h2>';
+
+            // Test 1: Check if TOUR_MODE is set
+            if (TOUR_MODE) {
+                results += '<p>✅ TOUR_MODE is enabled</p>';
+            } else {
+                results += '<p>❌ TOUR_MODE is not enabled</p>';
+            }
+
+            // Test 2: Check scenario structure
+            const scenario = TOUR_SCENARIOS[currentTourScenario];
+            if (scenario && scenario.dashboard && scenario.sensors) {
+                results += '<p>✅ Scenario structure is valid</p>';
+            } else {
+                results += '<p>❌ Scenario structure is invalid</p>';
+            }
+
+            // Test 3: Check dashboard metrics
+            const metrics = scenario.dashboard;
+            if (metrics.standby_mode_percent && metrics.airflow_reduction_percent && metrics.correlation_health) {
+                results += '<p>✅ Dashboard metrics are complete</p>';
+            } else {
+                results += '<p>❌ Dashboard metrics are incomplete</p>';
+            }
+
+            // Test 4: Check sensor data
+            const sensors = scenario.sensors;
+            if (sensors.length > 0 && sensors[0].sensor_id && sensors[0].zone_id) {
+                results += '<p>✅ Sensor data is valid</p>';
+            } else {
+                results += '<p>❌ Sensor data is invalid</p>';
+            }
+
+            results += `<h3>Sample Data:</h3>`;
+            results += `<p><strong>Scenario:</strong> ${scenario.name}</p>`;
+            results += `<p><strong>Standby Mode:</strong> ${metrics.standby_mode_percent}%</p>`;
+            results += `<p><strong>Airflow Reduction:</strong> ${metrics.airflow_reduction_percent}%</p>`;
+            results += `<p><strong>Sensors:</strong> ${sensors.length}</p>`;
+
+            output.innerHTML = results;
+        }
+
+        // Run tests when page loads
+        window.onload = runTests;
+    </script>
+</body>
+</html>

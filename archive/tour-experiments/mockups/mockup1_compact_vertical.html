@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ODCV Timeline - Mockup 1: Compact Vertical (Safe Density)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 14px; /* CHANGE A: Reduced from 16px */
+            background: #f5f7fa;
+            color: #2d3748;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 16px; /* CHANGE B: Reduced from 25px */
+            position: relative;
+        }
+
+        /* Annotation System - HIGHLY VISIBLE */
+        .annotation {
+            position: absolute;
+            border: 3px dashed;
+            pointer-events: none;
+            z-index: 1000;
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 20px currentColor;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 0.7;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.02);
+            }
+        }
+
+        .annotation-A {
+            border-color: #ff0000;
+            background: rgba(255,0,0,0.2);
+            box-shadow: 0 0 30px rgba(255,0,0,0.5);
+        }
+        .annotation-B {
+            border-color: #0066ff;
+            background: rgba(0,102,255,0.2);
+            box-shadow: 0 0 30px rgba(0,102,255,0.5);
+        }
+        .annotation-C {
+            border-color: #00cc00;
+            background: rgba(0,204,0,0.2);
+            box-shadow: 0 0 30px rgba(0,204,0,0.5);
+        }
+        .annotation-D {
+            border-color: #ff6600;
+            background: rgba(255,102,0,0.2);
+            box-shadow: 0 0 30px rgba(255,102,0,0.5);
+        }
+        .annotation-E {
+            border-color: #9900cc;
+            background: rgba(153,0,204,0.2);
+            box-shadow: 0 0 30px rgba(153,0,204,0.5);
+        }
+        .annotation-F {
+            border-color: #cc0099;
+            background: rgba(204,0,153,0.2);
+            box-shadow: 0 0 30px rgba(204,0,153,0.5);
+        }
+
+        .badge {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 1001;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+            pointer-events: all;
+            border: 3px solid white;
+            animation: badgePulse 2s infinite;
+        }
+
+        @keyframes badgePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .badge-A { background: #ff0000; top: -20px; left: -20px; }
+        .badge-B { background: #0066ff; top: -20px; right: -20px; }
+        .badge-C { background: #00cc00; top: -20px; left: 50%; transform: translateX(-50%); }
+        .badge-D { background: #ff6600; bottom: -20px; left: -20px; }
+        .badge-E { background: #9900cc; top: 50%; left: -20px; transform: translateY(-50%); }
+        .badge-F { background: #cc0099; top: -20px; right: -20px; }
+
+        .badge:hover {
+            transform: scale(1.2);
+            z-index: 1003;
+        }
+
+        .badge:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.95);
+            color: white;
+            padding: 12px 18px;
+            border-radius: 8px;
+            white-space: nowrap;
+            font-size: 14px;
+            font-weight: normal;
+            z-index: 1004;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+            border: 2px solid currentColor;
+        }
+
+        /* Floating Legend Panel - HIGHLY VISIBLE */
+        .legend-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border: 4px solid #1a202c;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 12px 48px rgba(0,0,0,0.3);
+            z-index: 2000;
+            max-width: 400px;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .legend-panel h3 {
+            margin-bottom: 20px;
+            font-size: 20px;
+            color: #1a202c;
+            border-bottom: 3px solid #1a202c;
+            padding-bottom: 12px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 16px;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .legend-item:hover {
+            background: #f0f4f8;
+            border-color: currentColor;
+            transform: translateX(8px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .legend-marker {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+            margin-right: 14px;
+            flex-shrink: 0;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+            border: 2px solid white;
+        }
+
+        .legend-text {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .legend-text strong {
+            display: block;
+            font-size: 15px;
+            margin-bottom: 3px;
+            color: #1a202c;
+        }
+
+        /* Header */
+        header {
+            background: white;
+            padding: 16px 20px; /* Reduced vertical padding */
+            margin-bottom: 12px; /* CHANGE D: Reduced from 20px */
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        header h1 {
+            font-size: 24px; /* CHANGE C: Consistent with other titles */
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            color: #718096;
+            margin-top: 4px;
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 12px; /* CHANGE D: Reduced from 20px */
+            margin-bottom: 12px; /* CHANGE D: Reduced from 20px */
+            position: relative;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .metric-card h3 {
+            font-size: 13px;
+            color: #718096;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 4px;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: #a0aec0;
+        }
+
+        /* Timeline Section */
+        .timeline-section {
+            background: white;
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .timeline-container {
+            height: 100px; /* CHANGE E: Reduced from 120px */
+            background: linear-gradient(to bottom, #f7fafc, #edf2f7);
+            border: 2px solid #e2e8f0;
+            border-radius: 4px;
+            position: relative;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Analysis Panels */
+        .analysis-panels {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+            position: relative;
+        }
+
+        .panel {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .panel h2 {
+            font-size: 18px; /* CHANGE C: Consistent typography */
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #2d3748;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .stat-label {
+            color: #718096;
+            font-size: 13px;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 13px;
+        }
+
+        /* Collapsible Help Section */
+        .help-section {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .help-header {
+            padding: 12px 16px;
+            background: linear-gradient(to right, #f7fafc, #edf2f7);
+            border-bottom: 2px solid #e2e8f0;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+
+        .help-header h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .collapse-icon {
+            transition: transform 0.3s;
+            fill: #718096;
+        }
+
+        .help-section.collapsed .collapse-icon {
+            transform: rotate(180deg);
+        }
+
+        .help-content {
+            padding: 16px;
+            max-height: 300px;
+            transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.3s ease;
+            overflow: hidden;
+            opacity: 1;
+        }
+
+        .help-section.collapsed .help-content {
+            max-height: 0;
+            padding: 0 16px;
+            opacity: 0;
+        }
+
+        .highlight-flash {
+            animation: flashHighlight 1s 3;
+        }
+
+        @keyframes flashHighlight {
+            0%, 100% { background: transparent; }
+            50% { background: rgba(255, 255, 0, 0.4); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating Legend Panel with all changes -->
+    <div class="legend-panel">
+        <h3>🎯 Compact Vertical Design Changes</h3>
+
+        <div class="legend-item" onclick="highlightChange('A')" style="border-color: #ff0000">
+            <div class="legend-marker" style="background: #ff0000">A</div>
+            <div class="legend-text">
+                <strong>Font Size Reduction</strong>
+                Base font reduced from 16px to 14px for 12.5% higher information density
+            </div>
+        </div>
+
+        <div class="legend-item" onclick="highlightChange('B')" style="border-color: #0066ff">
+            <div class="legend-marker" style="background: #0066ff">B</div>
+            <div class="legend-text">
+                <strong>Container Padding</strong>
+                Reduced from 25px to 16px (36% reduction) for more content area
+            </div>
+        </div>
+
+        <div class="legend-item" onclick="highlightChange('C')" style="border-color: #00cc00">
+            <div class="legend-marker" style="background: #00cc00">C</div>
+            <div class="legend-text">
+                <strong>Typography Consistency</strong>
+                All section titles unified at 18px font size (was 16-24px range)
+            </div>
+        </div>
+
+        <div class="legend-item" onclick="highlightChange('D')" style="border-color: #ff6600">
+            <div class="legend-marker" style="background: #ff6600">D</div>
+            <div class="legend-text">
+                <strong>Vertical Spacing</strong>
+                Section gaps reduced from 20px to 12px (40% space savings)
+            </div>
+        </div>
+
+        <div class="legend-item" onclick="highlightChange('E')" style="border-color: #9900cc">
+            <div class="legend-marker" style="background: #9900cc">E</div>
+            <div class="legend-text">
+                <strong>Timeline Height</strong>
+                Compressed from 120px to 100px (16.7% reduction)
+            </div>
+        </div>
+
+        <div class="legend-item" onclick="highlightChange('F')" style="border-color: #cc0099">
+            <div class="legend-marker" style="background: #cc0099">F</div>
+            <div class="legend-text">
+                <strong>Collapsible Help</strong>
+                Help section can collapse to save ~150px vertical space
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Container Padding Annotation B -->
+        <div class="annotation annotation-B" style="top: 0; left: 0; right: 0; height: 100px; pointer-events: none;">
+            <div class="badge badge-B" data-tooltip="Container padding: 25px → 16px (36% reduction)">B</div>
+        </div>
+
+        <!-- Header with Typography Consistency -->
+        <header>
+            <h1>ODCV Timeline Viewer - Compact Vertical Layout</h1>
+            <div class="subtitle">Optimized for information density with safe 14px base font</div>
+        </header>
+
+        <!-- Dashboard Grid with Spacing Annotations -->
+        <div class="dashboard-grid">
+            <!-- Vertical Spacing Annotation D -->
+            <div class="annotation annotation-D" style="top: -10px; left: -10px; right: -10px; bottom: -10px;">
+                <div class="badge badge-D" data-tooltip="Section gaps: 20px → 12px (40% reduction)">D</div>
+            </div>
+
+            <div class="metric-card">
+                <h3>Total Sensors</h3>
+                <div class="metric-value">3</div>
+                <div class="metric-label">Active monitoring points</div>
+            </div>
+
+            <div class="metric-card">
+                <h3>Time Range</h3>
+                <div class="metric-value">22h</div>
+                <div class="metric-label">Analysis window</div>
+            </div>
+
+            <div class="metric-card">
+                <h3>Violations</h3>
+                <div class="metric-value" style="color: #f56565">47</div>
+                <div class="metric-label">Control errors detected</div>
+            </div>
+
+            <div class="metric-card">
+                <!-- Font Size Annotation A -->
+                <div class="annotation annotation-A" style="inset: -5px;">
+                    <div class="badge badge-A" data-tooltip="Font size: 16px → 14px base (12.5% reduction)">A</div>
+                </div>
+                <h3>Efficiency</h3>
+                <div class="metric-value" style="color: #48bb78">78%</div>
+                <div class="metric-label">System performance</div>
+            </div>
+        </div>
+
+        <!-- Timeline Section with Height Annotation -->
+        <div class="timeline-section">
+            <h2>Zone BV200 Timeline - Conference Room A</h2>
+            <div class="timeline-container">
+                <!-- Timeline Height Annotation E -->
+                <div class="annotation annotation-E" style="inset: -5px;">
+                    <div class="badge badge-E" data-tooltip="Timeline height: 120px → 100px (16.7% reduction)">E</div>
+                </div>
+                <div style="text-align: center; color: #718096; font-size: 14px">
+                    Interactive Timeline Visualization<br>
+                    <span style="font-size: 12px; font-weight: bold">Height: 100px (Compact View)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analysis Panels with Typography Annotation -->
+        <div class="analysis-panels">
+            <div class="panel">
+                <!-- Typography Consistency Annotation C -->
+                <div class="annotation annotation-C" style="top: -5px; left: -5px; right: -5px; height: 50px;">
+                    <div class="badge badge-C" data-tooltip="Typography: Consistent 18px headers (was 16-24px)">C</div>
+                </div>
+                <h2>Occupancy Time Analysis</h2>
+                <div class="stat-row">
+                    <span class="stat-label">Total Occupied</span>
+                    <span class="stat-value">14h 23m</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Total Unoccupied</span>
+                    <span class="stat-value">7h 37m</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Occupancy Rate</span>
+                    <span class="stat-value">65.4%</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Peak Hour</span>
+                    <span class="stat-value">14:00-15:00</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Energy Saved</span>
+                    <span class="stat-value" style="color: #48bb78">$127.50</span>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>Continuous Commissioning</h2>
+                <div class="stat-row">
+                    <span class="stat-label">Early Standby</span>
+                    <span class="stat-value" style="color: #f56565">23 violations</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Early Occupied</span>
+                    <span class="stat-value" style="color: #ed8936">14 violations</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Missed Responses</span>
+                    <span class="stat-value" style="color: #ed8936">10 events</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Correct Operations</span>
+                    <span class="stat-value" style="color: #48bb78">156 transitions</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Compliance Rate</span>
+                    <span class="stat-value" style="color: #48bb78">76.8%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Collapsible Help Section with Annotation -->
+        <div class="help-section" id="helpSection">
+            <!-- Collapsible Help Annotation F -->
+            <div class="annotation annotation-F" style="top: -5px; left: -5px; right: -5px; height: 55px;">
+                <div class="badge badge-F" data-tooltip="Collapsible help: Saves ~150px when collapsed">F</div>
+            </div>
+            <div class="help-header" onclick="toggleHelp()">
+                <h3>📘 Help & Documentation (Click to Toggle)</h3>
+                <svg class="collapse-icon" width="20" height="20" viewBox="0 0 20 20">
+                    <path d="M5 8l5 5 5-5z"/>
+                </svg>
+            </div>
+            <div class="help-content">
+                <h4 style="margin-bottom: 8px; color: #2d3748">Compact Layout Benefits:</h4>
+                <ul style="padding-left: 20px; font-size: 13px; line-height: 1.8; color: #4a5568">
+                    <li><strong>12.5% more content:</strong> 14px base font maintains readability</li>
+                    <li><strong>36% padding reduction:</strong> More space for data visualization</li>
+                    <li><strong>40% gap reduction:</strong> Tighter vertical rhythm</li>
+                    <li><strong>Consistent typography:</strong> Improved visual hierarchy</li>
+                    <li><strong>Collapsible sections:</strong> User-controlled density</li>
+                </ul>
+                <p style="margin-top: 12px; font-size: 13px; color: #718096">
+                    This compact vertical layout allows viewing 25-30% more information on screen while maintaining professional appearance and readability standards.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleHelp() {
+            const helpSection = document.getElementById('helpSection');
+            helpSection.classList.toggle('collapsed');
+        }
+
+        function highlightChange(letter) {
+            // Remove any existing highlights
+            document.querySelectorAll('.highlight-flash').forEach(el => {
+                el.classList.remove('highlight-flash');
+            });
+
+            // Flash the corresponding annotation
+            const annotations = document.querySelectorAll(`.annotation-${letter}`);
+            annotations.forEach(annotation => {
+                // Reset animation
+                annotation.style.animation = 'none';
+                annotation.offsetHeight; // Trigger reflow
+                annotation.style.animation = 'pulse 0.8s 5';
+
+                // Make it more visible temporarily
+                const originalBorder = annotation.style.borderWidth;
+                annotation.style.borderWidth = '5px';
+                setTimeout(() => {
+                    annotation.style.borderWidth = originalBorder;
+                }, 4000);
+            });
+
+            // Flash the parent element
+            if (annotations.length > 0) {
+                const parent = annotations[0].parentElement;
+                if (parent) {
+                    parent.classList.add('highlight-flash');
+                }
+            }
+
+            // Scroll to the first annotation
+            if (annotations.length > 0) {
+                annotations[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        // Initialize with help expanded to show the collapsible feature
+        document.addEventListener('DOMContentLoaded', () => {
+            // Auto-collapse after 3 seconds to demonstrate
+            setTimeout(() => {
+                document.getElementById('helpSection').classList.add('collapsed');
+            }, 3000);
+        });
+    </script>
+</body>
+</html>

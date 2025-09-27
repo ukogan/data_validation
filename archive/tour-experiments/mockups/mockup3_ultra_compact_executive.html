@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ODCV Dashboard - Mockup 3: Ultra-Compact Executive</title>
+    <style>
+        /* CHANGE A: Minimal base styles with 12px font and zero body margin */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            font-size: 12px;
+            line-height: 1.3;
+        }
+
+        /* CHANGE B: Container with minimal padding (8px) */
+        .container {
+            max-width: 100%;
+            margin: 0;
+            background: white;
+            padding: 8px;
+        }
+
+        /* CHANGE C: Ultra-compact header integrated with metrics */
+        .integrated-header {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a8e 100%);
+            color: white;
+            padding: 8px 12px;
+            margin: -8px -8px 8px -8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            flex: 1;
+        }
+
+        .header-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .header-subtitle {
+            font-size: 0.75em;
+            opacity: 0.85;
+        }
+
+        /* CHANGE D: Executive metrics integrated into header */
+        .header-metrics {
+            display: flex;
+            gap: 15px;
+        }
+
+        .header-metric {
+            text-align: center;
+            padding: 0 10px;
+            border-left: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .header-metric:first-child {
+            border-left: none;
+        }
+
+        .metric-mini-label {
+            font-size: 0.65em;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-mini-value {
+            font-size: 1.1em;
+            font-weight: 700;
+        }
+
+        /* CHANGE E: Single-line control strip with everything inline */
+        .control-strip {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8f9fa;
+            padding: 4px 8px;
+            border: 1px solid #dee2e6;
+            border-radius: 3px;
+            margin-bottom: 8px;
+            font-size: 0.75em;
+        }
+
+        .legend-micro {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        /* CHANGE F: Dense card layout with minimal spacing */
+        .sensor-card {
+            border: 1px solid #dee2e6;
+            border-radius: 3px;
+            margin-bottom: 6px;
+            background: white;
+            overflow: hidden;
+        }
+
+        /* CHANGE G: Card header with inline metrics */
+        .card-header {
+            background: #f8f9fa;
+            padding: 4px 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .card-title {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .card-metrics {
+            display: flex;
+            gap: 10px;
+            font-size: 0.75em;
+        }
+
+        .inline-metric {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .metric-label-tiny {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .metric-value-tiny {
+            font-weight: 700;
+        }
+
+        /* CHANGE H: Ultra-compact body with 3-column layout */
+        .card-body {
+            display: grid;
+            grid-template-columns: 140px 140px 1fr;
+            gap: 8px;
+            padding: 6px;
+        }
+
+        /* CHANGE I: Micro analytics panels */
+        .micro-panel {
+            background: #f8f9fa;
+            padding: 4px;
+            border-radius: 2px;
+        }
+
+        .micro-title {
+            font-size: 0.7em;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 3px;
+        }
+
+        /* CHANGE J: Inline bar charts with embedded values */
+        .inline-bar {
+            display: flex;
+            height: 14px;
+            border-radius: 7px;
+            overflow: hidden;
+            border: 1px solid #dee2e6;
+            margin-bottom: 2px;
+            font-size: 0.6em;
+        }
+
+        .bar-part {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        /* CHANGE K: Micro timeline visualization */
+        .micro-timeline {
+            position: relative;
+            height: 40px;
+            background: #fafafa;
+            border: 1px solid #ccc;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .timeline-micro-track {
+            position: absolute;
+            height: 18px;
+        }
+
+        .timeline-label-micro {
+            position: absolute;
+            left: 2px;
+            font-size: 0.6em;
+            color: #6c757d;
+            top: 1px;
+        }
+
+        /* CHANGE L: Inline violation counters */
+        .violation-inline {
+            display: flex;
+            justify-content: space-around;
+            background: #ffe8e8;
+            border-radius: 2px;
+            padding: 2px 4px;
+            font-size: 0.65em;
+            margin-top: 2px;
+        }
+
+        .violation-count {
+            color: #721c24;
+            font-weight: 600;
+        }
+
+        /* CHANGE M: Sparkline for trends */
+        .sparkline {
+            height: 20px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 2px;
+            position: relative;
+            overflow: hidden;
+            margin-top: 2px;
+        }
+
+        .spark-bar {
+            position: absolute;
+            bottom: 0;
+            width: 2px;
+            background: #007bff;
+            opacity: 0.6;
+        }
+
+        /* CHANGE N: Dense summary footer */
+        .summary-footer {
+            background: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            margin: 8px -8px -8px -8px;
+            padding: 6px 12px;
+            display: flex;
+            justify-content: space-around;
+            font-size: 0.75em;
+        }
+
+        .footer-stat {
+            text-align: center;
+        }
+
+        .footer-label {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .footer-value {
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        /* CHANGE O: Tabbed view for sensor groups */
+        .sensor-tabs {
+            display: flex;
+            gap: 2px;
+            margin-bottom: 8px;
+            background: #dee2e6;
+            padding: 2px;
+            border-radius: 3px;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 4px 8px;
+            background: white;
+            border: none;
+            border-radius: 2px;
+            cursor: pointer;
+            font-size: 0.8em;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .tab-button.active {
+            background: #007bff;
+            color: white;
+        }
+
+        /* CHANGE P: Hover tooltips for detail access */
+        .hover-detail {
+            position: relative;
+            cursor: help;
+        }
+
+        .hover-detail:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 0.7em;
+            white-space: nowrap;
+            z-index: 1000;
+        }
+
+        /* Colors */
+        .sensor-occupied { background: #e74c3c; }
+        .sensor-unoccupied { background: #3498db; }
+        .zone-occupied { background: #f1948a; }
+        .zone-standby { background: #85c1e9; }
+        .violation-marker { background: #8e44ad; }
+        .perf-good { color: #28a745; }
+        .perf-fair { color: #ffc107; }
+        .perf-poor { color: #dc3545; }
+    </style>
+</head>
+<body>
+    <!-- CHANGE B: Minimal padding container -->
+    <div class="container">
+        <!-- CHANGE C & D: Integrated header with executive metrics -->
+        <div class="integrated-header">
+            <div class="header-left">
+                <h1 class="header-title">ODCV Dashboard - Ultra-Compact Executive View</h1>
+                <div class="header-subtitle">22-Hour Analysis | 3 Sensors | Sep 15-16, 2025</div>
+            </div>
+            <div class="header-metrics">
+                <div class="header-metric">
+                    <div class="metric-mini-label">Efficiency</div>
+                    <div class="metric-mini-value perf-good">71%</div>
+                </div>
+                <div class="header-metric">
+                    <div class="metric-mini-label">Response</div>
+                    <div class="metric-mini-value perf-fair">83%</div>
+                </div>
+                <div class="header-metric">
+                    <div class="metric-mini-label">Compliance</div>
+                    <div class="metric-mini-value perf-poor">76%</div>
+                </div>
+                <div class="header-metric">
+                    <div class="metric-mini-label">Violations</div>
+                    <div class="metric-mini-value">113</div>
+                </div>
+                <div class="header-metric">
+                    <div class="metric-mini-label">Saved</div>
+                    <div class="metric-mini-value perf-good">$353</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CHANGE E: Single control strip -->
+        <div class="control-strip">
+            <div class="legend-micro">
+                <span class="legend-dot sensor-occupied"></span>Occ
+                <span class="legend-dot sensor-unoccupied"></span>Unocc
+                <span class="legend-dot zone-occupied"></span>Active
+                <span class="legend-dot zone-standby"></span>Standby
+                <span class="legend-dot violation-marker"></span>Viol
+            </div>
+            <div>
+                <select style="font-size: 0.75em; padding: 1px 4px;">
+                    <option>All Sensors</option>
+                    <option>Critical Only</option>
+                    <option>Violations</option>
+                </select>
+                <button style="font-size: 0.75em; padding: 1px 6px; margin-left: 4px;">Export</button>
+            </div>
+        </div>
+
+        <!-- CHANGE O: Optional tabbed view -->
+        <div class="sensor-tabs">
+            <button class="tab-button active">All Sensors</button>
+            <button class="tab-button">By Building</button>
+            <button class="tab-button">By Performance</button>
+            <button class="tab-button">Violations Only</button>
+        </div>
+
+        <!-- CHANGE F: Dense sensor cards -->
+        <!-- Sensor 1 -->
+        <div class="sensor-card">
+            <!-- CHANGE G: Header with inline metrics -->
+            <div class="card-header">
+                <div class="card-title">115-4-01 / BV200</div>
+                <div class="card-metrics">
+                    <div class="inline-metric">
+                        <span class="metric-label-tiny">Eff:</span>
+                        <span class="metric-value-tiny perf-good">83%</span>
+                    </div>
+                    <div class="inline-metric">
+                        <span class="metric-label-tiny">Comp:</span>
+                        <span class="metric-value-tiny perf-poor">76%</span>
+                    </div>
+                    <div class="inline-metric">
+                        <span class="metric-label-tiny">Viol:</span>
+                        <span class="metric-value-tiny" style="color: #8e44ad;">47</span>
+                    </div>
+                    <div class="inline-metric hover-detail" data-tooltip="Energy saved in last 22 hours">
+                        <span class="metric-label-tiny">Save:</span>
+                        <span class="metric-value-tiny perf-good">$127</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CHANGE H: 3-column ultra-compact body -->
+            <div class="card-body">
+                <!-- CHANGE I: Micro occupancy panel -->
+                <div class="micro-panel">
+                    <div class="micro-title">Occupancy</div>
+                    <!-- CHANGE J: Inline bars -->
+                    <div class="inline-bar">
+                        <div class="bar-part sensor-occupied" style="width: 29%;">29%</div>
+                        <div class="bar-part sensor-unoccupied" style="width: 71%;">71%</div>
+                    </div>
+                    <div class="inline-bar">
+                        <div class="bar-part zone-occupied" style="width: 17%;">17%</div>
+                        <div class="bar-part zone-standby" style="width: 83%;">83%</div>
+                    </div>
+                    <!-- CHANGE M: Sparkline trend -->
+                    <div class="sparkline">
+                        <div class="spark-bar" style="left: 0%; height: 40%;"></div>
+                        <div class="spark-bar" style="left: 5%; height: 60%;"></div>
+                        <div class="spark-bar" style="left: 10%; height: 45%;"></div>
+                        <div class="spark-bar" style="left: 15%; height: 70%;"></div>
+                        <div class="spark-bar" style="left: 20%; height: 30%;"></div>
+                        <div class="spark-bar" style="left: 25%; height: 55%;"></div>
+                        <div class="spark-bar" style="left: 30%; height: 65%;"></div>
+                        <div class="spark-bar" style="left: 35%; height: 50%;"></div>
+                        <div class="spark-bar" style="left: 40%; height: 75%;"></div>
+                        <div class="spark-bar" style="left: 45%; height: 40%;"></div>
+                        <div class="spark-bar" style="left: 50%; height: 60%;"></div>
+                        <div class="spark-bar" style="left: 55%; height: 35%;"></div>
+                        <div class="spark-bar" style="left: 60%; height: 80%;"></div>
+                        <div class="spark-bar" style="left: 65%; height: 45%;"></div>
+                        <div class="spark-bar" style="left: 70%; height: 55%;"></div>
+                        <div class="spark-bar" style="left: 75%; height: 70%;"></div>
+                        <div class="spark-bar" style="left: 80%; height: 30%;"></div>
+                        <div class="spark-bar" style="left: 85%; height: 65%;"></div>
+                        <div class="spark-bar" style="left: 90%; height: 50%;"></div>
+                        <div class="spark-bar" style="left: 95%; height: 40%;"></div>
+                    </div>
+                </div>
+
+                <!-- CHANGE I: Micro compliance panel -->
+                <div class="micro-panel">
+                    <div class="micro-title">Compliance</div>
+                    <div class="inline-bar">
+                        <div class="bar-part perf-good" style="width: 76%;">76%</div>
+                        <div class="bar-part perf-poor" style="width: 24%;">24%</div>
+                    </div>
+                    <!-- CHANGE L: Inline violations -->
+                    <div class="violation-inline">
+                        <span>Early-S: <span class="violation-count">23</span></span>
+                        <span>Early-A: <span class="violation-count">24</span></span>
+                    </div>
+                    <div style="font-size: 0.6em; color: #6c757d; margin-top: 2px;">
+                        Last: 14:32:15
+                    </div>
+                </div>
+
+                <!-- CHANGE K: Micro timeline -->
+                <div class="micro-timeline">
+                    <div class="timeline-micro-track" style="top: 2px;">
+                        <span class="timeline-label-micro">S</span>
+                        <!-- Sensor track visualization -->
+                    </div>
+                    <div class="timeline-micro-track" style="top: 21px;">
+                        <span class="timeline-label-micro">Z</span>
+                        <!-- Zone track visualization -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sensor 2 -->
+        <div class="sensor-card">
+            <div class="card-header">
+                <div class="card-title">115-4-06 / BV201</div>
+                <div class="card-metrics">
+                    <div class="inline-metric">
+                        <span class="metric-label-tiny">Eff:</span>
+                        <span class="metric-value-tiny perf-good">78%</span>
+                    </div>
+                    <div class="inline-metric">
+                        <span class="metric-label-tiny">Comp:</span>
+                        <span class="metric-value-tiny perf-fair">82%</span>
+                    </div>
+                    <div class="inline-metric">
+                        <span class="metric-label-tiny">Viol:</span>
+                        <span class="metric-value-tiny" style="color: #8e44ad;">39</span>
+                    </div>
+                    <div class="inline-metric hover-detail" data-tooltip="Energy saved in last 22 hours">
+                        <span class="metric-label-tiny">Save:</span>
+                        <span class="metric-value-tiny perf-good">$118</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div class="micro-panel">
+                    <div class="micro-title">Occupancy</div>
+                    <div class="inline-bar">
+                        <div class="bar-part sensor-occupied" style="width: 35%;">35%</div>
+                        <div class="bar-part sensor-unoccupied" style="width: 65%;">65%</div>
+                    </div>
+                    <div class="inline-bar">
+                        <div class="bar-part zone-occupied" style="width: 22%;">22%</div>
+                        <div class="bar-part zone-standby" style="width: 78%;">78%</div>
+                    </div>
+                    <div class="sparkline">
+                        <div class="spark-bar" style="left: 0%; height: 50%;"></div>
+                        <div class="spark-bar" style="left: 5%; height: 70%;"></div>
+                        <div class="spark-bar" style="left: 10%; height: 35%;"></div>
+                        <div class="spark-bar" style="left: 15%; height: 80%;"></div>
+                        <div class="spark-bar" style="left: 20%; height: 45%;"></div>
+                        <div class="spark-bar" style="left: 25%; height: 60%;"></div>
+                        <div class="spark-bar" style="left: 30%; height: 75%;"></div>
+                        <div class="spark-bar" style="left: 35%; height: 40%;"></div>
+                        <div class="spark-bar" style="left: 40%; height: 85%;"></div>
+                        <div class="spark-bar" style="left: 45%; height: 30%;"></div>
+                        <div class="spark-bar" style="left: 50%; height: 65%;"></div>
+                        <div class="spark-bar" style="left: 55%; height: 55%;"></div>
+                        <div class="spark-bar" style="left: 60%; height: 70%;"></div>
+                        <div class="spark-bar" style="left: 65%; height: 35%;"></div>
+                        <div class="spark-bar" style="left: 70%; height: 60%;"></div>
+                        <div class="spark-bar" style="left: 75%; height: 80%;"></div>
+                        <div class="spark-bar" style="left: 80%; height: 40%;"></div>
+                        <div class="spark-bar" style="left: 85%; height: 75%;"></div>
+                        <div class="spark-bar" style="left: 90%; height: 45%;"></div>
+                        <div class="spark-bar" style="left: 95%; height: 50%;"></div>
+                    </div>
+                </div>
+
+                <div class="micro-panel">
+                    <div class="micro-title">Compliance</div>
+                    <div class="inline-bar">
+                        <div class="bar-part perf-good" style="width: 82%;">82%</div>
+                        <div class="bar-part perf-poor" style="width: 18%;">18%</div>
+                    </div>
+                    <div class="violation-inline">
+                        <span>Early-S: <span class="violation-count">18</span></span>
+                        <span>Early-A: <span class="violation-count">21</span></span>
+                    </div>
+                    <div style="font-size: 0.6em; color: #6c757d; margin-top: 2px;">
+                        Last: 13:45:22
+                    </div>
+                </div>
+
+                <div class="micro-timeline">
+                    <div class="timeline-micro-track" style="top: 2px;">
+                        <span class="timeline-label-micro">S</span>
+                    </div>
+                    <div class="timeline-micro-track" style="top: 21px;">
+                        <span class="timeline-label-micro">Z</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sensor 3 -->
+        <div class="sensor-card">
+            <div class="card-header">
+                <div class="card-title">115-4-09 / BV202</div>
+                <div class="card-metrics">
+                    <div class="inline-metric">
+                        <span class="metric-label-tiny">Eff:</span>
+                        <span class="metric-value-tiny perf-good">72%</span>
+                    </div>
+                    <div class="inline-metric">
+                        <span class="metric-label-tiny">Comp:</span>
+                        <span class="metric-value-tiny perf-good">88%</span>
+                    </div>
+                    <div class="inline-metric">
+                        <span class="metric-label-tiny">Viol:</span>
+                        <span class="metric-value-tiny" style="color: #8e44ad;">27</span>
+                    </div>
+                    <div class="inline-metric hover-detail" data-tooltip="Energy saved in last 22 hours">
+                        <span class="metric-label-tiny">Save:</span>
+                        <span class="metric-value-tiny perf-good">$108</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div class="micro-panel">
+                    <div class="micro-title">Occupancy</div>
+                    <div class="inline-bar">
+                        <div class="bar-part sensor-occupied" style="width: 41%;">41%</div>
+                        <div class="bar-part sensor-unoccupied" style="width: 59%;">59%</div>
+                    </div>
+                    <div class="inline-bar">
+                        <div class="bar-part zone-occupied" style="width: 28%;">28%</div>
+                        <div class="bar-part zone-standby" style="width: 72%;">72%</div>
+                    </div>
+                    <div class="sparkline">
+                        <div class="spark-bar" style="left: 0%; height: 60%;"></div>
+                        <div class="spark-bar" style="left: 5%; height: 40%;"></div>
+                        <div class="spark-bar" style="left: 10%; height: 75%;"></div>
+                        <div class="spark-bar" style="left: 15%; height: 50%;"></div>
+                        <div class="spark-bar" style="left: 20%; height: 85%;"></div>
+                        <div class="spark-bar" style="left: 25%; height: 30%;"></div>
+                        <div class="spark-bar" style="left: 30%; height: 65%;"></div>
+                        <div class="spark-bar" style="left: 35%; height: 70%;"></div>
+                        <div class="spark-bar" style="left: 40%; height: 45%;"></div>
+                        <div class="spark-bar" style="left: 45%; height: 80%;"></div>
+                        <div class="spark-bar" style="left: 50%; height: 35%;"></div>
+                        <div class="spark-bar" style="left: 55%; height: 75%;"></div>
+                        <div class="spark-bar" style="left: 60%; height: 40%;"></div>
+                        <div class="spark-bar" style="left: 65%; height: 65%;"></div>
+                        <div class="spark-bar" style="left: 70%; height: 55%;"></div>
+                        <div class="spark-bar" style="left: 75%; height: 40%;"></div>
+                        <div class="spark-bar" style="left: 80%; height: 70%;"></div>
+                        <div class="spark-bar" style="left: 85%; height: 45%;"></div>
+                        <div class="spark-bar" style="left: 90%; height: 60%;"></div>
+                        <div class="spark-bar" style="left: 95%; height: 55%;"></div>
+                    </div>
+                </div>
+
+                <div class="micro-panel">
+                    <div class="micro-title">Compliance</div>
+                    <div class="inline-bar">
+                        <div class="bar-part perf-good" style="width: 88%;">88%</div>
+                        <div class="bar-part perf-poor" style="width: 12%;">12%</div>
+                    </div>
+                    <div class="violation-inline">
+                        <span>Early-S: <span class="violation-count">12</span></span>
+                        <span>Early-A: <span class="violation-count">15</span></span>
+                    </div>
+                    <div style="font-size: 0.6em; color: #6c757d; margin-top: 2px;">
+                        Last: 16:10:45
+                    </div>
+                </div>
+
+                <div class="micro-timeline">
+                    <div class="timeline-micro-track" style="top: 2px;">
+                        <span class="timeline-label-micro">S</span>
+                    </div>
+                    <div class="timeline-micro-track" style="top: 21px;">
+                        <span class="timeline-label-micro">Z</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CHANGE N: Dense summary footer -->
+        <div class="summary-footer">
+            <div class="footer-stat">
+                <div class="footer-label">Total Hours</div>
+                <div class="footer-value">66h</div>
+            </div>
+            <div class="footer-stat">
+                <div class="footer-label">Avg Occupancy</div>
+                <div class="footer-value">35%</div>
+            </div>
+            <div class="footer-stat">
+                <div class="footer-label">Avg Compliance</div>
+                <div class="footer-value perf-fair">82%</div>
+            </div>
+            <div class="footer-stat">
+                <div class="footer-label">Total Violations</div>
+                <div class="footer-value" style="color: #8e44ad;">113</div>
+            </div>
+            <div class="footer-stat">
+                <div class="footer-label">Total Saved</div>
+                <div class="footer-value perf-good">$353</div>
+            </div>
+            <div class="footer-stat">
+                <div class="footer-label">CO2 Reduced</div>
+                <div class="footer-value perf-good">47kg</div>
+            </div>
+            <div class="footer-stat">
+                <div class="footer-label">Next Review</div>
+                <div class="footer-value">2h 15m</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

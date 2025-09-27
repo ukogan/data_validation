@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ODCV Timeline - Split-Pane Browser</title>
+    <style>
+        :root {
+            --occupied-color: #4CAF50;
+            --unoccupied-color: #f44336;
+            --active-color: #2196F3;
+            --standby-color: #FF9800;
+            --violation-color: #9C27B0;
+            --missing-data: #e0e0e0;
+            --grid-line: #ddd;
+            --selected-highlight: rgba(33, 150, 243, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .header {
+            background: white;
+            padding: 12px 20px;
+            border-bottom: 2px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 60px;
+        }
+
+        h1 {
+            font-size: 18px;
+            color: #333;
+        }
+
+        .container {
+            display: flex;
+            height: calc(100vh - 60px);
+        }
+
+        /* Left Navigator Pane */
+        .navigator-pane {
+            width: 350px;
+            background: white;
+            border-right: 2px solid #ddd;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .navigator-header {
+            padding: 15px;
+            background: #f8f8f8;
+            border-bottom: 1px solid #ddd;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .navigator-controls {
+            padding: 10px;
+            background: white;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .nav-btn.active {
+            background: var(--active-color);
+            color: white;
+            border-color: var(--active-color);
+        }
+
+        .calendar-view {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+        }
+
+        .calendar-month {
+            margin-bottom: 20px;
+        }
+
+        .calendar-month-header {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+
+        .calendar-day-header {
+            font-size: 10px;
+            color: #999;
+            text-align: center;
+            padding: 5px;
+            font-weight: 600;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 4px;
+            cursor: pointer;
+            background: white;
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        .calendar-day:hover {
+            transform: scale(1.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            z-index: 10;
+        }
+
+        .calendar-day.selected {
+            background: var(--selected-highlight);
+            border-color: var(--active-color);
+            border-width: 2px;
+        }
+
+        .calendar-day-number {
+            font-size: 11px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .calendar-day-indicator {
+            position: absolute;
+            bottom: 2px;
+            left: 2px;
+            right: 2px;
+            height: 4px;
+            border-radius: 2px;
+            display: flex;
+            gap: 1px;
+        }
+
+        .indicator-bar {
+            flex: 1;
+            border-radius: 1px;
+        }
+
+        .timeline-view {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            display: none;
+        }
+
+        .timeline-day {
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .timeline-day-header {
+            padding: 8px 12px;
+            background: #f8f8f8;
+            border-bottom: 1px solid #ddd;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .timeline-day-header:hover {
+            background: #f0f0f0;
+        }
+
+        .timeline-day-date {
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .timeline-day-stats {
+            font-size: 11px;
+            color: #666;
+        }
+
+        .timeline-hours {
+            display: grid;
+            grid-template-columns: repeat(24, 1fr);
+            height: 30px;
+            position: relative;
+        }
+
+        .timeline-hour {
+            border-right: 1px solid #f0f0f0;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .timeline-hour:hover {
+            background: var(--selected-highlight);
+        }
+
+        .timeline-hour.selected {
+            background: var(--selected-highlight);
+            border: 1px solid var(--active-color);
+        }
+
+        .timeline-hour-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top,
+                var(--occupied-color),
+                var(--active-color));
+        }
+
+        .timeline-hour-violation {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--violation-color);
+        }
+
+        /* Right Detail Pane */
+        .detail-pane {
+            flex: 1;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .detail-header {
+            padding: 15px 20px;
+            background: #f8f8f8;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .detail-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .detail-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .window-selector {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+        }
+
+        .window-selector select {
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .detail-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .zone-detail {
+            margin-bottom: 30px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .zone-header {
+            background: #f8f8f8;
+            padding: 12px 15px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .zone-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .zone-stats {
+            font-size: 11px;
+            color: #666;
+        }
+
+        .signal-response-container {
+            padding: 15px;
+            background: white;
+        }
+
+        .signal-row, .response-row {
+            height: 50px;
+            margin-bottom: 8px;
+            position: relative;
+            background: #fafafa;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+        }
+
+        .row-label {
+            width: 80px;
+            padding-left: 10px;
+            font-size: 11px;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .data-visualization {
+            flex: 1;
+            height: 40px;
+            display: flex;
+            gap: 0;
+            padding: 5px;
+            position: relative;
+        }
+
+        .data-block {
+            flex: 1;
+            min-width: 1px;
+            border-right: 1px solid rgba(255,255,255,0.2);
+            cursor: pointer;
+            position: relative;
+            transition: transform 0.1s;
+        }
+
+        .data-block:hover {
+            transform: scaleY(1.2);
+            z-index: 10;
+        }
+
+        .data-block.occupied { background: var(--occupied-color); }
+        .data-block.unoccupied { background: var(--unoccupied-color); }
+        .data-block.active { background: var(--active-color); }
+        .data-block.standby { background: var(--standby-color); }
+        .data-block.missing {
+            background: var(--missing-data);
+            background-image: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 3px,
+                rgba(0,0,0,0.1) 3px,
+                rgba(0,0,0,0.1) 6px
+            );
+        }
+
+        .violation-overlay {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--violation-color);
+            z-index: 5;
+        }
+
+        .time-ruler {
+            height: 30px;
+            display: flex;
+            padding-left: 80px;
+            padding-right: 15px;
+            border-top: 1px solid #ddd;
+            margin-top: 10px;
+        }
+
+        .time-mark {
+            flex: 1;
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+            border-left: 1px solid #f0f0f0;
+            padding-top: 5px;
+        }
+
+        .legend {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            font-size: 11px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-box {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+        }
+
+        .tooltip {
+            position: fixed;
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            pointer-events: none;
+            z-index: 1000;
+            display: none;
+        }
+
+        .resizer {
+            width: 5px;
+            cursor: ew-resize;
+            background: #ddd;
+            position: relative;
+        }
+
+        .resizer:hover {
+            background: var(--active-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ODCV Timeline - September 2025 - Split-Pane Browser</h1>
+        <div class="window-selector">
+            <label>Detail Window:</label>
+            <select id="window-size" onchange="updateDetailWindow()">
+                <option value="4">4 hours</option>
+                <option value="8" selected>8 hours</option>
+                <option value="12">12 hours</option>
+                <option value="24">Full day</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Left Navigator Pane -->
+        <div class="navigator-pane" id="navigator-pane">
+            <div class="navigator-header">Timeline Navigator</div>
+            <div class="navigator-controls">
+                <button class="nav-btn active" onclick="showView('calendar')">Calendar</button>
+                <button class="nav-btn" onclick="showView('timeline')">Timeline List</button>
+                <button class="nav-btn" onclick="jumpToToday()">Today</button>
+            </div>
+
+            <!-- Calendar View -->
+            <div class="calendar-view" id="calendar-view">
+                <div class="calendar-month">
+                    <div class="calendar-month-header">September 2025</div>
+                    <div class="calendar-grid" id="calendar-grid"></div>
+                </div>
+            </div>
+
+            <!-- Timeline List View -->
+            <div class="timeline-view" id="timeline-view">
+                <!-- Timeline list will be populated here -->
+            </div>
+        </div>
+
+        <div class="resizer" id="resizer"></div>
+
+        <!-- Right Detail Pane -->
+        <div class="detail-pane">
+            <div class="detail-header">
+                <div class="detail-title" id="detail-title">September 1, 2025 - 00:00 to 08:00</div>
+                <div class="detail-controls">
+                    <button class="nav-btn" onclick="navigateDetail(-1)">← Previous</button>
+                    <button class="nav-btn" onclick="navigateDetail(1)">Next →</button>
+                    <button class="nav-btn" onclick="refreshDetail()">Refresh</button>
+                </div>
+            </div>
+
+            <div class="detail-content" id="detail-content">
+                <!-- Detail visualization will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-box" style="background: var(--occupied-color)"></div>
+            <span>Occupied</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box" style="background: var(--unoccupied-color)"></div>
+            <span>Unoccupied</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box" style="background: var(--active-color)"></div>
+            <span>Active</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box" style="background: var(--standby-color)"></div>
+            <span>Standby</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box" style="background: var(--violation-color)"></div>
+            <span>Violation</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box" style="background: var(--missing-data)"></div>
+            <span>Missing</span>
+        </div>
+    </div>
+
+    <div class="tooltip" id="tooltip"></div>
+
+    <script>
+        let currentView = 'calendar';
+        let selectedDay = 1;
+        let selectedHour = 0;
+        let windowSizeHours = 8;
+        let monthData = {};
+
+        // Generate month data
+        function generateMonthData() {
+            const zones = ['BV200', 'BV201', 'BV202'];
+
+            zones.forEach(zone => {
+                monthData[zone] = [];
+
+                for (let day = 1; day <= 30; day++) {
+                    const dayData = {
+                        occupancy: [],
+                        control: [],
+                        violations: []
+                    };
+
+                    for (let hour = 0; hour < 24; hour++) {
+                        // Generate occupancy data (30-second readings)
+                        const hourOccupancy = [];
+                        for (let i = 0; i < 120; i++) {
+                            let occupied = false;
+
+                            const dayOfWeek = (day - 1) % 7;
+                            if (dayOfWeek < 5) { // Weekday
+                                if (hour >= 8 && hour <= 18) {
+                                    occupied = Math.random() > 0.3;
+                                } else {
+                                    occupied = Math.random() > 0.95;
+                                }
+                            } else { // Weekend
+                                occupied = Math.random() > 0.9;
+                            }
+
+                            if (Math.random() < 0.02) {
+                                hourOccupancy.push(null);
+                            } else {
+                                hourOccupancy.push(occupied);
+                            }
+                        }
+                        dayData.occupancy.push(hourOccupancy);
+
+                        // Generate control data (1-minute readings)
+                        const hourControl = [];
+                        for (let i = 0; i < 60; i++) {
+                            const lookbackStart = Math.max(0, i - 15);
+                            const recentOccupancy = hourOccupancy.slice(lookbackStart * 2, i * 2);
+                            const hasOccupancy = recentOccupancy.some(o => o === true);
+                            let control = hasOccupancy ? 'active' : 'standby';
+
+                            if (Math.random() < 0.03) {
+                                control = hasOccupancy ? 'standby' : 'active';
+                                dayData.violations.push({ hour, minute: i });
+                            }
+
+                            if (Math.random() < 0.01) {
+                                hourControl.push(null);
+                            } else {
+                                hourControl.push(control);
+                            }
+                        }
+                        dayData.control.push(hourControl);
+                    }
+
+                    monthData[zone].push(dayData);
+                }
+            });
+        }
+
+        // Initialize calendar
+        function initCalendar() {
+            const grid = document.getElementById('calendar-grid');
+            grid.innerHTML = '';
+
+            // Day headers
+            const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            dayHeaders.forEach(day => {
+                const header = document.createElement('div');
+                header.className = 'calendar-day-header';
+                header.textContent = day;
+                grid.appendChild(header);
+            });
+
+            // Empty cell for September 2025 (starts on Monday)
+            grid.appendChild(document.createElement('div'));
+
+            // Days
+            for (let day = 1; day <= 30; day++) {
+                const dayEl = document.createElement('div');
+                dayEl.className = 'calendar-day';
+                if (day === selectedDay) dayEl.classList.add('selected');
+                dayEl.onclick = () => selectDay(day);
+
+                // Calculate statistics
+                let occupancyRate = 0;
+                let violations = 0;
+
+                Object.keys(monthData).forEach(zone => {
+                    const dayOccupancy = monthData[zone][day - 1].occupancy.flat();
+                    const occupied = dayOccupancy.filter(o => o === true).length;
+                    occupancyRate += occupied / dayOccupancy.length;
+                    violations += monthData[zone][day - 1].violations.length;
+                });
+
+                occupancyRate = occupancyRate / 3;
+
+                dayEl.innerHTML = `
+                    <div class="calendar-day-number">${day}</div>
+                    <div class="calendar-day-indicator">
+                        <div class="indicator-bar" style="background: var(--occupied-color); opacity: ${0.3 + occupancyRate * 0.7}"></div>
+                        ${violations > 0 ? `<div class="indicator-bar" style="background: var(--violation-color); width: 20%"></div>` : ''}
+                    </div>
+                `;
+
+                grid.appendChild(dayEl);
+            }
+        }
+
+        // Initialize timeline list
+        function initTimelineList() {
+            const container = document.getElementById('timeline-view');
+            container.innerHTML = '';
+
+            for (let day = 1; day <= 30; day++) {
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'timeline-day';
+
+                let totalViolations = 0;
+                Object.keys(monthData).forEach(zone => {
+                    totalViolations += monthData[zone][day - 1].violations.length;
+                });
+
+                dayDiv.innerHTML = `
+                    <div class="timeline-day-header" onclick="selectDay(${day})">
+                        <div class="timeline-day-date">September ${day}</div>
+                        <div class="timeline-day-stats">${totalViolations} violations</div>
+                    </div>
+                    <div class="timeline-hours" id="timeline-hours-${day}"></div>
+                `;
+
+                const hoursContainer = dayDiv.querySelector(`#timeline-hours-${day}`);
+
+                for (let hour = 0; hour < 24; hour++) {
+                    const hourDiv = document.createElement('div');
+                    hourDiv.className = 'timeline-hour';
+                    if (day === selectedDay && hour >= selectedHour && hour < selectedHour + windowSizeHours) {
+                        hourDiv.classList.add('selected');
+                    }
+                    hourDiv.onclick = (e) => {
+                        e.stopPropagation();
+                        selectHour(day, hour);
+                    };
+
+                    // Calculate hour statistics
+                    let occupancyRate = 0;
+                    let hasViolation = false;
+
+                    Object.keys(monthData).forEach(zone => {
+                        const hourOccupancy = monthData[zone][day - 1].occupancy[hour];
+                        const occupied = hourOccupancy.filter(o => o === true).length;
+                        occupancyRate += occupied / hourOccupancy.length;
+
+                        if (monthData[zone][day - 1].violations.some(v => v.hour === hour)) {
+                            hasViolation = true;
+                        }
+                    });
+
+                    occupancyRate = occupancyRate / 3;
+
+                    hourDiv.innerHTML = `
+                        ${hasViolation ? '<div class="timeline-hour-violation"></div>' : ''}
+                        <div class="timeline-hour-bar" style="height: ${occupancyRate * 100}%"></div>
+                    `;
+
+                    hoursContainer.appendChild(hourDiv);
+                }
+
+                container.appendChild(dayDiv);
+            }
+        }
+
+        // Select day
+        function selectDay(day) {
+            selectedDay = day;
+            selectedHour = 0;
+            updateNavigator();
+            updateDetail();
+        }
+
+        // Select hour
+        function selectHour(day, hour) {
+            selectedDay = day;
+            selectedHour = hour;
+            updateNavigator();
+            updateDetail();
+        }
+
+        // Update detail pane
+        function updateDetail() {
+            const endHour = Math.min(selectedHour + windowSizeHours, 24);
+            const title = `September ${selectedDay}, 2025 - ${selectedHour.toString().padStart(2, '0')}:00 to ${endHour.toString().padStart(2, '0')}:00`;
+            document.getElementById('detail-title').textContent = title;
+
+            const container = document.getElementById('detail-content');
+            container.innerHTML = '';
+
+            Object.keys(monthData).forEach(zone => {
+                const zoneDiv = document.createElement('div');
+                zoneDiv.className = 'zone-detail';
+
+                // Calculate zone statistics for the window
+                let violations = 0;
+                for (let h = selectedHour; h < endHour; h++) {
+                    violations += monthData[zone][selectedDay - 1].violations.filter(v => v.hour === h).length;
+                }
+
+                zoneDiv.innerHTML = `
+                    <div class="zone-header">
+                        <div class="zone-name">${zone}</div>
+                        <div class="zone-stats">${violations} violations in window</div>
+                    </div>
+                    <div class="signal-response-container">
+                        <div class="signal-row">
+                            <div class="row-label">Occupancy</div>
+                            <div class="data-visualization" id="signal-${zone}"></div>
+                        </div>
+                        <div class="response-row">
+                            <div class="row-label">Control</div>
+                            <div class="data-visualization" id="response-${zone}"></div>
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(zoneDiv);
+
+                // Render signal data
+                const signalContainer = document.getElementById(`signal-${zone}`);
+                const responseContainer = document.getElementById(`response-${zone}`);
+
+                // Aggregate data for visualization
+                const totalMinutes = windowSizeHours * 60;
+                const blockSize = Math.max(1, Math.floor(totalMinutes / 200)); // Max 200 blocks
+
+                for (let m = 0; m < totalMinutes; m += blockSize) {
+                    const currentHour = selectedHour + Math.floor(m / 60);
+                    const startMinute = m % 60;
+                    const endMinute = Math.min(startMinute + blockSize, 60);
+
+                    if (currentHour >= 24) break;
+
+                    // Signal block (occupancy)
+                    const signalBlock = document.createElement('div');
+                    signalBlock.className = 'data-block';
+
+                    const occupancySlice = monthData[zone][selectedDay - 1].occupancy[currentHour]
+                        .slice(startMinute * 2, endMinute * 2);
+                    const occupied = occupancySlice.filter(o => o === true).length;
+                    const missing = occupancySlice.filter(o => o === null).length;
+
+                    if (missing > occupancySlice.length / 2) {
+                        signalBlock.classList.add('missing');
+                    } else if (occupied > occupancySlice.length / 2) {
+                        signalBlock.classList.add('occupied');
+                    } else {
+                        signalBlock.classList.add('unoccupied');
+                    }
+
+                    signalBlock.dataset.time = `${currentHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')}`;
+                    signalContainer.appendChild(signalBlock);
+
+                    // Response block (control)
+                    const responseBlock = document.createElement('div');
+                    responseBlock.className = 'data-block';
+
+                    const controlSlice = monthData[zone][selectedDay - 1].control[currentHour]
+                        .slice(startMinute, endMinute);
+                    const active = controlSlice.filter(c => c === 'active').length;
+                    const missingControl = controlSlice.filter(c => c === null).length;
+
+                    if (missingControl > controlSlice.length / 2) {
+                        responseBlock.classList.add('missing');
+                    } else if (active > controlSlice.length / 2) {
+                        responseBlock.classList.add('active');
+                    } else {
+                        responseBlock.classList.add('standby');
+                    }
+
+                    responseBlock.dataset.time = `${currentHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')}`;
+                    responseContainer.appendChild(responseBlock);
+                }
+
+                // Add violations
+                for (let h = selectedHour; h < endHour; h++) {
+                    const hourViolations = monthData[zone][selectedDay - 1].violations.filter(v => v.hour === h);
+                    hourViolations.forEach(v => {
+                        const position = ((h - selectedHour + v.minute / 60) / windowSizeHours) * 100;
+                        const violationMarker = document.createElement('div');
+                        violationMarker.className = 'violation-overlay';
+                        violationMarker.style.left = `${position}%`;
+                        responseContainer.appendChild(violationMarker);
+                    });
+                }
+            });
+
+            // Add time ruler
+            const timeRuler = document.createElement('div');
+            timeRuler.className = 'time-ruler';
+
+            const tickCount = Math.min(windowSizeHours, 12);
+            for (let i = 0; i <= tickCount; i++) {
+                const hour = selectedHour + Math.floor(i * windowSizeHours / tickCount);
+                const mark = document.createElement('div');
+                mark.className = 'time-mark';
+                mark.textContent = `${hour.toString().padStart(2, '0')}:00`;
+                timeRuler.appendChild(mark);
+            }
+
+            container.appendChild(timeRuler);
+        }
+
+        // Navigation functions
+        function showView(view) {
+            currentView = view;
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            if (view === 'calendar') {
+                document.getElementById('calendar-view').style.display = 'block';
+                document.getElementById('timeline-view').style.display = 'none';
+            } else {
+                document.getElementById('calendar-view').style.display = 'none';
+                document.getElementById('timeline-view').style.display = 'block';
+                initTimelineList();
+            }
+        }
+
+        function updateNavigator() {
+            if (currentView === 'calendar') {
+                initCalendar();
+            } else {
+                initTimelineList();
+            }
+        }
+
+        function jumpToToday() {
+            selectedDay = 15; // Simulate "today" as Sept 15
+            selectedHour = new Date().getHours();
+            updateNavigator();
+            updateDetail();
+        }
+
+        function navigateDetail(direction) {
+            if (direction < 0) {
+                selectedHour = Math.max(0, selectedHour - windowSizeHours);
+                if (selectedHour === 0 && selectedDay > 1) {
+                    selectedDay--;
+                    selectedHour = 24 - windowSizeHours;
+                }
+            } else {
+                selectedHour = selectedHour + windowSizeHours;
+                if (selectedHour >= 24) {
+                    selectedHour = 0;
+                    selectedDay = Math.min(30, selectedDay + 1);
+                }
+            }
+            updateNavigator();
+            updateDetail();
+        }
+
+        function refreshDetail() {
+            updateDetail();
+        }
+
+        function updateDetailWindow() {
+            windowSizeHours = parseInt(document.getElementById('window-size').value);
+            updateDetail();
+        }
+
+        // Resizer functionality
+        function initResizer() {
+            const resizer = document.getElementById('resizer');
+            const navigatorPane = document.getElementById('navigator-pane');
+            let isResizing = false;
+            let startX = 0;
+            let startWidth = 0;
+
+            resizer.addEventListener('mousedown', (e) => {
+                isResizing = true;
+                startX = e.clientX;
+                startWidth = navigatorPane.offsetWidth;
+                document.body.style.cursor = 'ew-resize';
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isResizing) return;
+
+                const newWidth = Math.max(250, Math.min(600, startWidth + e.clientX - startX));
+                navigatorPane.style.width = newWidth + 'px';
+            });
+
+            document.addEventListener('mouseup', () => {
+                isResizing = false;
+                document.body.style.cursor = 'default';
+            });
+        }
+
+        // Tooltip
+        document.addEventListener('mousemove', (e) => {
+            const tooltip = document.getElementById('tooltip');
+            if (e.target.classList.contains('data-block')) {
+                const time = e.target.dataset.time;
+                let status = 'Unknown';
+
+                if (e.target.classList.contains('occupied')) status = 'Occupied';
+                if (e.target.classList.contains('unoccupied')) status = 'Unoccupied';
+                if (e.target.classList.contains('active')) status = 'Active';
+                if (e.target.classList.contains('standby')) status = 'Standby';
+                if (e.target.classList.contains('missing')) status = 'Missing Data';
+
+                tooltip.textContent = `${time} - ${status}`;
+                tooltip.style.display = 'block';
+                tooltip.style.left = e.pageX + 10 + 'px';
+                tooltip.style.top = e.pageY - 30 + 'px';
+            } else {
+                tooltip.style.display = 'none';
+            }
+        });
+
+        // Initialize
+        generateMonthData();
+        initCalendar();
+        initResizer();
+        updateDetail();
+    </script>
+</body>
+</html>

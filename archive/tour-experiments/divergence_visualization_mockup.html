@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ODCV Divergence Visualization - UX Mockup</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f6fa;
+            padding: 20px;
+            color: #2c3e50;
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            padding: 30px;
+        }
+
+        .header {
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e8ebf1;
+            padding-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .sensor-grid {
+            display: grid;
+            gap: 30px;
+        }
+
+        .sensor-card {
+            background: #fafbfc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .sensor-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .sensor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .sensor-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .sensor-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .zone-badge {
+            background: #e6f2ff;
+            color: #0066cc;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* Correlation Status Badge (Recommendation #2) */
+        .correlation-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .correlation-status:hover {
+            transform: translateY(-1px);
+        }
+
+        .status-good {
+            background: #d4f8e8;
+            color: #0d7a3f;
+            border: 1px solid #4ade80;
+        }
+
+        .status-warning {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fbbf24;
+        }
+
+        .status-poor {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #f87171;
+        }
+
+        .status-icon {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .chart-row {
+            margin-bottom: 8px;
+        }
+
+        .chart-label {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .timing-indicator {
+            width: 14px;
+            height: 14px;
+            opacity: 0.7;
+        }
+
+        .bar-container {
+            position: relative;
+            height: 40px;
+            background: #f1f5f9;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .bar-segment {
+            position: absolute;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: 500;
+            transition: opacity 0.2s ease;
+            cursor: pointer;
+        }
+
+        .bar-segment:hover {
+            opacity: 0.9;
+        }
+
+        .occupied {
+            background: #10b981;
+        }
+
+        .standby {
+            background: #3b82f6;
+        }
+
+        /* Timing Mismatch Pattern (Recommendation #3) */
+        .delayed-response {
+            background-image: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(0,0,0,0.1) 10px,
+                rgba(0,0,0,0.1) 20px
+            );
+        }
+
+        /* Divergence Bar (Recommendation #1) */
+        .divergence-bar {
+            position: relative;
+            height: 20px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            margin: 8px 0 12px 0;
+            overflow: hidden;
+        }
+
+        .divergence-segment {
+            position: absolute;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+        .divergence-segment:hover {
+            opacity: 0.85;
+        }
+
+        .divergence-mismatch {
+            background: #ef4444;
+        }
+
+        .divergence-inverse {
+            background: #fb923c;
+        }
+
+        .divergence-aligned {
+            background: #94a3b8;
+        }
+
+        /* Metrics Row */
+        .metrics-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .metric {
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: absolute;
+            background: #1e293b;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            z-index: 1000;
+            white-space: nowrap;
+        }
+
+        .tooltip.visible {
+            opacity: 1;
+        }
+
+        .tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: #1e293b;
+        }
+
+        /* Legend */
+        .legend {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+        }
+
+        /* Animation for attention */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .attention {
+            animation: pulse 2s infinite;
+        }
+
+        /* Info Box */
+        .info-box {
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #0c4a6e;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="header">
+            <h1>ODCV Analytics Dashboard - Divergence Visualization</h1>
+            <div class="subtitle">Enhanced sensor-response mismatch detection with visual indicators</div>
+        </div>
+
+        <div class="info-box">
+            <strong>Interactive Demo:</strong> Hover over any segment to see detailed timing information. The divergence bars show misalignment between sensors and zone responses, while patterns indicate delayed responses.
+        </div>
+
+        <div class="sensor-grid">
+            <!-- Sensor 1: Poor Sync Example -->
+            <div class="sensor-card">
+                <div class="sensor-header">
+                    <div class="sensor-info">
+                        <div class="sensor-name">Sensor 115-4-01</div>
+                        <div class="zone-badge">Zone BV200</div>
+                    </div>
+                    <div class="correlation-status status-warning" title="83.3% correlation - System responds but with minor timing issues">
+                        <svg class="status-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                        </svg>
+                        <span>Minor Drift</span>
+                        <span style="font-weight: normal; opacity: 0.8;">83.3%</span>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-row">
+                        <div class="chart-label">
+                            Sensor (Occupancy Detection)
+                        </div>
+                        <div class="bar-container" id="sensor1-sensor">
+                            <div class="bar-segment occupied" style="left: 0%; width: 35%;" data-info="Occupied: 35% (08:00-11:30)">35%</div>
+                            <div class="bar-segment standby" style="left: 35%; width: 20%;" data-info="Unoccupied: 20% (11:30-13:00)">20%</div>
+                            <div class="bar-segment occupied" style="left: 55%; width: 30%;" data-info="Occupied: 30% (13:00-16:00)">30%</div>
+                            <div class="bar-segment standby" style="left: 85%; width: 15%;" data-info="Unoccupied: 15% (16:00-17:00)">15%</div>
+                        </div>
+                    </div>
+
+                    <!-- Divergence Bar (Recommendation #1) -->
+                    <div class="divergence-bar" title="Visual representation of sensor-zone misalignment">
+                        <div class="divergence-segment divergence-aligned" style="left: 0%; width: 30%;" data-info="Aligned: 30%"></div>
+                        <div class="divergence-segment divergence-mismatch" style="left: 30%; width: 5%;" data-info="Sensor occupied, Zone standby: 5%">5%</div>
+                        <div class="divergence-segment divergence-aligned" style="left: 35%; width: 20%;" data-info="Aligned: 20%"></div>
+                        <div class="divergence-segment divergence-inverse" style="left: 55%; width: 8%;" data-info="Sensor unoccupied, Zone occupied: 8%">8%</div>
+                        <div class="divergence-segment divergence-aligned" style="left: 63%; width: 37%;" data-info="Aligned: 37%"></div>
+                    </div>
+
+                    <div class="chart-row">
+                        <div class="chart-label">
+                            <span>Zone Response (BV200)</span>
+                            <svg class="timing-indicator" viewBox="0 0 24 24" fill="#fb923c" title="Timing delays detected">
+                                <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+                            </svg>
+                        </div>
+                        <div class="bar-container" id="sensor1-zone">
+                            <div class="bar-segment occupied delayed-response" style="left: 0%; width: 30%;" data-info="Active: 30% (08:00-11:00) - DELAYED RESPONSE">30%</div>
+                            <div class="bar-segment standby" style="left: 30%; width: 25%;" data-info="Standby: 25% (11:00-13:15)">25%</div>
+                            <div class="bar-segment occupied delayed-response" style="left: 55%; width: 33%;" data-info="Active: 33% (13:15-16:30) - DELAYED RESPONSE">33%</div>
+                            <div class="bar-segment standby" style="left: 88%; width: 12%;" data-info="Standby: 12% (16:30-17:00)">12%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metrics-row">
+                    <div class="metric">
+                        <div class="metric-value">83.3%</div>
+                        <div class="metric-label">Correlation</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">13%</div>
+                        <div class="metric-label">Divergence</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">~15min</div>
+                        <div class="metric-label">Avg Delay</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">2</div>
+                        <div class="metric-label">Late Responses</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sensor 2: Poor Sync Example -->
+            <div class="sensor-card">
+                <div class="sensor-header">
+                    <div class="sensor-info">
+                        <div class="sensor-name">Sensor 115-4-06</div>
+                        <div class="zone-badge">Zone BV201</div>
+                    </div>
+                    <div class="correlation-status status-poor attention" title="60.2% correlation - Significant synchronization issues detected">
+                        <svg class="status-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                        </svg>
+                        <span>Poor Sync</span>
+                        <span style="font-weight: normal; opacity: 0.8;">60.2%</span>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-row">
+                        <div class="chart-label">
+                            Sensor (Occupancy Detection)
+                        </div>
+                        <div class="bar-container" id="sensor2-sensor">
+                            <div class="bar-segment occupied" style="left: 0%; width: 45%;" data-info="Occupied: 45% (08:00-12:00)">45%</div>
+                            <div class="bar-segment standby" style="left: 45%; width: 10%;" data-info="Unoccupied: 10% (12:00-13:00)">10%</div>
+                            <div class="bar-segment occupied" style="left: 55%; width: 25%;" data-info="Occupied: 25% (13:00-15:30)">25%</div>
+                            <div class="bar-segment standby" style="left: 80%; width: 20%;" data-info="Unoccupied: 20% (15:30-17:00)">20%</div>
+                        </div>
+                    </div>
+
+                    <!-- Divergence Bar with High Mismatch -->
+                    <div class="divergence-bar" title="High divergence detected - Review zone control logic">
+                        <div class="divergence-segment divergence-aligned" style="left: 0%; width: 20%;" data-info="Aligned: 20%"></div>
+                        <div class="divergence-segment divergence-mismatch" style="left: 20%; width: 25%;" data-info="Sensor occupied, Zone standby: 25%">25%</div>
+                        <div class="divergence-segment divergence-aligned" style="left: 45%; width: 10%;" data-info="Aligned: 10%"></div>
+                        <div class="divergence-segment divergence-inverse" style="left: 55%; width: 15%;" data-info="Sensor unoccupied, Zone occupied: 15%">15%</div>
+                        <div class="divergence-segment divergence-aligned" style="left: 70%; width: 30%;" data-info="Aligned: 30%"></div>
+                    </div>
+
+                    <div class="chart-row">
+                        <div class="chart-label">
+                            <span>Zone Response (BV201)</span>
+                            <svg class="timing-indicator" viewBox="0 0 24 24" fill="#ef4444" title="Critical timing issues">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                            </svg>
+                        </div>
+                        <div class="bar-container" id="sensor2-zone">
+                            <div class="bar-segment occupied delayed-response" style="left: 0%; width: 20%;" data-info="Active: 20% (08:00-10:00) - SEVERELY DELAYED">20%</div>
+                            <div class="bar-segment standby" style="left: 20%; width: 35%;" data-info="Standby: 35% (10:00-13:30)">35%</div>
+                            <div class="bar-segment occupied" style="left: 55%; width: 15%;" data-info="Active: 15% (13:30-15:00)">15%</div>
+                            <div class="bar-segment standby" style="left: 70%; width: 30%;" data-info="Standby: 30% (15:00-17:00)">30%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metrics-row">
+                    <div class="metric">
+                        <div class="metric-value" style="color: #ef4444;">60.2%</div>
+                        <div class="metric-label">Correlation</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" style="color: #ef4444;">40%</div>
+                        <div class="metric-label">Divergence</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">~30min</div>
+                        <div class="metric-label">Avg Delay</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">4</div>
+                        <div class="metric-label">Late Responses</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sensor 3: Good Sync Example -->
+            <div class="sensor-card">
+                <div class="sensor-header">
+                    <div class="sensor-info">
+                        <div class="sensor-name">Sensor 115-4-09</div>
+                        <div class="zone-badge">Zone BV202</div>
+                    </div>
+                    <div class="correlation-status status-good" title="95.1% correlation - Excellent synchronization">
+                        <svg class="status-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                        </svg>
+                        <span>Good Sync</span>
+                        <span style="font-weight: normal; opacity: 0.8;">95.1%</span>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-row">
+                        <div class="chart-label">
+                            Sensor (Occupancy Detection)
+                        </div>
+                        <div class="bar-container" id="sensor3-sensor">
+                            <div class="bar-segment occupied" style="left: 0%; width: 40%;" data-info="Occupied: 40% (08:00-11:45)">40%</div>
+                            <div class="bar-segment standby" style="left: 40%; width: 15%;" data-info="Unoccupied: 15% (11:45-13:00)">15%</div>
+                            <div class="bar-segment occupied" style="left: 55%; width: 35%;" data-info="Occupied: 35% (13:00-16:15)">35%</div>
+                            <div class="bar-segment standby" style="left: 90%; width: 10%;" data-info="Unoccupied: 10% (16:15-17:00)">10%</div>
+                        </div>
+                    </div>
+
+                    <!-- Divergence Bar with Minimal Issues -->
+                    <div class="divergence-bar" title="Excellent alignment between sensor and zone">
+                        <div class="divergence-segment divergence-aligned" style="left: 0%; width: 39%;" data-info="Aligned: 39%"></div>
+                        <div class="divergence-segment divergence-mismatch" style="left: 39%; width: 2%;" data-info="Minor mismatch: 2%">2%</div>
+                        <div class="divergence-segment divergence-aligned" style="left: 41%; width: 14%;" data-info="Aligned: 14%"></div>
+                        <div class="divergence-segment divergence-inverse" style="left: 55%; width: 3%;" data-info="Minor inverse: 3%">3%</div>
+                        <div class="divergence-segment divergence-aligned" style="left: 58%; width: 42%;" data-info="Aligned: 42%"></div>
+                    </div>
+
+                    <div class="chart-row">
+                        <div class="chart-label">
+                            <span>Zone Response (BV202)</span>
+                        </div>
+                        <div class="bar-container" id="sensor3-zone">
+                            <div class="bar-segment occupied" style="left: 0%; width: 39%;" data-info="Active: 39% (08:00-11:40)">39%</div>
+                            <div class="bar-segment standby" style="left: 39%; width: 16%;" data-info="Standby: 16% (11:40-13:05)">16%</div>
+                            <div class="bar-segment occupied" style="left: 55%; width: 36%;" data-info="Active: 36% (13:05-16:20)">36%</div>
+                            <div class="bar-segment standby" style="left: 91%; width: 9%;" data-info="Standby: 9% (16:20-17:00)">9%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metrics-row">
+                    <div class="metric">
+                        <div class="metric-value" style="color: #10b981;">95.1%</div>
+                        <div class="metric-label">Correlation</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" style="color: #10b981;">4.9%</div>
+                        <div class="metric-label">Divergence</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">~5min</div>
+                        <div class="metric-label">Avg Delay</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">0</div>
+                        <div class="metric-label">Late Responses</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #10b981;"></div>
+                <span>Occupied/Active</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #3b82f6;"></div>
+                <span>Unoccupied/Standby</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ef4444;"></div>
+                <span>Sensor On / Zone Off</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #fb923c;"></div>
+                <span>Sensor Off / Zone On</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #94a3b8;"></div>
+                <span>Aligned States</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: repeating-linear-gradient(45deg, #10b981, #10b981 10px, rgba(0,0,0,0.1) 10px, rgba(0,0,0,0.1) 20px);"></div>
+                <span>Delayed Response</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tooltip element -->
+    <div class="tooltip" id="tooltip"></div>
+
+    <script>
+        // Interactive tooltip functionality
+        const tooltip = document.getElementById('tooltip');
+        let currentTimeout = null;
+
+        // Add hover effects for all interactive segments
+        document.querySelectorAll('.bar-segment, .divergence-segment').forEach(segment => {
+            segment.addEventListener('mouseenter', (e) => {
+                const info = e.target.dataset.info;
+                if (info) {
+                    clearTimeout(currentTimeout);
+                    tooltip.textContent = info;
+                    tooltip.classList.add('visible');
+
+                    const rect = e.target.getBoundingClientRect();
+                    tooltip.style.left = rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2) + 'px';
+                    tooltip.style.top = rect.top - tooltip.offsetHeight - 10 + 'px';
+                }
+            });
+
+            segment.addEventListener('mouseleave', () => {
+                currentTimeout = setTimeout(() => {
+                    tooltip.classList.remove('visible');
+                }, 100);
+            });
+        });
+
+        // Add interactive click handler for correlation status badges
+        document.querySelectorAll('.correlation-status').forEach(badge => {
+            badge.addEventListener('click', (e) => {
+                const card = badge.closest('.sensor-card');
+                const divergenceBar = card.querySelector('.divergence-bar');
+
+                // Temporarily highlight the divergence bar
+                divergenceBar.style.boxShadow = '0 0 20px rgba(59, 130, 246, 0.5)';
+                setTimeout(() => {
+                    divergenceBar.style.boxShadow = '';
+                }, 2000);
+            });
+        });
+
+        // Simulate real-time updates (demo only)
+        function simulateUpdate() {
+            const correlationValues = document.querySelectorAll('.metric-value');
+            correlationValues.forEach((value, index) => {
+                if (Math.random() > 0.7 && index % 4 === 0) {
+                    const current = parseFloat(value.textContent);
+                    const change = (Math.random() - 0.5) * 2;
+                    const newValue = Math.max(0, Math.min(100, current + change));
+                    value.textContent = newValue.toFixed(1) + '%';
+
+                    // Flash to indicate update
+                    value.style.transition = 'color 0.3s';
+                    value.style.color = '#0ea5e9';
+                    setTimeout(() => {
+                        value.style.color = '';
+                    }, 300);
+                }
+            });
+        }
+
+        // Update every 5 seconds for demo purposes
+        setInterval(simulateUpdate, 5000);
+
+        // Add keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                tooltip.classList.remove('visible');
+            }
+        });
+
+        // Demo: Show initial attention to poor sync sensor
+        setTimeout(() => {
+            const poorSyncCard = document.querySelectorAll('.sensor-card')[1];
+            poorSyncCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // Highlight the divergence visualization
+            const divergenceBar = poorSyncCard.querySelector('.divergence-bar');
+            divergenceBar.style.transition = 'transform 0.3s';
+            divergenceBar.style.transform = 'scale(1.05)';
+            setTimeout(() => {
+                divergenceBar.style.transform = '';
+            }, 2000);
+        }, 1500);
+    </script>
+</body>
+</html>
