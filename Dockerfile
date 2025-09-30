@@ -17,7 +17,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY src/ ./src/
 COPY main.py .
 COPY dashboard.html .
-COPY mockups/ ./mockups/
+COPY static/ ./static/
 COPY automated_pipeline.py .
 COPY *.csv ./
 
