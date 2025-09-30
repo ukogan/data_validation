@@ -1478,17 +1478,195 @@
                 top: 10px;
             }
 
-            .tour-popup {
-                max-width: 250px;
-                padding: 15px;
+        }
+    </style>
+
+    <!-- Shepherd.js CSS -->
+    <link rel="stylesheet" href="/static/shepherd/shepherd.css">
+
+    <!-- Shepherd.js JavaScript -->
+    <script type="module">
+        import Shepherd from '/static/shepherd/shepherd.js';
+        window.Shepherd = Shepherd;
+        console.log('Shepherd.js loaded successfully');
+    </script>
+
+    <!-- Custom Shepherd styling -->
+    <style>
+        .shepherd-button {
+            background: #6c5ce7 !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 4px !important;
+            padding: 8px 16px !important;
+            font-weight: 500 !important;
+        }
+
+        .shepherd-button:hover {
+            background: #5a52d5 !important;
+        }
+
+        .shepherd-element {
+            background: white !important;
+            border: 2px solid #6c5ce7 !important;
+            border-radius: 8px !important;
+            box-shadow: 0 8px 24px rgba(108, 92, 231, 0.2) !important;
+            cursor: move !important;
+            position: fixed !important;
+            z-index: 10000 !important;
+            max-width: 350px !important;
+            pointer-events: auto !important;
+        }
+
+        .shepherd-element.shepherd-pinned-top {
+            top: 20px !important;
+        }
+
+        .shepherd-element.shepherd-pinned-bottom {
+            bottom: 20px !important;
+        }
+
+        .shepherd-element.shepherd-pinned-left {
+            left: 20px !important;
+        }
+
+        .shepherd-element.shepherd-pinned-right {
+            right: 20px !important;
+        }
+
+        .shepherd-header {
+            background: #6c5ce7 !important;
+            color: white !important;
+            padding: 12px 16px !important;
+            border-radius: 6px 6px 0 0 !important;
+        }
+
+        .shepherd-text {
+            padding: 16px !important;
+            color: #333 !important;
+            line-height: 1.5 !important;
+        }
+
+
+        .info-indicator {
+            font-size: 16px;
+        }
+
+        /* Tour Progress Indicator */
+        .tour-progress {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(108, 92, 231, 0.9);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 1002;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            display: none;
+        }
+
+        .tour-progress.visible {
+            display: block;
+        }
+
+        /* Pulsing Highlight Animation */
+        .tour-highlight {
+            position: relative;
+            z-index: 1001;
+        }
+
+        .tour-highlight::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: -8px;
+            right: -8px;
+            bottom: -8px;
+            border: 4px solid #6c5ce7;
+            border-radius: 12px;
+            animation: pulse-border 2s infinite;
+            pointer-events: none;
+            z-index: 1002;
+        }
+
+        /* Override group-header border when highlighted */
+        .tour-highlight.group-header {
+            border-left: none !important;
+        }
+
+        /* Allow highlighting to show outside container bounds */
+        .grouped-container.tour-visible {
+            overflow: visible !important;
+        }
+
+        @keyframes pulse-border {
+            0% {
+                border-color: #6c5ce7;
+                box-shadow: 0 0 0 0 rgba(108, 92, 231, 0.4);
             }
+            50% {
+                border-color: #a29bfe;
+                box-shadow: 0 0 0 8px rgba(108, 92, 231, 0.1);
+            }
+            100% {
+                border-color: #6c5ce7;
+                box-shadow: 0 0 0 0 rgba(108, 92, 231, 0.4);
+            }
+        }
+
+        /* Tour Arrow Pointer */
+        .tour-arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border: 12px solid transparent;
+            z-index: 1003;
+            animation: bounce-arrow 1.5s infinite;
+        }
+
+        .tour-arrow.top {
+            border-bottom-color: #6c5ce7;
+            top: -24px;
+        }
+
+        .tour-arrow.bottom {
+            border-top-color: #6c5ce7;
+            bottom: -24px;
+        }
+
+        .tour-arrow.left {
+            border-right-color: #6c5ce7;
+            left: -24px;
+        }
+
+        .tour-arrow.right {
+            border-left-color: #6c5ce7;
+            right: -24px;
+        }
+
+        @keyframes bounce-arrow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Controls Validation & Continuous Commissioning</h1>
-        <div class="header-subtitle" id="headerSubtitle">API Powered Dashboard</div>
+    <!-- Tour Progress Indicator -->
+    <div class="tour-progress" id="tourProgress">Step 1 of 6</div>
+
+    <div class="header" style="display: flex; align-items: flex-start; justify-content: space-between;">
+        <div>
+            <h1>Controls Validation & Continuous Commissioning</h1>
+            <div class="header-subtitle" id="headerSubtitle">API Powered Dashboard</div>
+        </div>
+        <button class="upload-btn" onclick="startTour()" style="background: linear-gradient(135deg, #6c5ce7 0%, #5a52d5 100%); color: white; margin-top: 10px; flex-shrink: 0;">
+            🎓 Take Interactive Tour
+            <div style="font-size: 0.8em; opacity: 0.9;">Learn how to use ODCV Analytics</div>
+        </button>
         <div class="dataset-info" id="datasetInfo" style="margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 6px; font-size: 14px; display: none;">
             <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
                 <div style="display: flex; align-items: center; gap: 5px;">
@@ -1510,55 +1688,6 @@
         </div>
     </div>
 
-    <!-- Enhanced Legend Panel -->
-    <div class="legend-panel" id="legendPanel">
-        <div class="legend-header">
-            <div class="legend-title">
-                <div class="legend-icon">🔍</div>
-                Legend & Guide
-            </div>
-            <button class="collapse-btn" onclick="toggleLegend()">−</button>
-        </div>
-        <div class="legend-content" id="legendContent">
-            <div class="legend-section">
-                <div class="legend-section-title">Dashboard Indicators</div>
-                <div class="legend-item">
-                    <div class="legend-swatch occupied"></div>
-                    <span>Good Performance - On target</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-swatch standby"></div>
-                    <span>Warning - Needs monitoring</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-swatch violation"></div>
-                    <span>Alert - Requires action</span>
-                </div>
-            </div>
-            <div class="legend-section">
-                <div class="legend-section-title">Data Status</div>
-                <div class="legend-item">
-                    <div class="legend-swatch active"></div>
-                    <span>Live data available</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-swatch missing"></div>
-                    <span>Missing or incomplete data</span>
-                </div>
-            </div>
-            <div class="legend-section">
-                <div class="legend-section-title">Interactive Features</div>
-                <div class="legend-item">
-                    <span class="info-indicator">ⓘ</span>
-                    <span>Hover over elements for details</span>
-                </div>
-                <div class="legend-item">
-                    <span class="info-indicator">🎯</span>
-                    <span>Click for detailed analysis</span>
-                </div>
-            </div>
-        </div>
-    </div>
 
 
     <!-- Dataset Selection Section -->
@@ -1585,6 +1714,10 @@
             <div class="upload-area" id="uploadArea">
                 <p>Drag and drop CSV file here or click to select</p>
                 <input type="file" id="fileInput" accept=".csv" style="display: none;">
+                <button class="upload-btn" onclick="loadPresetDataset('database')" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white;">
+                📊 Latest from Database
+                <div style="font-size: 0.8em; opacity: 0.9;">Live data from TimescaleDB (last 24hrs)</div>
+            </button>
                 <button class="upload-btn" onclick="document.getElementById('fileInput').click()">Choose File</button>
                 <button class="generate-test-btn" onclick="generateTestData()">Generate Test Data</button>
             </div>
@@ -1627,19 +1760,6 @@
         let currentTimePeriod = '24h';
         let violationsData = {}; // Store violations by sensor ID for CSV export
 
-        // Enhanced Legend System Functions
-        function toggleLegend() {
-            const content = document.getElementById('legendContent');
-            const btn = document.querySelector('.collapse-btn');
-
-            if (content.classList.contains('collapsed')) {
-                content.classList.remove('collapsed');
-                btn.textContent = '−';
-            } else {
-                content.classList.add('collapsed');
-                btn.textContent = '+';
-            }
-        }
 
 
         // File upload handling
@@ -2994,6 +3114,250 @@
         });
     </script>
 
+    <!-- Shepherd Tour Configuration -->
+    <script>
+        let tour;
+        let currentTourStep = 0;
+        const totalTourSteps = 8;
+
+        // Tour utility functions
+        function showTourProgress(step) {
+            const progressEl = document.getElementById('tourProgress');
+            progressEl.textContent = `Step ${step} of ${totalTourSteps}`;
+            progressEl.classList.add('visible');
+        }
+
+        function hideTourProgress() {
+            const progressEl = document.getElementById('tourProgress');
+            progressEl.classList.remove('visible');
+        }
+
+        function addTourHighlight(element) {
+            if (element) {
+                element.classList.add('tour-highlight');
+                // Add tour-visible class to parent grouped-container to allow overflow
+                const groupedContainer = element.closest('.grouped-container');
+                if (groupedContainer) {
+                    groupedContainer.classList.add('tour-visible');
+                }
+                // Scroll element into view with smooth animation
+                element.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center',
+                    inline: 'center'
+                });
+            }
+        }
+
+        function removeTourHighlight(element) {
+            if (element) {
+                element.classList.remove('tour-highlight');
+            }
+        }
+
+        function clearAllTourHighlights() {
+            document.querySelectorAll('.tour-highlight').forEach(el => {
+                el.classList.remove('tour-highlight');
+            });
+            // Remove tour-visible class from all grouped containers
+            document.querySelectorAll('.grouped-container.tour-visible').forEach(el => {
+                el.classList.remove('tour-visible');
+            });
+        }
+
+        function makeTourWindowDraggable() {
+            console.log('Making tour window draggable...');
+            const tourElement = document.querySelector('.shepherd-element');
+            console.log('Tour element found:', tourElement);
+            if (!tourElement) {
+                console.warn('No tour element found for dragging');
+                return;
+            }
+
+            let isDragging = false;
+            let startX = 0;
+            let startY = 0;
+            let currentX = 0;
+            let currentY = 0;
+
+            const header = tourElement.querySelector('.shepherd-header') || tourElement;
+
+            header.style.cursor = 'move';
+            header.addEventListener('mousedown', startDrag);
+
+            function startDrag(e) {
+                if (e.target.closest('.shepherd-button')) return; // Don't drag if clicking buttons
+
+                isDragging = true;
+                startX = e.clientX - currentX;
+                startY = e.clientY - currentY;
+
+                document.addEventListener('mousemove', drag);
+                document.addEventListener('mouseup', stopDrag);
+                e.preventDefault();
+            }
+
+            function drag(e) {
+                if (!isDragging) return;
+
+                e.preventDefault();
+                currentX = e.clientX - startX;
+                currentY = e.clientY - startY;
+
+                tourElement.style.transform = `translate(${currentX}px, ${currentY}px)`;
+            }
+
+            function stopDrag() {
+                isDragging = false;
+                document.removeEventListener('mousemove', drag);
+                document.removeEventListener('mouseup', stopDrag);
+            }
+        }
+
+        function startTour() {
+            // Create lightweight popup with just tour instructions
+            const tourHTML = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>ODCV Analytics Tour</title>
+                    <style>
+                        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 20px; line-height: 1.6; background: #f8f9fa; }
+                        .tour-window { max-width: 500px; background: white; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
+                        .tour-header { background: linear-gradient(135deg, #6c5ce7 0%, #5a52d5 100%); color: white; padding: 20px; border-radius: 12px 12px 0 0; }
+                        .tour-content { padding: 24px; }
+                        .tour-buttons { display: flex; gap: 12px; margin-top: 24px; }
+                        .btn { padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; }
+                        .btn-primary { background: #6c5ce7; color: white; }
+                        .btn-secondary { background: #f1f3f4; color: #333; }
+                        .btn:hover { opacity: 0.9; }
+                        .step-counter { background: rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 16px; font-size: 14px; }
+                        h3 { margin: 0 0 16px 0; color: #2c3e50; }
+                        p { margin: 0 0 12px 0; color: #495057; }
+                    </style>
+                </head>
+                <body>
+                    <div class="tour-window">
+                        <div class="tour-header">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <h2 style="margin: 0; font-size: 18px;">🎓 ODCV Analytics Tour</h2>
+                                <div class="step-counter" id="stepCounter">Step 1 of 6</div>
+                            </div>
+                        </div>
+                        <div class="tour-content" id="tourContent">
+                            <!-- Content will be populated by updateStep() -->
+                        </div>
+                        <div class="tour-buttons">
+                            <button class="btn btn-secondary" onclick="closeTour()">Exit Tour</button>
+                            <button class="btn btn-primary" onclick="nextStep()">Next →</button>
+                        </div>
+                    </div>
+                    <scr` + `ipt>
+                        let currentStep = 1;
+                        const totalSteps = 6;
+
+                        const tourSteps = [
+                            { title: '📊 Step 1: Load Your Building Data', content: 'Look for the green "Latest from database" button with the purple border.<br><br>Click it and give the dashboard up to a minute to load (there may be many millions of records)!', element: "loadPresetDataset('database')" },
+                            { title: '📊 Step 2: Understanding Key Metrics', content: 'Once data loads, you&apos;ll see an highlighted executive summary that shows overall O-DCV performance for the building. It shows:<br><br><strong>Standby Mode</strong>: Percentage of time all zones fall back to energy-saving standby mode because they&apos;re unoccupied<br><strong>Airflow Reduction</strong>: Overall reduction in airflow from switching to standby mode (airflow reduction reduces outside air requirements, which reduces heating and cooling loads and fan energy)<br><strong>Correlation Health</strong>: Checks the BMS is responding correctly to occupancy data<br><strong>Data Completeness:</strong>Checks that sensor data is available 2× per minute and BMS data 1× per minute. Missing data affects analysis accuracy and can indicate Gateway or BMS problems.', element: 'executive-dashboard' },
+                            { title: '🏢 Step 3: Floor Organization', content: ' Sensors are automatically grouped by floor. Each floor shows:<br><br><strong>Standby %</strong>:Percentage of time floor zones are in energy-saving mode<br><strong>Out of Spec %</strong>: Percentage of mode switches between standby and occupied that are either too early/late across all zones on the floor. Indicatator of proper BMS programming', element: '.group-header' },
+                            { title: '🏠 Step 4: Room-Level Performance', content: 'Click <strong>^ expand button</strong> on the left of any floor to see individual room metrics. <br><br>Each room shows:<br><br><strong>Fraction of time sensor vs BMS show each mode</strong>: Show room/zone level standby rate and confirms correlation between occupancy sensing and BMS. Poor correlation means system is not responding properly, and bars turn yellow or red.<br><strong>Missing Data</strong>: Gaps in sensor/BMS data<br><strong>Last Outage</strong>: Most recent 5+ minute data interruption<br><strong>Commissioning</strong>: Counts out of spec mode changes by early vs late and switching to standby vs switching to occupied.<br><strong>24hr Chart</strong>: Standby rate over the last day (1 bar per hour)', element: '.expand-btn' },
+                            { title: '⏰ Step 5: Time Controls', content: '<strong> Latest 24 Hrs</strong>: ID current issues and their resolution<br><strong>5 Days</strong>: See work week; confirm any programming changes are sticking<br><strong>30 Days</strong>: Long term performance trends', element: 'time-period-toggle' },
+                            { title: '📈 Step 6: Timeline View', content: 'Expand any room to see its <strong>granular timeline</strong> covering up to 5 days. You&apos;ll see <strong>3 zone pairs</strong>; each pair covers 8 hours and shows a sensor row (what occupancy detected) above a BMS row (how the system responded).<br><br><strong>Gray</strong> = occupied | <strong>Green</strong> = standby<br><strong>Purple vertical lines</strong> = Out of spec mode switches<br><strong>Loupe tool</strong> = Hover over the timeline for a closeup view<br><br>When rows colors align closely with no visible breaks in the pattern and no purple lines, your system is working as designed!', element: '.expand-btn' }
+                        ];
+
+                        function updateStep() {
+                            const step = tourSteps[currentStep - 1];
+                            document.getElementById('stepCounter').textContent = \`Step \${currentStep} of \${totalSteps}\`;
+                            document.getElementById('tourContent').innerHTML = \`<h3>\${step.title}</h3><p>\${step.content}</p>\`;
+
+                            // Send message to main window for highlighting
+                            if (step.element) {
+                                window.opener.postMessage({type: 'tour-highlight', element: step.element}, '*');
+                            } else {
+                                window.opener.postMessage({type: 'tour-clear'}, '*');
+                            }
+                            updateButtons();
+                        }
+
+                        function updateButtons() {
+                            const buttonsDiv = document.querySelector('.tour-buttons');
+                            let backBtn = currentStep > 1 ? '<button class="btn btn-secondary" onclick="prevStep()">← Back</button>' : '';
+                            let nextBtn = currentStep < totalSteps ? '<button class="btn btn-primary" onclick="nextStep()">Next →</button>' : '<button class="btn btn-primary" onclick="closeTour()">Finish Tour</button>';
+                            buttonsDiv.innerHTML = \`<button class="btn btn-secondary" onclick="closeTour()">Exit Tour</button>\${backBtn}\${nextBtn}\`;
+                        }
+
+                        function nextStep() { if (currentStep < totalSteps) { currentStep++; updateStep(); } }
+                        function prevStep() { if (currentStep > 1) { currentStep--; updateStep(); } }
+                        function closeTour() { window.opener.postMessage({type: 'tour-clear'}, '*'); window.close(); }
+
+                        // Initialize tour on load
+                        setTimeout(() => updateStep(), 0);
+                    </scr` + `ipt>
+                </body>
+                </html>
+            `;
+
+            const popup = window.open('', 'ODCVTour', 'width=600,height=700,scrollbars=yes,resizable=yes');
+            if (!popup) {
+                alert('Please allow popups for this site to use the interactive tour.');
+                return;
+            }
+
+            popup.document.open();
+            popup.document.write(tourHTML);
+            popup.document.close();
+            popup.focus();
+        }
+
+        // Message listener for tour highlighting from popup window
+        window.addEventListener('message', function(event) {
+            if (event.data.type === 'tour-highlight') {
+                // Clear any existing highlights
+                clearAllTourHighlights();
+
+                // Add highlight to specified element
+                let element;
+
+                // Try various selectors in order
+                if (event.data.element.includes('(')) {
+                    // If it contains parentheses, it's likely an onclick function
+                    element = document.querySelector(`[onclick*="${event.data.element}"]`);
+                } else if (event.data.element.startsWith('.') || event.data.element.startsWith('#') || event.data.element.includes(':')) {
+                    // If it starts with . or # or contains :, it's already a CSS selector
+                    element = document.querySelector(event.data.element);
+                } else {
+                    // Try ID, then class, then onclick
+                    element = document.querySelector(`#${event.data.element}`) ||
+                             document.querySelector(`.${event.data.element}`) ||
+                             document.querySelector(`[onclick*="${event.data.element}"]`);
+                }
+
+                if (element) {
+                    addTourHighlight(element);
+                    // Scroll element into view
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    console.warn('Tour element not found:', event.data.element);
+                }
+            } else if (event.data.type === 'tour-clear') {
+                clearAllTourHighlights();
+            }
+        });
+
+        // Auto-start tour on first visit (you can remove this if not desired)
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if user has taken the tour before
+            if (!localStorage.getItem('odcv-tour-completed')) {
+                setTimeout(() => {
+                    if (confirm('Welcome to ODCV Analytics! Would you like to take a quick interactive tour?')) {
+                        startTour();
+                    }
+                    localStorage.setItem('odcv-tour-completed', 'true');
+                }, 1500);
+            }
+        });
+    </script>
+
     <!-- Zoom Loupe -->
     <div class="zoom-loupe" id="zoom-loupe">
         <div class="zoom-header" id="zoom-header">Hover View</div>
@@ -3006,38 +3370,6 @@
         </div>
     </div>
 
-    <!-- Test Datasets Section -->
-    <div class="upload-section" style="margin-top: 40px; border-top: 2px solid #dee2e6; padding-top: 30px;">
-        <h3>Test Datasets</h3>
-        <p style="margin-bottom: 20px; color: #666; font-size: 0.9em;">These datasets are for testing and demonstration purposes only.</p>
-
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
-            <button class="upload-btn" onclick="loadPresetDataset('SCH-1_data_30_days_mock')">
-                30 Days / 100 Sensors (Mock)
-                <div style="font-size: 0.8em; opacity: 0.8;">Full dataset with BV zones</div>
-            </button>
-            <button class="upload-btn" onclick="loadPresetDataset('SCH-1_data_5_days_mock')">
-                5 Days / 100 Sensors (Mock)
-                <div style="font-size: 0.8em; opacity: 0.8;">Medium dataset with BV zones</div>
-            </button>
-            <button class="upload-btn" onclick="loadPresetDataset('SCH-1_data_1_day_mock')">
-                1 Day / 100 Sensors (Mock)
-                <div style="font-size: 0.8em; opacity: 0.8;">Quick test dataset</div>
-            </button>
-            <button class="upload-btn" onclick="loadPresetDataset('SCH-1_data_20250916')">
-                Real Data - 23.5 Hours
-                <div style="font-size: 0.8em; opacity: 0.8;">Actual sensor data from Sept 16</div>
-            </button>
-            <button class="upload-btn" onclick="loadPresetDataset('SCH1_Since915')">
-                Real Data - 4 Days
-                <div style="font-size: 0.8em; opacity: 0.8;">Extended dataset from Sept 15-19</div>
-            </button>
-            <button class="upload-btn" onclick="loadPresetDataset('database')" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white;">
-                📊 Latest from Database
-                <div style="font-size: 0.8em; opacity: 0.9;">Live data from TimescaleDB (last 24hrs)</div>
-            </button>
-        </div>
-    </div>
 
 
 </body>
