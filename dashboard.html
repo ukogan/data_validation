@@ -1715,8 +1715,7 @@
                 <p>Drag and drop CSV file here or click to select</p>
                 <input type="file" id="fileInput" accept=".csv" style="display: none;">
                 <button class="upload-btn" onclick="loadPresetDataset('database')" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white;">
-                📊 Latest from Database
-                <div style="font-size: 0.8em; opacity: 0.9;">Live data from TimescaleDB (last 24hrs)</div>
+                Load data from database
             </button>
                 <button class="upload-btn" onclick="document.getElementById('fileInput').click()">Choose File</button>
                 <button class="generate-test-btn" onclick="generateTestData()">Generate Test Data</button>
@@ -3257,7 +3256,7 @@
                         const totalSteps = 6;
 
                         const tourSteps = [
-                            { title: '📊 Step 1: Load Your Building Data', content: 'Look for the green "Latest from database" button with the purple border.<br><br>Click it and give the dashboard up to a minute to load (there may be many millions of records)!', element: "loadPresetDataset('database')" },
+                            { title: '📊 Step 1: Load Your Building Data', content: 'Look for the green "Load data from database" button.<br><br>Click it and give the dashboard up to a minute to load (there may be many millions of records)!', element: "loadPresetDataset('database')" },
                             { title: '📊 Step 2: Understanding Key Metrics', content: 'Once data loads, you&apos;ll see an highlighted executive summary that shows overall O-DCV performance for the building. It shows:<br><br><strong>Standby Mode</strong>: Percentage of time all zones fall back to energy-saving standby mode because they&apos;re unoccupied<br><strong>Airflow Reduction</strong>: Overall reduction in airflow from switching to standby mode (airflow reduction reduces outside air requirements, which reduces heating and cooling loads and fan energy)<br><strong>Correlation Health</strong>: Checks the BMS is responding correctly to occupancy data<br><strong>Data Completeness:</strong>Checks that sensor data is available 2× per minute and BMS data 1× per minute. Missing data affects analysis accuracy and can indicate Gateway or BMS problems.', element: 'executive-dashboard' },
                             { title: '🏢 Step 3: Floor Organization', content: ' Sensors are automatically grouped by floor. Each floor shows:<br><br><strong>Standby %</strong>:Percentage of time floor zones are in energy-saving mode<br><strong>Out of Spec %</strong>: Percentage of mode switches between standby and occupied that are either too early/late across all zones on the floor. Indicatator of proper BMS programming', element: '.group-header' },
                             { title: '🏠 Step 4: Room-Level Performance', content: 'Click <strong>^ expand button</strong> on the left of any floor to see individual room metrics. <br><br>Each room shows:<br><br><strong>Fraction of time sensor vs BMS show each mode</strong>: Show room/zone level standby rate and confirms correlation between occupancy sensing and BMS. Poor correlation means system is not responding properly, and bars turn yellow or red.<br><strong>Missing Data</strong>: Gaps in sensor/BMS data<br><strong>Last Outage</strong>: Most recent 5+ minute data interruption<br><strong>Commissioning</strong>: Counts out of spec mode changes by early vs late and switching to standby vs switching to occupied.<br><strong>24hr Chart</strong>: Standby rate over the last day (1 bar per hour)', element: '.expand-btn' },
