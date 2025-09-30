@@ -89,7 +89,6 @@ app.add_middleware(
 )
 
 # Mount static files for Shepherd.js
-app.mount("/node_modules", StaticFiles(directory="node_modules"), name="node_modules")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Pydantic models for API
