@@ -272,32 +272,140 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
             padding-bottom: 15px;
             border-bottom: 1px solid #e9ecef;
         }}
-        .legend {{
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-            background: #f8f9fa;
-            padding: 12px 15px;
-            border-radius: 6px;
-            border: 1px solid #dee2e6;
-            margin: 10px 0 15px 0;
+        /* Enhanced Persistent Legend Panel */
+        .legend-panel {{
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 1000;
+            width: 320px;
+            max-height: 80vh;
+            overflow-y: auto;
             font-size: 0.9em;
         }}
-        .legend-title {{
-            font-weight: bold;
-            margin-right: 15px;
-            color: #333;
+
+        .legend-header {{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
         }}
+
+        .legend-title {{
+            font-weight: 600;
+            font-size: 14px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }}
+
+        .legend-icon {{
+            width: 18px;
+            height: 18px;
+            background: #007bff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 10px;
+            font-weight: bold;
+        }}
+
+        .collapse-btn {{
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: #666;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.2s;
+        }}
+
+        .collapse-btn:hover {{
+            background: #f0f0f0;
+        }}
+
+        .legend-content {{
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }}
+
+        .legend-content.collapsed {{
+            max-height: 0 !important;
+        }}
+
+        .legend-section {{
+            margin-bottom: 15px;
+        }}
+
+        .legend-section-title {{
+            font-weight: 600;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }}
+
         .legend-item {{
             display: flex;
             align-items: center;
-            gap: 5px;
-            font-size: 0.9em;
+            gap: 8px;
+            margin-bottom: 6px;
+            font-size: 12px;
         }}
+
         .legend-color {{
             width: 20px;
             height: 12px;
             border-radius: 2px;
+            flex-shrink: 0;
+        }}
+
+        .divergence-thresholds {{
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }}
+
+        .threshold-item {{
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+            font-size: 11px;
+        }}
+
+        .threshold-dot {{
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }}
+
+        .help-hint {{
+            background: #e3f2fd;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            color: #1565c0;
+            margin-top: 10px;
         }}
         .tooltip {{
             position: absolute;
@@ -642,6 +750,208 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
         .help-content.expanded {{
             display: block;
         }}
+
+        /* Progressive Information Hierarchy */
+        .dashboard-sections {{
+            margin-right: 350px; /* Space for legend panel */
+        }}
+
+        .section-header {{
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px 8px 0 0;
+            margin-bottom: 0;
+            font-weight: 600;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }}
+
+        .section-icon {{
+            width: 24px;
+            height: 24px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }}
+
+        .section-content {{
+            background: white;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }}
+
+        .section-description {{
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            border-radius: 0 4px 4px 0;
+        }}
+
+        /* Smart Tour Overlay System */
+        .tour-overlay {{
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 998;
+            display: none;
+        }}
+
+        .tour-highlight {{
+            position: relative;
+            z-index: 999;
+            border-radius: 8px;
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7);
+        }}
+
+        .tour-popup {{
+            position: absolute;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            max-width: 300px;
+            z-index: 1000;
+            font-size: 14px;
+        }}
+
+        .tour-popup-header {{
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }}
+
+        .tour-popup-content {{
+            color: #666;
+            line-height: 1.4;
+            margin-bottom: 12px;
+        }}
+
+        .tour-popup-buttons {{
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }}
+
+        .tour-btn {{
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }}
+
+        .tour-btn:hover {{
+            background: #0056b3;
+        }}
+
+        .tour-btn.secondary {{
+            background: #6c757d;
+        }}
+
+        .tour-btn.secondary:hover {{
+            background: #545b62;
+        }}
+
+        .quick-tour-btn {{
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }}
+
+        .quick-tour-btn:hover {{
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(40, 167, 69, 0.4);
+        }}
+
+        /* Enhanced Hover Affordances */
+        .hoverable-element {{
+            position: relative;
+            cursor: help;
+        }}
+
+        .hoverable-element::after {{
+            content: "ⓘ";
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #007bff;
+            color: white;
+            border-radius: 50%;
+            width: 14px;
+            height: 14px;
+            font-size: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }}
+
+        .hoverable-element:hover::after {{
+            opacity: 1;
+        }}
+
+        .hoverable-element:hover {{
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }}
+
+        /* Mobile responsiveness for legend panel */
+        @media (max-width: 768px) {{
+            .legend-panel {{
+                position: fixed;
+                bottom: 0;
+                top: auto;
+                left: 0;
+                right: 0;
+                width: 100%;
+                max-height: 50vh;
+                border-radius: 8px 8px 0 0;
+            }}
+
+            .dashboard-sections {{
+                margin-right: 0;
+                margin-bottom: 200px;
+            }}
+
+            .quick-tour-btn {{
+                bottom: 180px;
+            }}
+        }}
     </style>
 </head>
 <body>
@@ -668,6 +978,67 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
             </div>
 
             <div class="container">
+
+        <!-- Legend Panel -->
+        <div class="legend-panel" id="legendPanel">
+            <div class="legend-header">
+                <div class="legend-title">
+                    <div class="legend-icon">🔍</div>
+                    Legend & Guide
+                </div>
+                <button class="collapse-btn" onclick="toggleLegend()">−</button>
+            </div>
+            <div class="legend-content" id="legendContent">
+                <div class="legend-section">
+                    <div class="legend-section-title">Timeline Colors</div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #e74c3c;"></div>
+                        <span>Sensor: Occupied</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #3498db;"></div>
+                        <span>Sensor: Unoccupied</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #f1948a;"></div>
+                        <span>Zone: Occupied Mode</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #85c1e9;"></div>
+                        <span>Zone: Standby Mode</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #8e44ad;"></div>
+                        <span>Control Violation</span>
+                    </div>
+                </div>
+
+                <div class="legend-section">
+                    <div class="legend-section-title">Divergence Indicators</div>
+                    <div class="divergence-thresholds">
+                        <div class="threshold-item">
+                            <div class="threshold-dot" style="background: #28a745;"></div>
+                            <span>Good Sync (&lt;10% divergence)</span>
+                        </div>
+                        <div class="threshold-item">
+                            <div class="threshold-dot" style="background: #ffc107;"></div>
+                            <span>Minor Drift (10-20% divergence)</span>
+                        </div>
+                        <div class="threshold-item">
+                            <div class="threshold-dot" style="background: #dc3545;"></div>
+                            <span>Poor Sync (&gt;20% divergence)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="help-hint">
+                    💡 <strong>Hover for details:</strong> Charts and metrics show additional information on hover. Look for the ⓘ indicators.
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Sections -->
+        <div class="dashboard-sections">
 
         <div class="help-section">
             <div class="help-toggle" onclick="toggleHelp()">How to Read This Dashboard <span id="help-arrow">▶</span></div>
@@ -698,13 +1069,52 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
         </div>
 
 
-        <div id="executive-dashboard" class="executive-dashboard">
-            <!-- Executive dashboard will be populated by JavaScript -->
+        <!-- Executive Summary Section -->
+        <div class="section-header" data-tour-element="executive" data-tour-tooltip="High-level performance metrics showing overall building efficiency and control system synchronization">
+            <div class="section-icon">📊</div>
+            Executive Summary
+        </div>
+        <div class="section-content">
+            <div class="section-description">
+                View overall building performance metrics and identify systems requiring attention.
+            </div>
+            <div id="executive-dashboard" class="executive-dashboard hoverable-element" data-tour-tooltip="Overall system performance showing correlation efficiency and energy savings opportunities">
+                <!-- Executive dashboard will be populated by JavaScript -->
+            </div>
         </div>
 
-        <div id="timelines">
-            <!-- Timelines will be inserted here -->
+        <!-- Timeline Analysis Section -->
+        <div class="section-header" data-tour-element="timelines" data-tour-tooltip="Detailed timeline view showing exact timing of occupancy events and control responses">
+            <div class="section-icon">📈</div>
+            Timeline & Violation Details
         </div>
+        <div class="section-content">
+            <div class="section-description">
+                Drill down into specific timing events and control violations for each sensor-zone pair.
+            </div>
+            <div id="timelines" class="hoverable-element" data-tour-tooltip="Interactive timeline with hover details and violation markers">
+                <!-- Timelines will be inserted here -->
+            </div>
+        </div>
+
+        </div> <!-- Close dashboard-sections -->
+
+        <!-- Tour Overlay System -->
+        <div class="tour-overlay" id="tourOverlay"></div>
+        <div class="tour-popup" id="tourPopup" style="display: none;">
+            <div class="tour-popup-header" id="tourTitle"></div>
+            <div class="tour-popup-content" id="tourContent"></div>
+            <div class="tour-popup-buttons">
+                <button class="tour-btn secondary" onclick="skipTour()">Skip</button>
+                <button class="tour-btn" onclick="nextTourStep()">Next</button>
+            </div>
+        </div>
+
+        <!-- Quick Tour Button -->
+        <button class="quick-tour-btn" onclick="startQuickTour()">
+            <span>🎯</span>
+            Quick Tour
+        </button>
     </div>
 
     <div class="tooltip" id="tooltip" style="display: none;"></div>
@@ -728,29 +1138,7 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
 
             // Create timeline HTML
             container.innerHTML = `
-                <div class="timeline-header">Sensor (${{data.sensor.replace(' presence', '')}}) → BMS Status (${{data.zone}})</div>
-                <div class="legend">
-                    <div class="legend-item">
-                        <div class="legend-color" style="background-color: #e74c3c;"></div>
-                        <span>Sensor: Occupied</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background-color: #3498db;"></div>
-                        <span>Sensor: Unoccupied</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background-color: #f1948a;"></div>
-                        <span>Zone: Occupied Mode</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background-color: #85c1e9;"></div>
-                        <span>Zone: Standby Mode</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background-color: #8e44ad;"></div>
-                        <span>Out of spec mode change</span>
-                    </div>
-                </div>
+                <div class="timeline-header" data-tour-element="timeline-header" data-tour-tooltip="Timeline showing sensor occupancy events and BMS zone responses over time">Sensor (${{data.sensor.replace(' presence', '')}}) → BMS Status (${{data.zone}})</div>
 
                 <div class="analytics-row">
                     <div class="statistics-panel">
@@ -1322,6 +1710,181 @@ def create_html_viewer(timeline_data_list, output_file='timeline_viewer.html'):
             // Initialize on page load
             checkAuthAndDisplayUser();
         }})();
+
+        // Legend Panel Functions
+        let isLegendCollapsed = false;
+
+        function toggleLegend() {{
+            const content = document.getElementById('legendContent');
+            const btn = document.querySelector('.collapse-btn');
+
+            if (isLegendCollapsed) {{
+                content.classList.remove('collapsed');
+                content.style.maxHeight = '1000px';
+                btn.textContent = '−';
+                isLegendCollapsed = false;
+            }} else {{
+                content.classList.add('collapsed');
+                content.style.maxHeight = '0';
+                btn.textContent = '+';
+                isLegendCollapsed = true;
+            }}
+        }}
+
+        // Quick Tour System
+        let currentTourStep = 0;
+        let tourSteps = [];
+
+        function initializeTourSteps() {{
+            tourSteps = [
+                {{
+                    element: '[data-tour-element="executive"]',
+                    title: '📊 Executive Summary',
+                    content: 'High-level performance metrics showing overall building efficiency and control system synchronization. Start here for key insights.',
+                    position: 'bottom'
+                }},
+                {{
+                    element: '[data-tour-element="timelines"]',
+                    title: '📈 Timeline Details',
+                    content: 'Detailed timeline view showing exact timing of occupancy events and control responses. Purple bars indicate timing violations.',
+                    position: 'top'
+                }},
+                {{
+                    element: '#legendPanel',
+                    title: '🔍 Legend & Guide',
+                    content: 'Persistent legend panel with color explanations and divergence thresholds. Always available for reference.',
+                    position: 'left'
+                }},
+                {{
+                    element: '.hoverable-element',
+                    title: '💡 Interactive Elements',
+                    content: 'Look for ⓘ indicators throughout the dashboard. Hover over charts and metrics for detailed information.',
+                    position: 'top'
+                }}
+            ];
+        }}
+
+        function startQuickTour() {{
+            initializeTourSteps();
+            currentTourStep = 0;
+            showTourStep();
+        }}
+
+        function showTourStep() {{
+            if (currentTourStep >= tourSteps.length) {{
+                endTour();
+                return;
+            }}
+
+            const step = tourSteps[currentTourStep];
+            const element = document.querySelector(step.element);
+
+            if (!element) {{
+                nextTourStep();
+                return;
+            }}
+
+            // Clear any existing highlights
+            document.querySelectorAll('.tour-highlight').forEach(el => {{
+                el.classList.remove('tour-highlight');
+            }});
+
+            // Show overlay
+            const overlay = document.getElementById('tourOverlay');
+            overlay.style.display = 'block';
+
+            // Highlight current element
+            element.classList.add('tour-highlight');
+            element.scrollIntoView({{ behavior: 'smooth', block: 'center' }});
+
+            // Position and show popup
+            const popup = document.getElementById('tourPopup');
+            const title = document.getElementById('tourTitle');
+            const content = document.getElementById('tourContent');
+
+            title.textContent = step.title;
+            content.innerHTML = step.content + (element.dataset.tourTooltip ? '<br><br><em>Existing tooltip: ' + element.dataset.tourTooltip + '</em>' : '');
+
+            // Position popup relative to element
+            const rect = element.getBoundingClientRect();
+            const popupRect = popup.getBoundingClientRect();
+
+            let top, left;
+            switch (step.position) {{
+                case 'bottom':
+                    top = rect.bottom + 10;
+                    left = rect.left + (rect.width / 2) - (popupRect.width / 2);
+                    break;
+                case 'top':
+                    top = rect.top - popupRect.height - 10;
+                    left = rect.left + (rect.width / 2) - (popupRect.width / 2);
+                    break;
+                case 'left':
+                    top = rect.top + (rect.height / 2) - (popupRect.height / 2);
+                    left = rect.left - popupRect.width - 10;
+                    break;
+                default:
+                    top = rect.bottom + 10;
+                    left = rect.left;
+            }}
+
+            // Ensure popup stays within viewport
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+
+            if (left < 10) left = 10;
+            if (left + popupRect.width > viewportWidth - 10) left = viewportWidth - popupRect.width - 10;
+            if (top < 10) top = 10;
+            if (top + popupRect.height > viewportHeight - 10) top = viewportHeight - popupRect.height - 10;
+
+            popup.style.left = left + 'px';
+            popup.style.top = top + 'px';
+            popup.style.display = 'block';
+
+            // Update button text
+            const nextBtn = popup.querySelector('.tour-btn:not(.secondary)');
+            nextBtn.textContent = currentTourStep === tourSteps.length - 1 ? 'Finish' : 'Next';
+        }}
+
+        function nextTourStep() {{
+            currentTourStep++;
+            showTourStep();
+        }}
+
+        function skipTour() {{
+            endTour();
+        }}
+
+        function endTour() {{
+            // Hide overlay and popup
+            document.getElementById('tourOverlay').style.display = 'none';
+            document.getElementById('tourPopup').style.display = 'none';
+
+            // Clear highlights
+            document.querySelectorAll('.tour-highlight').forEach(el => {{
+                el.classList.remove('tour-highlight');
+            }});
+
+            currentTourStep = 0;
+        }}
+
+        // Initialize tour system when page loads
+        document.addEventListener('DOMContentLoaded', function() {{
+            initializeTourSteps();
+
+            // Add hover effects for enhanced elements
+            document.querySelectorAll('.hoverable-element').forEach(element => {{
+                element.addEventListener('mouseenter', function() {{
+                    this.style.transform = 'translateY(-2px)';
+                    this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                }});
+
+                element.addEventListener('mouseleave', function() {{
+                    this.style.transform = 'translateY(0)';
+                    this.style.boxShadow = 'none';
+                }});
+            }});
+        }});
     </script>
 
     <script src="public/auth.js"></script>

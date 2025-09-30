@@ -888,6 +888,15 @@
             background: rgba(133, 208, 133, 0.5);
         }
 
+        /* Divergence border styling */
+        .divergence-warning {
+            border: 2px solid #ffc107 !important;
+        }
+
+        .divergence-poor {
+            border: 2px solid #dc3545 !important;
+        }
+
         .bar-label {
             position: absolute;
             font-size: 9px;
@@ -921,50 +930,6 @@
             font-weight: 500;
         }
 
-        /* Chart Legend */
-        .chart-legend-section {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            padding: 16px;
-            margin: 20px 36px;
-            text-align: center;
-        }
-
-        .chart-legend-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 12px;
-        }
-
-        .chart-legend {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 30px;
-            flex-wrap: wrap;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 12px;
-        }
-
-        .legend-color {
-            width: 16px;
-            height: 10px;
-            border-radius: 2px;
-        }
-
-        .legend-direction {
-            font-size: 13px;
-            font-weight: 600;
-            color: #495057;
-            margin: 0 15px;
-        }
 
         /* Missing Data Display */
         .missing-data-chart {
@@ -1358,13 +1323,371 @@
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
+
+        /* Enhanced Legend Panel */
+        .legend-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 320px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+            z-index: 1000;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+        }
+
+        .legend-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid #eee;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            border-radius: 12px 12px 0 0;
+        }
+
+        .legend-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 16px;
+        }
+
+        .legend-icon {
+            font-size: 18px;
+        }
+
+        .collapse-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            font-weight: bold;
+            color: #6c757d;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .collapse-btn:hover {
+            background: #f8f9fa;
+            color: #495057;
+        }
+
+        .legend-content {
+            max-height: 500px;
+            overflow-y: auto;
+            transition: max-height 0.3s ease;
+        }
+
+        .legend-content.collapsed {
+            max-height: 0;
+            overflow: hidden;
+        }
+
+        .legend-section {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f8f9fa;
+        }
+
+        .legend-section:last-child {
+            border-bottom: none;
+        }
+
+        .legend-section-title {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: #6c757d;
+        }
+
+        .legend-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .legend-swatch {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+
+        .legend-swatch.occupied { background: #28a745; }
+        .legend-swatch.unoccupied { background: #6c757d; }
+        .legend-swatch.active { background: #007bff; }
+        .legend-swatch.standby { background: #ffc107; }
+        .legend-swatch.violation { background: #dc3545; }
+        .legend-swatch.missing { background: repeating-linear-gradient(45deg, #f8f9fa, #f8f9fa 3px, #dee2e6 3px, #dee2e6 6px); }
+
+
+        /* Progressive Information Hierarchy */
+        .section-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 20px 0 15px 0;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 0 0 4px 0;
+        }
+
+        .section-description {
+            font-size: 14px;
+            color: #6c757d;
+            margin: 0;
+        }
+
+        .info-indicator {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            background: #17a2b8;
+            color: white;
+            border-radius: 50%;
+            font-size: 10px;
+            font-weight: bold;
+            margin-left: 6px;
+            cursor: help;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .legend-panel {
+                width: 280px;
+                right: 10px;
+                top: 10px;
+            }
+
+        }
+    </style>
+
+    <!-- Shepherd.js CSS -->
+    <link rel="stylesheet" href="/static/shepherd/shepherd.css">
+
+    <!-- Shepherd.js JavaScript -->
+    <script type="module">
+        import Shepherd from '/static/shepherd/shepherd.js';
+        window.Shepherd = Shepherd;
+        console.log('Shepherd.js loaded successfully');
+    </script>
+
+    <!-- Custom Shepherd styling -->
+    <style>
+        .shepherd-button {
+            background: #6c5ce7 !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 4px !important;
+            padding: 8px 16px !important;
+            font-weight: 500 !important;
+        }
+
+        .shepherd-button:hover {
+            background: #5a52d5 !important;
+        }
+
+        .shepherd-element {
+            background: white !important;
+            border: 2px solid #6c5ce7 !important;
+            border-radius: 8px !important;
+            box-shadow: 0 8px 24px rgba(108, 92, 231, 0.2) !important;
+            cursor: move !important;
+            position: fixed !important;
+            z-index: 10000 !important;
+            max-width: 350px !important;
+            pointer-events: auto !important;
+        }
+
+        .shepherd-element.shepherd-pinned-top {
+            top: 20px !important;
+        }
+
+        .shepherd-element.shepherd-pinned-bottom {
+            bottom: 20px !important;
+        }
+
+        .shepherd-element.shepherd-pinned-left {
+            left: 20px !important;
+        }
+
+        .shepherd-element.shepherd-pinned-right {
+            right: 20px !important;
+        }
+
+        .shepherd-header {
+            background: #6c5ce7 !important;
+            color: white !important;
+            padding: 12px 16px !important;
+            border-radius: 6px 6px 0 0 !important;
+        }
+
+        .shepherd-text {
+            padding: 16px !important;
+            color: #333 !important;
+            line-height: 1.5 !important;
+        }
+
+
+        .info-indicator {
+            font-size: 16px;
+        }
+
+        /* Tour Progress Indicator */
+        .tour-progress {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(108, 92, 231, 0.9);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 1002;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            display: none;
+        }
+
+        .tour-progress.visible {
+            display: block;
+        }
+
+        /* Pulsing Highlight Animation */
+        .tour-highlight {
+            position: relative;
+            z-index: 1001;
+        }
+
+        .tour-highlight::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: -8px;
+            right: -8px;
+            bottom: -8px;
+            border: 4px solid #6c5ce7;
+            border-radius: 12px;
+            animation: pulse-border 2s infinite;
+            pointer-events: none;
+            z-index: 1002;
+        }
+
+        /* Override group-header border when highlighted */
+        .tour-highlight.group-header {
+            border-left: none !important;
+        }
+
+        /* Allow highlighting to show outside container bounds */
+        .grouped-container.tour-visible {
+            overflow: visible !important;
+        }
+
+        @keyframes pulse-border {
+            0% {
+                border-color: #6c5ce7;
+                box-shadow: 0 0 0 0 rgba(108, 92, 231, 0.4);
+            }
+            50% {
+                border-color: #a29bfe;
+                box-shadow: 0 0 0 8px rgba(108, 92, 231, 0.1);
+            }
+            100% {
+                border-color: #6c5ce7;
+                box-shadow: 0 0 0 0 rgba(108, 92, 231, 0.4);
+            }
+        }
+
+        /* Tour Arrow Pointer */
+        .tour-arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border: 12px solid transparent;
+            z-index: 1003;
+            animation: bounce-arrow 1.5s infinite;
+        }
+
+        .tour-arrow.top {
+            border-bottom-color: #6c5ce7;
+            top: -24px;
+        }
+
+        .tour-arrow.bottom {
+            border-top-color: #6c5ce7;
+            bottom: -24px;
+        }
+
+        .tour-arrow.left {
+            border-right-color: #6c5ce7;
+            left: -24px;
+        }
+
+        .tour-arrow.right {
+            border-left-color: #6c5ce7;
+            right: -24px;
+        }
+
+        @keyframes bounce-arrow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Controls Validation & Continuous Commissioning</h1>
-        <div class="header-subtitle" id="headerSubtitle">API Powered Dashboard</div>
+    <!-- Tour Progress Indicator -->
+    <div class="tour-progress" id="tourProgress">Step 1 of 6</div>
+
+    <div class="header" style="display: flex; align-items: flex-start; justify-content: space-between;">
+        <div>
+            <h1>Controls Validation & Continuous Commissioning</h1>
+            <div class="header-subtitle" id="headerSubtitle">API Powered Dashboard</div>
+        </div>
+        <button class="upload-btn" onclick="startTour()" style="background: linear-gradient(135deg, #6c5ce7 0%, #5a52d5 100%); color: white; margin-top: 10px; flex-shrink: 0;">
+            Show me around
+        </button>
+        <div class="dataset-info" id="datasetInfo" style="margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 6px; font-size: 14px; display: none;">
+            <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <span style="font-weight: 600;">Dataset:</span>
+                    <span id="datasetRecords">Loading...</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <span style="font-weight: 600;">Timespan:</span>
+                    <span id="datasetTimespan">Loading...</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <span style="font-weight: 600;">Source:</span>
+                    <span id="datasetSource" style="padding: 2px 6px; border-radius: 3px; font-size: 12px; font-weight: 600;">Loading...</span>
+                </div>
+                <div style="margin-left: auto;">
+                    <span id="datasetLastUpdated" style="font-size: 12px; opacity: 0.8;">Last updated: Loading...</span>
+                </div>
+            </div>
+        </div>
     </div>
+
+
 
     <!-- Dataset Selection Section -->
     <div class="upload-section">
@@ -1390,6 +1713,9 @@
             <div class="upload-area" id="uploadArea">
                 <p>Drag and drop CSV file here or click to select</p>
                 <input type="file" id="fileInput" accept=".csv" style="display: none;">
+                <button class="upload-btn" onclick="loadPresetDataset('database')" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white;">
+                Load data from database
+            </button>
                 <button class="upload-btn" onclick="document.getElementById('fileInput').click()">Choose File</button>
                 <button class="generate-test-btn" onclick="generateTestData()">Generate Test Data</button>
             </div>
@@ -1402,23 +1728,6 @@
         <div class="loading">Loading dashboard metrics...</div>
     </div>
 
-    <!-- Chart Legend -->
-    <div class="chart-legend-section">
-        <div class="chart-legend-title">📊 Diverging Chart Guide</div>
-        <div class="chart-legend">
-            <div class="legend-item">
-                <div class="legend-color" style="background: #2c2c2c;"></div>
-                <span>Sensor</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background: rgba(102, 102, 102, 0.5);"></div>
-                <span>BMS</span>
-            </div>
-            <span class="legend-direction">OCCUPIED ←</span>
-            <span style="color: #dee2e6; font-weight: bold;">|</span>
-            <span class="legend-direction">→ STANDBY</span>
-        </div>
-    </div>
 
     <div class="main-content">
         <div class="controls">
@@ -1448,6 +1757,8 @@
         let currentGrouping = 'building';
         let currentTimePeriod = '24h';
         let violationsData = {}; // Store violations by sensor ID for CSV export
+
+
 
         // File upload handling
         document.getElementById('fileInput').addEventListener('change', handleFileUpload);
@@ -1577,6 +1888,117 @@
                 headerSubtitle.textContent = `${customerName} - API Powered Dashboard`;
             } else {
                 headerSubtitle.textContent = 'API Powered Dashboard';
+            }
+        }
+
+        // Dataset info tracking
+        let lastDatasetInfo = null;
+        let datasetInfoInterval = null;
+
+        async function fetchDatasetInfo() {
+            try {
+                const response = await fetch('/api/dataset-info');
+                const data = await response.json();
+                updateDatasetInfoDisplay(data);
+                checkForDatasetChanges(data);
+                return data;
+            } catch (error) {
+                console.error('Failed to fetch dataset info:', error);
+                return null;
+            }
+        }
+
+        function updateDatasetInfoDisplay(data) {
+            const datasetInfo = document.getElementById('datasetInfo');
+            const recordsElement = document.getElementById('datasetRecords');
+            const timespanElement = document.getElementById('datasetTimespan');
+            const sourceElement = document.getElementById('datasetSource');
+            const lastUpdatedElement = document.getElementById('datasetLastUpdated');
+
+            if (data && data.record_count > 0) {
+                datasetInfo.style.display = 'block';
+
+                // Format record count with commas
+                recordsElement.textContent = data.record_count.toLocaleString() + ' records';
+
+                // Format timespan
+                if (data.earliest_timestamp && data.latest_timestamp) {
+                    const earliest = new Date(data.earliest_timestamp);
+                    const latest = new Date(data.latest_timestamp);
+                    const timespanStr = `${earliest.toLocaleDateString()} - ${latest.toLocaleDateString()} (${data.timespan_hours}h)`;
+                    timespanElement.textContent = timespanStr;
+                } else {
+                    timespanElement.textContent = 'Unknown timespan';
+                }
+
+                // Format data source with color coding
+                sourceElement.textContent = data.data_source.toUpperCase();
+                sourceElement.style.backgroundColor = data.data_source === 'database' ? '#28a745' : '#007bff';
+                sourceElement.style.color = 'white';
+
+                // Format last updated
+                const loadTime = new Date(data.load_timestamp);
+                lastUpdatedElement.textContent = `Last updated: ${loadTime.toLocaleTimeString()}`;
+            } else {
+                datasetInfo.style.display = 'none';
+            }
+        }
+
+        function checkForDatasetChanges(newData) {
+            if (lastDatasetInfo && newData) {
+                // Check if dataset has changed (different record count or timespan)
+                if (lastDatasetInfo.record_count !== newData.record_count ||
+                    lastDatasetInfo.timespan_hours !== newData.timespan_hours) {
+
+                    console.warn('🚨 DATASET CHANGE DETECTED!');
+                    console.warn('Previous:', lastDatasetInfo);
+                    console.warn('Current:', newData);
+
+                    // Show warning in UI
+                    showDatasetChangeWarning(lastDatasetInfo, newData);
+                }
+            }
+            lastDatasetInfo = newData;
+        }
+
+        function showDatasetChangeWarning(oldData, newData) {
+            const warningDiv = document.createElement('div');
+            warningDiv.style.cssText = `
+                position: fixed; top: 20px; right: 20px; z-index: 10000;
+                background: #dc3545; color: white; padding: 15px; border-radius: 8px;
+                max-width: 400px; font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            `;
+            warningDiv.innerHTML = `
+                <div style="font-weight: bold; margin-bottom: 8px;">📊 Dataset Updated</div>
+                <div>Previous: ${oldData.record_count.toLocaleString()} records</div>
+                <div>Current: ${newData.record_count.toLocaleString()} records</div>
+                <button onclick="this.parentElement.remove()" style="margin-top: 10px; background: white; color: #dc3545; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Close</button>
+            `;
+            document.body.appendChild(warningDiv);
+
+            // Auto-remove after 10 seconds
+            setTimeout(() => {
+                if (warningDiv.parentElement) {
+                    warningDiv.remove();
+                }
+            }, 10000);
+        }
+
+        function startDatasetInfoUpdates() {
+            // Initial fetch
+            fetchDatasetInfo();
+
+            // Update every 30 seconds
+            if (datasetInfoInterval) {
+                clearInterval(datasetInfoInterval);
+            }
+            datasetInfoInterval = setInterval(fetchDatasetInfo, 30000);
+        }
+
+        function stopDatasetInfoUpdates() {
+            if (datasetInfoInterval) {
+                clearInterval(datasetInfoInterval);
+                datasetInfoInterval = null;
             }
         }
 
@@ -1742,6 +2164,14 @@
             renderSensorTable(sensors);
         }
 
+        // Calculate divergence border class based on sensor vs BMS percentages
+        function getDivergenceBorderClass(sensorPercent, bmsPercent) {
+            const divergence = Math.abs(sensorPercent - bmsPercent);
+            if (divergence < 10) return ''; // No border for good sync
+            if (divergence < 20) return 'divergence-warning';
+            return 'divergence-poor';
+        }
+
         function renderSensorTable(sensors) {
             const container = document.getElementById('groupedContainer');
 
@@ -1839,19 +2269,20 @@
                                 <div class="correlation-chart" title="Diverging bar chart showing occupancy correlation. Left side shows occupied percentages (sensor vs BMS). Right side shows standby percentages. Well-balanced systems show symmetrical patterns.">
                                     <div class="chart-container">
                                         <div class="occupied-side">
-                                            <div class="sensor-bar" style="width: ${sensor.sensor_occupied_percent}%;">
+                                            <div class="sensor-bar ${getDivergenceBorderClass(sensor.sensor_occupied_percent, sensor.zone_occupied_percent)}" style="width: ${sensor.sensor_occupied_percent}%;" title="Sensor Occupied: ${sensor.sensor_occupied_percent.toFixed(0)}% - ${Math.abs(sensor.sensor_occupied_percent - sensor.zone_occupied_percent) < 10 ? 'Good sync' : Math.abs(sensor.sensor_occupied_percent - sensor.zone_occupied_percent) < 20 ? 'Minor drift (' + Math.abs(sensor.sensor_occupied_percent - sensor.zone_occupied_percent).toFixed(0) + '% divergence)' : 'Poor sync (' + Math.abs(sensor.sensor_occupied_percent - sensor.zone_occupied_percent).toFixed(0) + '% divergence)'}">
                                                 <span class="bar-label">${sensor.sensor_occupied_percent.toFixed(0)}%</span>
                                             </div>
-                                            <div class="bms-bar" style="width: ${sensor.zone_occupied_percent}%;">
+                                            <div class="bms-bar ${getDivergenceBorderClass(sensor.sensor_occupied_percent, sensor.zone_occupied_percent)}" style="width: ${sensor.zone_occupied_percent}%;" title="BMS Occupied: ${sensor.zone_occupied_percent.toFixed(0)}% - ${Math.abs(sensor.sensor_occupied_percent - sensor.zone_occupied_percent) < 10 ? 'Good sync' : Math.abs(sensor.sensor_occupied_percent - sensor.zone_occupied_percent) < 20 ? 'Minor drift (' + Math.abs(sensor.sensor_occupied_percent - sensor.zone_occupied_percent).toFixed(0) + '% divergence)' : 'Poor sync (' + Math.abs(sensor.sensor_occupied_percent - sensor.zone_occupied_percent).toFixed(0) + '% divergence)'}">
                                                 <span class="bar-label">${sensor.zone_occupied_percent.toFixed(0)}%</span>
                                             </div>
                                         </div>
-                                        <div class="chart-center"></div>
+                                        <div class="chart-center">
+                                        </div>
                                         <div class="standby-side">
-                                            <div class="sensor-bar" style="width: ${sensor.sensor_unoccupied_percent}%;">
+                                            <div class="sensor-bar ${getDivergenceBorderClass(sensor.sensor_unoccupied_percent, sensor.zone_standby_percent)}" style="width: ${sensor.sensor_unoccupied_percent}%;" title="Sensor Unoccupied: ${sensor.sensor_unoccupied_percent.toFixed(0)}% - ${Math.abs(sensor.sensor_unoccupied_percent - sensor.zone_standby_percent) < 10 ? 'Good sync' : Math.abs(sensor.sensor_unoccupied_percent - sensor.zone_standby_percent) < 20 ? 'Minor drift (' + Math.abs(sensor.sensor_unoccupied_percent - sensor.zone_standby_percent).toFixed(0) + '% divergence)' : 'Poor sync (' + Math.abs(sensor.sensor_unoccupied_percent - sensor.zone_standby_percent).toFixed(0) + '% divergence)'}">
                                                 <span class="bar-label">${sensor.sensor_unoccupied_percent.toFixed(0)}%</span>
                                             </div>
-                                            <div class="bms-bar" style="width: ${sensor.zone_standby_percent}%;">
+                                            <div class="bms-bar ${getDivergenceBorderClass(sensor.sensor_unoccupied_percent, sensor.zone_standby_percent)}" style="width: ${sensor.zone_standby_percent}%;" title="BMS Standby: ${sensor.zone_standby_percent.toFixed(0)}% - ${Math.abs(sensor.sensor_unoccupied_percent - sensor.zone_standby_percent) < 10 ? 'Good sync' : Math.abs(sensor.sensor_unoccupied_percent - sensor.zone_standby_percent) < 20 ? 'Minor drift (' + Math.abs(sensor.sensor_unoccupied_percent - sensor.zone_standby_percent).toFixed(0) + '% divergence)' : 'Poor sync (' + Math.abs(sensor.sensor_unoccupied_percent - sensor.zone_standby_percent).toFixed(0) + '% divergence)'}">
                                                 <span class="bar-label">${sensor.zone_standby_percent.toFixed(0)}%</span>
                                             </div>
                                         </div>
@@ -2045,25 +2476,73 @@
             const dataStartTime = new Date(Math.min(...timestamps));
             const dataEndTime = new Date(Math.max(...timestamps));
 
-            // Calculate from most recent data backwards
-            // Find the end day (midnight after the last data point)
-            const endDayMidnight = new Date(dataEndTime.getFullYear(), dataEndTime.getMonth(), dataEndTime.getDate() + 1, 0, 0, 0);
+            // Hybrid approach: 24h uses current-time-based rolling window, 5d/30d use calendar alignment
+            if (maxHours === 24) {
+                // For 24h: Use current time minus 24 hours (rolling window)
+                const now = new Date();
+                const windowStartTime = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+                const windowEndTime = now;
 
-            // Calculate start time by going back maxHours from end
-            const calculatedStartTime = new Date(endDayMidnight.getTime() - maxHours * 60 * 60 * 1000);
+                // Find the standard 8-hour blocks that intersect with the 24h window
+                // Start from the day containing windowStartTime
+                const startDay = new Date(windowStartTime.getFullYear(), windowStartTime.getMonth(), windowStartTime.getDate());
+                const endDay = new Date(windowEndTime.getFullYear(), windowEndTime.getMonth(), windowEndTime.getDate() + 1);
 
-            // Align start time to midnight
-            const gridStartTime = new Date(calculatedStartTime.getFullYear(), calculatedStartTime.getMonth(), calculatedStartTime.getDate(), 0, 0, 0);
+                // Calculate which 8-hour blocks intersect with our window
+                const blocks = [];
+                for (let day = new Date(startDay); day < endDay; day.setDate(day.getDate() + 1)) {
+                    for (let slot = 0; slot < 3; slot++) {
+                        const blockStart = new Date(day.getTime() + slot * 8 * 60 * 60 * 1000);
+                        const blockEnd = new Date(blockStart.getTime() + 8 * 60 * 60 * 1000);
 
-            // Grid end time is the end day midnight (or data end if earlier)
-            const gridEndTime = endDayMidnight;
+                        // Check if this block intersects with our 24h window
+                        if (blockEnd > windowStartTime && blockStart < windowEndTime) {
+                            blocks.push({
+                                blockStart,
+                                blockEnd,
+                                dayDate: new Date(day),
+                                slot
+                            });
+                        }
+                    }
+                }
 
-            // Calculate number of days and rows
-            const totalDays = Math.ceil((gridEndTime - gridStartTime) / (1000 * 60 * 60 * 24));
-            const numRows = totalDays * 3; // 3 rows per day (00:00, 08:00, 16:00)
-            const totalHours = (gridEndTime - gridStartTime) / (1000 * 60 * 60);
+                const totalHours = 24;
+                const numRows = blocks.length;
 
-            return { numRows, totalHours, gridStartTime, dataStartTime, dataEndTime };
+                return {
+                    numRows,
+                    totalHours,
+                    gridStartTime: windowStartTime,
+                    dataStartTime,
+                    dataEndTime,
+                    gridEndTime: windowEndTime,
+                    isRollingWindow: true,
+                    windowStartTime,
+                    windowEndTime,
+                    blocks
+                };
+            } else {
+                // For 5d/30d: Keep calendar day alignment
+                // Find the end day (midnight after the last data point)
+                const endDayMidnight = new Date(dataEndTime.getFullYear(), dataEndTime.getMonth(), dataEndTime.getDate() + 1, 0, 0, 0);
+
+                // Calculate start time by going back maxHours from end
+                const calculatedStartTime = new Date(endDayMidnight.getTime() - maxHours * 60 * 60 * 1000);
+
+                // Align start time to midnight
+                const gridStartTime = new Date(calculatedStartTime.getFullYear(), calculatedStartTime.getMonth(), calculatedStartTime.getDate(), 0, 0, 0);
+
+                // Grid end time is the end day midnight
+                const gridEndTime = endDayMidnight;
+
+                // Calculate number of days and rows
+                const totalDays = Math.ceil((gridEndTime - gridStartTime) / (1000 * 60 * 60 * 24));
+                const numRows = totalDays * 3; // 3 rows per day (00:00, 08:00, 16:00)
+                const totalHours = (gridEndTime - gridStartTime) / (1000 * 60 * 60);
+
+                return { numRows, totalHours, gridStartTime, dataStartTime, dataEndTime, gridEndTime, isRollingWindow: false };
+            }
         }
 
         function generateTimelineVisualization(timelineGrid, timelineData, groupIndex, sensorIndex) {
@@ -2081,55 +2560,99 @@
                 maxHours = 24; // Default to 24h
             }
 
-            const { numRows, totalHours, gridStartTime, dataStartTime, dataEndTime } = calculateTimelineRows(events, maxHours);
+            const { numRows, totalHours, gridStartTime, dataStartTime, dataEndTime, gridEndTime, isRollingWindow, windowStartTime, windowEndTime, blocks } = calculateTimelineRows(events, maxHours);
 
             console.log(`🔍 [DEBUG] Generating ${numRows} timeline rows for ${totalHours.toFixed(1)} hours (grid starts at ${gridStartTime.toISOString()})`);
 
             // Clear loading message
             timelineGrid.innerHTML = '';
 
-            // Generate timeline rows (3 per day: 00:00, 08:00, 16:00)
-            let currentDayIndex = -1;
-            for (let row = 0; row < numRows; row++) {
-                // Calculate row time based on fixed 8-hour schedule
-                const dayIndex = Math.floor(row / 3);
-                const timeSlot = row % 3;
-                const rowStartHour = timeSlot * 8; // 0, 8, or 16
-                const rowDate = new Date(gridStartTime.getTime() + dayIndex * 24 * 60 * 60 * 1000 + rowStartHour * 60 * 60 * 1000);
+            // Generate timeline rows
+            if (isRollingWindow) {
+                // For 24h rolling window: Use standard 8-hour blocks that intersect with the window
+                let currentDay = null;
 
-                // Add day header when starting a new day
-                if (dayIndex !== currentDayIndex) {
-                    currentDayIndex = dayIndex;
-                    const dayHeader = document.createElement('div');
-                    dayHeader.className = 'timeline-day-header';
+                for (let row = 0; row < numRows; row++) {
+                    const block = blocks[row];
 
-                    const dayDate = new Date(gridStartTime.getTime() + dayIndex * 24 * 60 * 60 * 1000);
-                    const dayName = dayDate.toLocaleDateString('en-US', { weekday: 'long' });
-                    const dateStr = dayDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                    // Add day header when starting a new day
+                    const dayKey = block.dayDate.toDateString();
+                    if (dayKey !== currentDay) {
+                        currentDay = dayKey;
+                        const dayHeader = document.createElement('div');
+                        dayHeader.className = 'timeline-day-header';
 
-                    dayHeader.textContent = `${dayName}, ${dateStr}`;
-                    timelineGrid.appendChild(dayHeader);
+                        const dayName = block.dayDate.toLocaleDateString('en-US', { weekday: 'long' });
+                        const dateStr = block.dayDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+                        dayHeader.textContent = `${dayName}, ${dateStr}`;
+                        timelineGrid.appendChild(dayHeader);
+                    }
+
+                    const timelineRow = document.createElement('div');
+                    timelineRow.className = 'timeline-row';
+
+                    // Add row label (standard 8-hour period)
+                    const label = document.createElement('div');
+                    label.className = 'timeline-row-label';
+                    label.textContent = String(block.blockStart.getHours()).padStart(2, '0') + ':00';
+                    timelineRow.appendChild(label);
+
+                    // Create timeline container for this row
+                    const timeline = document.createElement('div');
+                    timeline.className = 'timeline';
+                    timeline.dataset.row = row;
+
+                    // Add events for this 8-hour period, filtered to the 24h window
+                    addEventsToGridTimelineRowWithWindow(timeline, events, violations, block.blockStart, windowStartTime, windowEndTime);
+
+                    timelineRow.appendChild(timeline);
+                    timelineGrid.appendChild(timelineRow);
                 }
+            } else {
+                // For 5d/30d: Use calendar day alignment (original logic)
+                let currentDayIndex = -1;
+                for (let row = 0; row < numRows; row++) {
+                    // Calculate row time based on fixed 8-hour schedule
+                    const dayIndex = Math.floor(row / 3);
+                    const timeSlot = row % 3;
+                    const rowStartHour = timeSlot * 8; // 0, 8, or 16
+                    const rowDate = new Date(gridStartTime.getTime() + dayIndex * 24 * 60 * 60 * 1000 + rowStartHour * 60 * 60 * 1000);
 
-                const timelineRow = document.createElement('div');
-                timelineRow.className = 'timeline-row';
+                    // Add day header when starting a new day
+                    if (dayIndex !== currentDayIndex) {
+                        currentDayIndex = dayIndex;
+                        const dayHeader = document.createElement('div');
+                        dayHeader.className = 'timeline-day-header';
 
-                // Add row label (time only, since day is in header)
-                const label = document.createElement('div');
-                label.className = 'timeline-row-label';
-                label.textContent = String(rowDate.getHours()).padStart(2, '0') + ':00';
-                timelineRow.appendChild(label);
+                        const dayDate = new Date(gridStartTime.getTime() + dayIndex * 24 * 60 * 60 * 1000);
+                        const dayName = dayDate.toLocaleDateString('en-US', { weekday: 'long' });
+                        const dateStr = dayDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
-                // Create timeline container for this row
-                const timeline = document.createElement('div');
-                timeline.className = 'timeline';
-                timeline.dataset.row = row;
+                        dayHeader.textContent = `${dayName}, ${dateStr}`;
+                        timelineGrid.appendChild(dayHeader);
+                    }
 
-                // Add events for this 8-hour period
-                addEventsToGridTimelineRow(timeline, events, violations, rowDate);
+                    const timelineRow = document.createElement('div');
+                    timelineRow.className = 'timeline-row';
 
-                timelineRow.appendChild(timeline);
-                timelineGrid.appendChild(timelineRow);
+                    // Add row label (time only, since day is in header)
+                    const label = document.createElement('div');
+                    label.className = 'timeline-row-label';
+                    label.textContent = String(rowDate.getHours()).padStart(2, '0') + ':00';
+                    timelineRow.appendChild(label);
+
+                    // Create timeline container for this row
+                    const timeline = document.createElement('div');
+                    timeline.className = 'timeline';
+                    timeline.dataset.row = row;
+
+                    // Add events for this 8-hour period
+                    addEventsToGridTimelineRow(timeline, events, violations, rowDate);
+
+                    timelineRow.appendChild(timeline);
+                    timelineGrid.appendChild(timelineRow);
+                }
             }
 
             // Add hover functionality
@@ -2149,6 +2672,52 @@
             const rowViolations = violations.filter(violation => {
                 const violationTime = new Date(violation.timestamp);
                 return violationTime >= rowStartTime && violationTime < rowEndTime;
+            });
+
+            // Add sensor and zone events
+            rowEvents.forEach(event => {
+                const eventElement = document.createElement('div');
+                const eventTime = new Date(event.timestamp);
+                const minutesFromRowStart = (eventTime - rowStartTime) / (1000 * 60);
+                const xPos = (minutesFromRowStart / (8 * 60)) * 100; // Position within 8-hour row
+
+                eventElement.className = `event ${event.type} ${event.value === 1 ? (event.type === 'sensor' ? 'occupied' : 'standby') : (event.type === 'sensor' ? 'unoccupied' : 'occupied')}`;
+                eventElement.style.left = `${Math.max(0, Math.min(100, xPos))}%`;
+                eventElement.title = `${event.timestamp}: ${event.description || event.type}`;
+
+                timeline.appendChild(eventElement);
+            });
+
+            // Add violations
+            rowViolations.forEach(violation => {
+                const violationElement = document.createElement('div');
+                const violationTime = new Date(violation.timestamp);
+                const minutesFromRowStart = (violationTime - rowStartTime) / (1000 * 60);
+                const xPos = (minutesFromRowStart / (8 * 60)) * 100;
+
+                violationElement.className = 'violation';
+                violationElement.style.left = `${Math.max(0, Math.min(100, xPos))}%`;
+                violationElement.title = `Violation: ${violation.description || violation.type}`;
+
+                timeline.appendChild(violationElement);
+            });
+        }
+
+        function addEventsToGridTimelineRowWithWindow(timeline, events, violations, rowDate, windowStartTime, windowEndTime) {
+            const rowStartTime = new Date(rowDate);
+            const rowEndTime = new Date(rowStartTime.getTime() + 8 * 60 * 60 * 1000); // 8 hours later
+
+            // Filter events for this row's time period AND within the 24h window
+            const rowEvents = events.filter(event => {
+                const eventTime = new Date(event.timestamp);
+                return eventTime >= rowStartTime && eventTime < rowEndTime &&
+                       eventTime >= windowStartTime && eventTime < windowEndTime;
+            });
+
+            const rowViolations = violations.filter(violation => {
+                const violationTime = new Date(violation.timestamp);
+                return violationTime >= rowStartTime && violationTime < rowEndTime &&
+                       violationTime >= windowStartTime && violationTime < windowEndTime;
             });
 
             // Add sensor and zone events
@@ -2526,6 +3095,9 @@
 
         // Initialize the page
         document.addEventListener('DOMContentLoaded', () => {
+            // Start dataset info monitoring
+            startDatasetInfoUpdates();
+
             // Check if we have any data on startup
             fetch(`${API_BASE}/api/sensors`)
                 .then(response => response.json())
@@ -2537,6 +3109,237 @@
                 .catch(error => {
                     console.log('No initial data available');
                 });
+        });
+    </script>
+
+    <!-- Shepherd Tour Configuration -->
+    <script>
+        let tour;
+        let currentTourStep = 0;
+        const totalTourSteps = 8;
+
+        // Tour utility functions
+        function showTourProgress(step) {
+            const progressEl = document.getElementById('tourProgress');
+            progressEl.textContent = `Step ${step} of ${totalTourSteps}`;
+            progressEl.classList.add('visible');
+        }
+
+        function hideTourProgress() {
+            const progressEl = document.getElementById('tourProgress');
+            progressEl.classList.remove('visible');
+        }
+
+        function addTourHighlight(element) {
+            if (element) {
+                element.classList.add('tour-highlight');
+                // Add tour-visible class to parent grouped-container to allow overflow
+                const groupedContainer = element.closest('.grouped-container');
+                if (groupedContainer) {
+                    groupedContainer.classList.add('tour-visible');
+                }
+                // Scroll element into view with smooth animation
+                element.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center',
+                    inline: 'center'
+                });
+            }
+        }
+
+        function removeTourHighlight(element) {
+            if (element) {
+                element.classList.remove('tour-highlight');
+            }
+        }
+
+        function clearAllTourHighlights() {
+            document.querySelectorAll('.tour-highlight').forEach(el => {
+                el.classList.remove('tour-highlight');
+            });
+            // Remove tour-visible class from all grouped containers
+            document.querySelectorAll('.grouped-container.tour-visible').forEach(el => {
+                el.classList.remove('tour-visible');
+            });
+        }
+
+        function makeTourWindowDraggable() {
+            console.log('Making tour window draggable...');
+            const tourElement = document.querySelector('.shepherd-element');
+            console.log('Tour element found:', tourElement);
+            if (!tourElement) {
+                console.warn('No tour element found for dragging');
+                return;
+            }
+
+            let isDragging = false;
+            let startX = 0;
+            let startY = 0;
+            let currentX = 0;
+            let currentY = 0;
+
+            const header = tourElement.querySelector('.shepherd-header') || tourElement;
+
+            header.style.cursor = 'move';
+            header.addEventListener('mousedown', startDrag);
+
+            function startDrag(e) {
+                if (e.target.closest('.shepherd-button')) return; // Don't drag if clicking buttons
+
+                isDragging = true;
+                startX = e.clientX - currentX;
+                startY = e.clientY - currentY;
+
+                document.addEventListener('mousemove', drag);
+                document.addEventListener('mouseup', stopDrag);
+                e.preventDefault();
+            }
+
+            function drag(e) {
+                if (!isDragging) return;
+
+                e.preventDefault();
+                currentX = e.clientX - startX;
+                currentY = e.clientY - startY;
+
+                tourElement.style.transform = `translate(${currentX}px, ${currentY}px)`;
+            }
+
+            function stopDrag() {
+                isDragging = false;
+                document.removeEventListener('mousemove', drag);
+                document.removeEventListener('mouseup', stopDrag);
+            }
+        }
+
+        function startTour() {
+            // Create lightweight popup with just tour instructions
+            const tourHTML = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>ODCV Analytics Tour</title>
+                    <style>
+                        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 20px; line-height: 1.6; background: #f8f9fa; }
+                        .tour-window { max-width: 500px; background: white; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
+                        .tour-header { background: linear-gradient(135deg, #6c5ce7 0%, #5a52d5 100%); color: white; padding: 20px; border-radius: 12px 12px 0 0; }
+                        .tour-content { padding: 24px; }
+                        .tour-buttons { display: flex; gap: 12px; margin-top: 24px; }
+                        .btn { padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; }
+                        .btn-primary { background: #6c5ce7; color: white; }
+                        .btn-secondary { background: #f1f3f4; color: #333; }
+                        .btn:hover { opacity: 0.9; }
+                        .step-counter { background: rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 16px; font-size: 14px; }
+                        h3 { margin: 0 0 16px 0; color: #2c3e50; }
+                        p { margin: 0 0 12px 0; color: #495057; }
+                    </style>
+                </head>
+                <body>
+                    <div class="tour-window">
+                        <div class="tour-header">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <h2 style="margin: 0; font-size: 18px;">🎓 ODCV Analytics Tour</h2>
+                                <div class="step-counter" id="stepCounter">Step 1 of 6</div>
+                            </div>
+                        </div>
+                        <div class="tour-content" id="tourContent">
+                            <!-- Content will be populated by updateStep() -->
+                        </div>
+                        <div class="tour-buttons">
+                            <button class="btn btn-secondary" onclick="closeTour()">Exit Tour</button>
+                            <button class="btn btn-primary" onclick="nextStep()">Next →</button>
+                        </div>
+                    </div>
+                    <scr` + `ipt>
+                        let currentStep = 1;
+                        const totalSteps = 6;
+
+                        const tourSteps = [
+                            { title: '📊 Step 1: Load Your Building Data', content: 'Look for the green "Load data from database" button.<br><br>Click it and give the dashboard up to a minute to load (there may be many millions of records)!', element: "loadPresetDataset('database')" },
+                            { title: '📊 Step 2: Understanding Key Metrics', content: 'Once data loads, you&apos;ll see an highlighted executive summary that shows overall O-DCV performance for the building. It shows:<br><br><strong>Standby Mode</strong>: Percentage of time all zones fall back to energy-saving standby mode because they&apos;re unoccupied<br><strong>Airflow Reduction</strong>: Overall reduction in airflow from switching to standby mode (airflow reduction reduces outside air requirements, which reduces heating and cooling loads and fan energy)<br><strong>Correlation Health</strong>: Checks the BMS is responding correctly to occupancy data<br><strong>Data Completeness:</strong>Checks that sensor data is available 2× per minute and BMS data 1× per minute. Missing data affects analysis accuracy and can indicate Gateway or BMS problems.', element: 'executive-dashboard' },
+                            { title: '🏢 Step 3: Floor Organization', content: ' Sensors are automatically grouped by floor. Each floor shows:<br><br><strong>Standby %</strong>:Percentage of time floor zones are in energy-saving mode<br><strong>Out of Spec %</strong>: Percentage of mode switches between standby and occupied that are either too early/late across all zones on the floor. Indicatator of proper BMS programming', element: '.group-header' },
+                            { title: '🏠 Step 4: Room-Level Performance', content: 'Click the <strong>˅</strong> arrow on the left of any floor to see individual room metrics. <br><br>Each room shows:<br><br><strong>Fraction of time sensor vs BMS show each mode</strong>: Show room/zone level standby rate and confirms correlation between occupancy sensing and BMS. Poor correlation means system is not responding properly, and bars turn yellow or red.<br><strong>Missing Data</strong>: Gaps in sensor/BMS data<br><strong>Last Outage</strong>: Most recent 5+ minute data interruption<br><strong>Commissioning</strong>: Counts out of spec mode changes by early vs late and switching to standby vs switching to occupied.<br><strong>24hr Chart</strong>: Standby rate over the last day (1 bar per hour)', element: '.group-header' },
+                            { title: '⏰ Step 5: Time Controls', content: '<strong> Latest 24 Hrs</strong>: ID current issues and their resolution<br><strong>5 Days</strong>: See work week; confirm any programming changes are sticking<br><strong>30 Days</strong>: Long term performance trends', element: 'time-period-toggle' },
+                            { title: '📈 Step 6: Timeline View', content: 'Expand any room to see its <strong>granular timeline</strong> covering up to 5 days. You&apos;ll see <strong>3 zone pairs</strong>; each pair covers 8 hours and shows a sensor row (what occupancy detected) above a BMS row (how the system responded).<br><br><strong>Gray</strong> = occupied | <strong>Green</strong> = standby<br><strong>Purple vertical lines</strong> = Out of spec mode switches<br><strong>Loupe tool</strong> = Hover over the timeline for a closeup view<br><br>When rows colors align closely with no visible breaks in the pattern and no purple lines, your system is working as designed!', element: '.expand-btn' }
+                        ];
+
+                        function updateStep() {
+                            const step = tourSteps[currentStep - 1];
+                            document.getElementById('stepCounter').textContent = \`Step \${currentStep} of \${totalSteps}\`;
+                            document.getElementById('tourContent').innerHTML = \`<h3>\${step.title}</h3><p>\${step.content}</p>\`;
+
+                            // Send message to main window for highlighting
+                            if (step.element) {
+                                window.opener.postMessage({type: 'tour-highlight', element: step.element}, '*');
+                            } else {
+                                window.opener.postMessage({type: 'tour-clear'}, '*');
+                            }
+                            updateButtons();
+                        }
+
+                        function updateButtons() {
+                            const buttonsDiv = document.querySelector('.tour-buttons');
+                            let backBtn = currentStep > 1 ? '<button class="btn btn-secondary" onclick="prevStep()">← Back</button>' : '';
+                            let nextBtn = currentStep < totalSteps ? '<button class="btn btn-primary" onclick="nextStep()">Next →</button>' : '<button class="btn btn-primary" onclick="closeTour()">Finish Tour</button>';
+                            buttonsDiv.innerHTML = \`<button class="btn btn-secondary" onclick="closeTour()">Exit Tour</button>\${backBtn}\${nextBtn}\`;
+                        }
+
+                        function nextStep() { if (currentStep < totalSteps) { currentStep++; updateStep(); } }
+                        function prevStep() { if (currentStep > 1) { currentStep--; updateStep(); } }
+                        function closeTour() { window.opener.postMessage({type: 'tour-clear'}, '*'); window.close(); }
+
+                        // Initialize tour on load
+                        setTimeout(() => updateStep(), 0);
+                    </scr` + `ipt>
+                </body>
+                </html>
+            `;
+
+            const popup = window.open('', 'ODCVTour', 'width=600,height=700,scrollbars=yes,resizable=yes');
+            if (!popup) {
+                alert('Please allow popups for this site to use the interactive tour.');
+                return;
+            }
+
+            popup.document.open();
+            popup.document.write(tourHTML);
+            popup.document.close();
+            popup.focus();
+        }
+
+        // Message listener for tour highlighting from popup window
+        window.addEventListener('message', function(event) {
+            if (event.data.type === 'tour-highlight') {
+                // Clear any existing highlights
+                clearAllTourHighlights();
+
+                // Add highlight to specified element
+                let element;
+
+                // Try various selectors in order
+                if (event.data.element.includes('(')) {
+                    // If it contains parentheses, it's likely an onclick function
+                    element = document.querySelector(`[onclick*="${event.data.element}"]`);
+                } else if (event.data.element.startsWith('.') || event.data.element.startsWith('#') || event.data.element.includes(':')) {
+                    // If it starts with . or # or contains :, it's already a CSS selector
+                    element = document.querySelector(event.data.element);
+                } else {
+                    // Try ID, then class, then onclick
+                    element = document.querySelector(`#${event.data.element}`) ||
+                             document.querySelector(`.${event.data.element}`) ||
+                             document.querySelector(`[onclick*="${event.data.element}"]`);
+                }
+
+                if (element) {
+                    addTourHighlight(element);
+                    // Scroll element into view
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    console.warn('Tour element not found:', event.data.element);
+                }
+            } else if (event.data.type === 'tour-clear') {
+                clearAllTourHighlights();
+            }
         });
     </script>
 
@@ -2552,38 +3355,6 @@
         </div>
     </div>
 
-    <!-- Test Datasets Section -->
-    <div class="upload-section" style="margin-top: 40px; border-top: 2px solid #dee2e6; padding-top: 30px;">
-        <h3>Test Datasets</h3>
-        <p style="margin-bottom: 20px; color: #666; font-size: 0.9em;">These datasets are for testing and demonstration purposes only.</p>
-
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
-            <button class="upload-btn" onclick="loadPresetDataset('SCH-1_data_30_days_mock')">
-                30 Days / 100 Sensors (Mock)
-                <div style="font-size: 0.8em; opacity: 0.8;">Full dataset with BV zones</div>
-            </button>
-            <button class="upload-btn" onclick="loadPresetDataset('SCH-1_data_5_days_mock')">
-                5 Days / 100 Sensors (Mock)
-                <div style="font-size: 0.8em; opacity: 0.8;">Medium dataset with BV zones</div>
-            </button>
-            <button class="upload-btn" onclick="loadPresetDataset('SCH-1_data_1_day_mock')">
-                1 Day / 100 Sensors (Mock)
-                <div style="font-size: 0.8em; opacity: 0.8;">Quick test dataset</div>
-            </button>
-            <button class="upload-btn" onclick="loadPresetDataset('SCH-1_data_20250916')">
-                Real Data - 23.5 Hours
-                <div style="font-size: 0.8em; opacity: 0.8;">Actual sensor data from Sept 16</div>
-            </button>
-            <button class="upload-btn" onclick="loadPresetDataset('SCH1_Since915')">
-                Real Data - 4 Days
-                <div style="font-size: 0.8em; opacity: 0.8;">Extended dataset from Sept 15-19</div>
-            </button>
-            <button class="upload-btn" onclick="loadPresetDataset('database')" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white;">
-                📊 Latest from Database
-                <div style="font-size: 0.8em; opacity: 0.9;">Live data from TimescaleDB (last 24hrs)</div>
-            </button>
-        </div>
-    </div>
 
 
 </body>
