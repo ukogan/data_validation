@@ -3343,19 +3343,6 @@
                 clearAllTourHighlights();
             }
         });
-
-        // Auto-start tour on first visit (you can remove this if not desired)
-        document.addEventListener('DOMContentLoaded', function() {
-            // Check if user has taken the tour before
-            if (!localStorage.getItem('odcv-tour-completed')) {
-                setTimeout(() => {
-                    if (confirm('Welcome to ODCV Analytics! Would you like to take a quick interactive tour?')) {
-                        startTour();
-                    }
-                    localStorage.setItem('odcv-tour-completed', 'true');
-                }, 1500);
-            }
-        });
     </script>
 
     <!-- Zoom Loupe -->
